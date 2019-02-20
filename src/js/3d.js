@@ -12,8 +12,8 @@ const e = function(vue){
     window.o = o;
     renderer.setSize( cont.clientWidth, cont.clientHeight );
     cont.appendChild( renderer.domElement );
-    camera.position.z = 15*3;
-    camera.position.y = -17*3;
+    camera.position.z = 15*10;
+    camera.position.y = -17*10;
     camera.lookAt(0,0,0)
 
     var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
@@ -39,7 +39,7 @@ const e = function(vue){
             ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
             ctx.lineTo( x + radius, y );
             ctx.quadraticCurveTo( x, y, x, y + radius );
-        } )( shape, -5, -8, 10, 16, 0.8 );        
+        } )( shape, -5, -8, 10, 16, 0.8 );
         
         //var geometry = new THREE.ShapeBufferGeometry( shape );
         var geometry = new THREE.ExtrudeGeometry( shape, { depth: 0.2, bevelEnabled: false } );
@@ -50,12 +50,46 @@ const e = function(vue){
         })
         geometry.groupsNeedUpdate = true;
 
+        geometry.computeBoundingBox();
+        let max = geometry.boundingBox.max
+        let min = geometry.boundingBox.min;
+        let offset = new THREE.Vector2(0 - min.x, 0 - min.y)
+        let range = new THREE.Vector2(max.x - min.x, max.y - min.y);
+        let faces = geometry.faces;
+
+        geometry.faceVertexUvs[0] = [];
+
+        for (let j = 0; j < faces.length ; j++) {
+
+            var v1 = geometry.vertices[faces[j].a], 
+                v2 = geometry.vertices[faces[j].b], 
+                v3 = geometry.vertices[faces[j].c];
+            
+            geometry.faceVertexUvs[0].push([
+                new THREE.Vector2((v1.x + offset.x)/range.x ,(v1.y + offset.y)/range.y),
+                new THREE.Vector2((v2.x + offset.x)/range.x ,(v2.y + offset.y)/range.y),
+                new THREE.Vector2((v3.x + offset.x)/range.x ,(v3.y + offset.y)/range.y)
+            ]);
+            
+        }
+        geometry.uvsNeedUpdate = true;   
+        
+        
         var mesh = new THREE.Mesh( geometry, [
-            new THREE.MeshBasicMaterial( { color: 0x444400 } ),
+            new THREE.MeshBasicMaterial( { color: 0xffffff,
+                map : new THREE.Texture({
+                    image: require('@/images/02_13.png')
+                })
+             } ),
             new THREE.MeshBasicMaterial( { color: 0x000000 } ),
             new THREE.MeshBasicMaterial( { color: 0x000077 } ),
         ] );
-        mesh.rotation.x = Math.PI;
+        
+        new THREE.TextureLoader().load(require('@/images/02_13.png'),texture=>{
+            mesh.material[0].map = texture
+        })
+
+        //mesh.rotation.x = Math.PI;
         group.add( mesh );
         o.push(mesh)
         group.position.x = i * 30
