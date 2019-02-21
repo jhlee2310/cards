@@ -2,7 +2,7 @@ import * as THREE from 'three'
 
 const e = function(opt){    
     const {vue,el,TWEEN} = opt
-    
+
     let cont =  document.querySelector(el)    
     let scene = this.scene = new THREE.Scene();
     let camera = new THREE.PerspectiveCamera( 30, cont.clientWidth / cont.clientHeight, 0.1, 1000 );
@@ -20,7 +20,7 @@ const e = function(opt){
 
     renderer.setSize( cont.clientWidth, cont.clientHeight );
     cont.appendChild( renderer.domElement );
-    camera.position.z = 15*3;
+    camera.position.z = 15*5;
     camera.position.y = -17*3;
     camera.lookAt(0,0,0)
 
