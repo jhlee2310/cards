@@ -13,14 +13,17 @@
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
 import TWEEN from '@tweenjs/tween.js'
-import threejs from '@/js/3d.js'
-const opop = 123
+//import threejs from '@/js/3d.js'
+
 export default {
   name: 'home',
   components: {
     HelloWorld
   },
-  methods:{   
+  methods:{
+    onWindowResize(){
+
+    },
     render(stamp){
       this.update()
       requestAnimationFrame(this.render)
@@ -56,7 +59,8 @@ export default {
     //this.$socket.sendObj({awesome: 'data'})
   },
   mounted(){    
-    new threejs(this)    
+    new threejs(this)
+    window.on( 'resize', this.onWindowResize )
   },
 }
 </script>

@@ -6417,6 +6417,11 @@ postcss@^7.0.0, postcss@^7.0.1, postcss@^7.0.14, postcss@^7.0.5:
     source-map "^0.6.1"
     supports-color "^6.1.0"
 
+postprocessing@^5.6.0:
+  version "5.6.0"
+  resolved "https://registry.yarnpkg.com/postprocessing/-/postprocessing-5.6.0.tgz#210edaf366e4970ecb7689ee5bc289dcea4ebaf2"
+  integrity sha512-+kvzu6teSCFzqjJHvz2Ov1aOot3v4O3dwfLgDn1bp16Dr8kWewUriCEwsSjK//e7znAoy+rZsi2ptZwW+FPh+g==
+
 prelude-ls@~1.1.2:
   version "1.1.2"
   resolved "http://registry.npm.taobao.org/prelude-ls/download/prelude-ls-1.1.2.tgz#21932a549f5e52ffd9a827f570e04be62a97da54"
@@ -7768,6 +7773,23 @@ thread-loader@^2.1.2:
     loader-runner "^2.3.1"
     loader-utils "^1.1.0"
     neo-async "^2.6.0"
+
+three-copyshader@0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/three-copyshader/-/three-copyshader-0.0.1.tgz#ddfa6c3f5dbce596187cfbf4ce1b46c7fbd456c0"
+  integrity sha1-3fpsP1285ZYYfPv0zhtGx/vUVsA=
+
+three-effectcomposer@^0.0.1:
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/three-effectcomposer/-/three-effectcomposer-0.0.1.tgz#09f438bfc76e522a985e5b8867d6b407eddd1d12"
+  integrity sha1-CfQ4v8duUiqYXluIZ9a0B+3dHRI=
+  dependencies:
+    three-copyshader "0.0.1"
+
+three-shader-fxaa@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/three-shader-fxaa/-/three-shader-fxaa-5.1.1.tgz#636f6981df6977ab4105bc3f96bbea39afa8f483"
+  integrity sha1-Y29pgd9pd6tBBbw/lrvqOa+o9IM=
 
 three@^0.101.1:
   version "0.101.1"
