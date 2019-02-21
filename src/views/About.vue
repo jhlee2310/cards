@@ -38,7 +38,10 @@ export default {
 		},
     async click(e){
       const scene = this.game.scene
-      let card = scene.getObjectByName('card_1')      
+
+      for(let i=1;i<=6;i++){
+
+        let card = scene.getObjectByName(`card_${i}`)      
       
       card.userData.original_position = card.position.clone()
       card.position.y += 8
@@ -51,6 +54,7 @@ export default {
         .easing(TWEEN.Easing.Linear.None)
         .onUpdate(a=>{
           card.position.y = a.pos
+          card.rotation.y = a.rot
         })
         .onComplete( ()=>{
           resolve();
@@ -64,6 +68,7 @@ export default {
           card.rotation.y = a.y  
         } )
         .start();        
+      }
     }
   }
 }

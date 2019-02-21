@@ -13,6 +13,7 @@ const e = function(opt){
     let renderer = this.renderer = new THREE.WebGLRenderer({
         //alpha:true,
         antialias: true,
+        autoClearDepth: false
     });
 
     let o = [];
@@ -138,6 +139,8 @@ const e = function(opt){
                 mesh.rotation.z = Math.PI/2
                 mesh.position.y = -10
                 mesh.position.z = 0.4
+                mesh.renderOrder = 999;
+                mesh.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
             }
 
             textureLoader.load(require(`@/images/test_${imgcnt++}.png`), texture=>{
