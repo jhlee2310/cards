@@ -1,19 +1,27 @@
 import * as THREE from 'three'
 
-const e = function(vue){
-    let cont =  document.querySelector('#cards_cont')        
+const e = function(opt){    
+    const {vue,el,TWEEN} = opt
+    
+    let cont =  document.querySelector(el)    
     let scene = this.scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera( 45, cont.clientWidth / cont.clientHeight, 0.1, 1000 );
+    let camera = new THREE.PerspectiveCamera( 30, cont.clientWidth / cont.clientHeight, 0.1, 1000 );
     let renderer = new THREE.WebGLRenderer({
         alpha:true,
         antialias: true,
     });
     let o = [];
+        
     window.o = o;
+    window.THREE = THREE;
+    window.camera = camera;
+    window.scene = scene;
+    window.renderer = renderer;
+
     renderer.setSize( cont.clientWidth, cont.clientHeight );
     cont.appendChild( renderer.domElement );
-    camera.position.z = 15*10;
-    camera.position.y = -17*10;
+    camera.position.z = 15*3;
+    camera.position.y = -17*3;
     camera.lookAt(0,0,0)
 
     var directionalLight = new THREE.DirectionalLight( 0xffffff, 0.8 );
@@ -85,7 +93,7 @@ const e = function(vue){
             new THREE.MeshBasicMaterial( { color: 0x000077 } ),
         ] );
         
-        new THREE.TextureLoader().load(require('@/images/02_13.png'),texture=>{
+        new THREE.TextureLoader().load(require('@/images/02_13.png'), texture=>{
             mesh.material[0].map = texture
         })
 
@@ -115,8 +123,7 @@ const e = function(vue){
     animate();
     
 
-    window.THREE = THREE;
-    window.camera = camera;
+    
 
     function animate(){
         for(let _o of o){

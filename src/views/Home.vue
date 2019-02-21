@@ -12,8 +12,9 @@
 <script>
 // @ is an alias to /src
 import HelloWorld from '@/components/HelloWorld.vue'
+import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3d.js'
-
+const opop = 123
 export default {
   name: 'home',
   components: {
