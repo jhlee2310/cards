@@ -43,35 +43,25 @@ const e = function(opt){
     let selectedObject = null
 
     this.onMouseMove = function(e){        
-        e.preventDefault();        
-        let intersects = getIntersects( e.layerX, e.layerY );       
-        console.log(intersects.length) 
-        
-        if ( intersects.length > 0 ) {
-            let intersect = intersects[0]
-            if ( selectedObject ) {
-                if(selectedObject != intersect.object){
-                    selectedObject = intersect.object;
-                    selectedObject.material.color.set( '#690' )
-                }
-            }else{
-                selectedObject = intersect.object;
-                selectedObject.material.color.set( '#690' )
-            }
-		}else{
-            if ( selectedObject ){
-                selectedObject.material.color.set( '#FFFFFF' )               
-            }
+        e.preventDefault();
+
+        if ( selectedObject ){
+            selectedObject.material.color.set( '#FFFFFF' )               
             selectedObject = null
         }
 
-		
+        let intersects = getIntersects( e.layerX, e.layerY );       
         
-        
-        
-        
-		
-		
+        if ( intersects.length > 0 ) {
+            var res = intersects.filter( function ( res ) {
+                return res && res.object;
+            } )[ 0 ];
+            if ( res && res.object ) {
+                selectedObject = res.object;
+                selectedObject.material.color.set( '#690' );
+            }
+		}
+
     }
     
     let scene = this.scene = new THREE.Scene();    
