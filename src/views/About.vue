@@ -44,6 +44,7 @@
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
 
+
 export default {
   data(){
     return {
@@ -64,10 +65,13 @@ export default {
       el: '#cont_3d',
       TWEEN    
     })
-
     window.addEventListener('resize',this.onWindowResize,false)
+    window.addEventListener('mousemove',this.onMouseMove,false)
   },
   methods: {
+    onMouseMove(e){      
+      this.game.onMouseMove(e);      
+    },
     onWindowResize(e){
       const camera = this.game.camera
       const renderer = this.game.renderer

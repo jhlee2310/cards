@@ -15,7 +15,7 @@ const e = function(opt){
     LineMaterial(THREE);
     LineSegments2(THREE);
     Line2(THREE);
-    //Wireframe(THREE);
+    //Wireframe(THREE);   
 
     this.resizeUpdate = {
         matLines: []
@@ -26,6 +26,53 @@ const e = function(opt){
     let width = cont.clientWidth
     let height = cont.clientHeight
 
+
+    this.intersects = null;
+    const raycaster = new THREE.Raycaster();
+    const mouseVector = new THREE.Vector3();
+    const forIntersect = [];
+
+    function getIntersects( x, y ) {
+        x = ( x / width ) * 2 - 1;
+        y = - ( y / height ) * 2 + 1;
+        mouseVector.set( x, y, 0.5 );
+        raycaster.setFromCamera( mouseVector, camera );        
+        return raycaster.intersectObjects( forIntersect, true );
+    }
+
+    let selectedObject = null
+
+    this.onMouseMove = function(e){        
+        e.preventDefault();        
+        let intersects = getIntersects( e.layerX, e.layerY );       
+        console.log(intersects.length) 
+        
+        if ( intersects.length > 0 ) {
+            let intersect = intersects[0]
+            if ( selectedObject ) {
+                if(selectedObject != intersect.object){
+                    selectedObject = intersect.object;
+                    selectedObject.material.color.set( '#690' )
+                }
+            }else{
+                selectedObject = intersect.object;
+                selectedObject.material.color.set( '#690' )
+            }
+		}else{
+            if ( selectedObject ){
+                selectedObject.material.color.set( '#FFFFFF' )               
+            }
+            selectedObject = null
+        }
+
+		
+        
+        
+        
+        
+		
+		
+    }
     
     let scene = this.scene = new THREE.Scene();    
     let camera = this.camera = new THREE.PerspectiveCamera( 30, cont.clientWidth / cont.clientHeight, 0.1, 1000 );
@@ -156,9 +203,9 @@ const e = function(opt){
                 mesh.position.x = j * 5.6
             }else{
                 mesh.rotation.z = Math.PI/2
-                mesh.position.y = -10
-                mesh.position.z = 0.4
-                mesh.renderOrder = 999;
+                mesh.position.y = -6
+                mesh.position.z = 1
+                mesh.renderOrder = 999;                
                 mesh.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
             }
 
@@ -179,7 +226,7 @@ const e = function(opt){
 
         //mesh.rotation.x = Math.PI;        
         group.position.x = i * 20
-        group.position.y = 17
+        group.position.y = 22
         
         scene.add(group)
     }
@@ -220,10 +267,11 @@ const e = function(opt){
     });
 
 
-    let _pl_mt = new THREE.MeshPhongMaterial( { color: 0xffffff, opacity:0.3, transparent: true } )
+    let _pl_mt = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity:0.3, transparent: true, depthTest:false } )
     let _pl_g1 = new THREE.ShapeBufferGeometry( _r1 ), _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
-    let _pl_m1 = new THREE.Mesh( _pl_g1,  _pl_mt ), _pl_m2 = new THREE.Mesh( _pl_g2,  _pl_mt )
-    _pl_m1.position.z = _pl_m2.position.z = -0.1
+    let _pl_m1 = new THREE.Mesh( _pl_g1,  _pl_mt ), _pl_m2 = new THREE.Mesh( _pl_g2,  _pl_mt.clone() )
+    forIntersect.push(_pl_m1,_pl_m2);
+    _pl_m1.position.z = _pl_m2.position.z = -0.2
         
     
 
@@ -242,22 +290,26 @@ const e = function(opt){
     _group.add(_pl_m1);
     _group.position.z = -3
     _group2.add(_line2)
-    _group2.add(_pl_m2)
+    _group2.add(_pl_m2)    
     _group2.position.x = 15;
     _group2.position.z = -5
-
+    _group.name = 'bet_1'
+    _group2.name = 'bet_2'
     scene.add(_group)
     scene.add(_group2)
     _group2.rotation.z = Math.PI / 36
     _group2.position.y = 0.8
     let _group3 = _group2.clone()
+    _group3.name = 'bet_3'
     _group3.position.x = _group2.position.x * -1
     _group3.rotation.z = _group2.rotation.z * -1
     let _group4 = _group2.clone()
+    _group4.name = 'bet_4'
     _group4.position.x = _group2.position.x + 16;
     _group4.position.y = 3
     _group4.rotation.z = Math.PI / 16
     let _group5 = _group4.clone()
+    _group5.name = 'bet_5'
     _group5.position.x = _group4.position.x * -1;
     _group5.rotation.z = _group4.rotation.z * -1
 
@@ -265,7 +317,79 @@ const e = function(opt){
     scene.add(_group4)
     scene.add(_group5)
 
-	
+    for(let i=3;i <= 5;i++){
+        let tmp = scene.getObjectByName(`bet_${i}`).getObjectByProperty('type',"Mesh")
+        tmp.material = tmp.material.clone()
+        forIntersect.push(tmp)
+    }
+
+    //sprites
+    const group_sprite = new THREE.Group()
+    let cnt = 0;
+    for(let i of [4,5,6,7,8,9,10,11,12]){
+        let spriteMap = new textureLoader.load( require(`@/images/chips/bet${i}__.png`) );
+        let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
+        let sprite = new THREE.Sprite( spriteMaterial );
+        sprite.scale.set(4.8,4.8)
+        sprite.position.x = cnt++ * 7
+        group_sprite.add( sprite );
+    }
+    group_sprite.position.x = -(cnt-1) * 7 /2
+    group_sprite.position.y = -22
+    scene.add(group_sprite)
+    
+    this.group_buy_sprite = {}
+    for(let i of [0.1,1,10,50,100,500,1000,5000,100000]){
+        let spriteMap = new textureLoader.load( require(`@/images/chips/buy${i}_.png`) );
+        let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
+        let sprite = new THREE.Sprite( spriteMaterial );
+        sprite.scale.set(2.6,2.6)        
+        this.group_buy_sprite[`buy_${i}`] = sprite
+    }
+
+    const show_bet = (cont, p, q)=>{
+        let target;
+        let zones = [];
+        for(let y=-1; y<=1; y++){
+            for(let x=-1; x<=1; x++){
+                zones.push(new THREE.Vector3(x,y,0))
+            }
+        }
+        switch(cont){
+            case 1: target = _group5;
+                break;
+            case 2: target = _group3
+                break;
+            case 3: target = _group
+                break;
+            case 4: target = _group2
+                break;
+            case 5: target = _group4
+                break;
+        }
+        
+        let z = Math.floor(Math.random()*9)
+        let coins = new THREE.Group();
+        coins.position.copy( zones[z].multiplyScalar(3.8) )
+        let coin = this.group_buy_sprite[`buy_${p}`]        
+        for(let i=0;i<q;i++){
+            coin = coin.clone()
+            coin.position.x = (Math.random() - 0.5)*0.7 + ( i*0.05 )
+            coin.position.y = i*0.14            
+            coins.add(coin)
+        }
+        target.add(coins)
+    }
+    
+    show_bet(1,'50',10)
+    show_bet(3,'0.1',12)
+    show_bet(4,'100000',4)
+    show_bet(4,'100000',10)
+    show_bet(3,'500',10)
+    
+    
+    
+    
 
     animate();
 
