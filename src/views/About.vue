@@ -32,6 +32,16 @@
       </div>
     </div>
     <div class="control">
+      <select v-model="typeA">
+        <option v-for="type in easing" v-bind:value="type.value" :key="type.text">
+          {{ type.text }}
+        </option>
+      </select>
+      <select v-model="typeB">
+        <option v-for="type in easing" v-bind:value="type.value" :key="type.text">
+          {{ type.text }}
+        </option>
+      </select>
       <button @click="click">click</button>
       <button @click="show = !show">
         toggle
@@ -57,6 +67,42 @@ export default {
       left: 0,
       top: 0,
       winning: 1,
+      easing: [
+        {text:'Linear.None', value:TWEEN.Easing.Linear.None},
+        {text:'Quadratic.In', value:TWEEN.Easing.Quadratic.In},
+        {text:'Quadratic.Out', value:TWEEN.Easing.Quadratic.Out},
+        {text:'Quadratic.InOut',  value:TWEEN.Easing.Quadratic.InOut},
+        {text:'Cubic.In',  value:TWEEN.Easing.Cubic.In},
+        {text:'Cubic.Out',  value:TWEEN.Easing.Cubic.Out},
+        {text:'Cubic.InOut',  value:TWEEN.Easing.Cubic.InOut},
+        {text:'Quartic.In',  value:TWEEN.Easing.Quartic.In},
+        {text:'Quartic.Out',  value:TWEEN.Easing.Quartic.Out},
+        {text:'Quartic.InOut',  value:TWEEN.Easing.Quartic.InOut},
+        {text:'Quintic.In',  value:TWEEN.Easing.Quintic.In},
+        {text:'Quintic.Out',  value:TWEEN.Easing.Quintic.Out},
+        {text:'Quintic.InOut',  value:TWEEN.Easing.Quintic.InOut},
+        {text:'Sinusoidal.In',  value:TWEEN.Easing.Sinusoidal.In},
+        {text:'Sinusoidal.Out',  value:TWEEN.Easing.Sinusoidal.Out},
+        {text:'Sinusoidal.InOut',  value:TWEEN.Easing.Sinusoidal.InOut},
+        {text:'Exponential.In',  value:TWEEN.Easing.Exponential.In},
+        {text:'Exponential.Out',  value:TWEEN.Easing.Exponential.Out},
+        {text:'Exponential.InOut',  value:TWEEN.Easing.Exponential.InOut},
+        {text:'Circular.In',  value:TWEEN.Easing.Circular.In},
+        {text:'Circular.Out',  value:TWEEN.Easing.Circular.Out},
+        {text:'Circular.InOut',  value:TWEEN.Easing.Circular.InOut},
+        {text:'Elastic.In',  value:TWEEN.Easing.Elastic.In},
+        {text:'Elastic.Out',  value:TWEEN.Easing.Elastic.Out},
+        {text:'Elastic.InOut',  value:TWEEN.Easing.Elastic.InOut},
+        {text:'Back.In',  value:TWEEN.Easing.Back.In},
+        {text:'Back.Out',  value:TWEEN.Easing.Back.Out},
+        {text:'Back.InOut',  value:TWEEN.Easing.Back.InOut},
+        {text:'Bounce.In',  value:TWEEN.Easing.Bounce.In},
+        {text:'Bounce.Out',  value:TWEEN.Easing.Bounce.Out},
+        {text:'Bounce.InOut',  value:TWEEN.Easing.Bounce.InOut},
+        
+      ],
+      typeA: TWEEN.Easing.Linear.None,
+      typeB: TWEEN.Easing.Elastic.Out,
     }
   },
   mounted(){  
@@ -121,10 +167,11 @@ export default {
       //Linear.None
       await new Promise( (resolve,reject) => {
         setTimeout(() => {
+          
       card.visible = true
           new TWEEN.Tween( { rot: 0, pos: card.position.y } )
           .to( { pos: card.userData.original_position.y},speed )
-          .easing(TWEEN.Easing.Linear.None)
+          .easing(this.typeA)
           .onUpdate(a=>{
             card.position.y = a.pos
             card.rotation.y = a.rot
@@ -135,7 +182,7 @@ export default {
           }).start()
        new TWEEN.Tween( { rot: 0, y: 0 } )
         .to( { y: Math.PI }, speed+1000 )
-        .easing( TWEEN.Easing.Elastic.InOut )
+        .easing( this.typeB )
         .onUpdate( function (a) {          
           card.rotation.y = a.y  
         } )
