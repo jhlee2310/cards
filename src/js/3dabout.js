@@ -1,6 +1,25 @@
 import * as THREE from 'three'
+import LineMaterial from '@/js/src/lines/LineMaterial'
+import LineSegments2 from '@/js/src/lines/LineSegments2'
+import Line2 from '@/js/src/lines/Line2'
+import LineGeometry from '@/js/src/lines/LineGeometry'
+import LineSegmentsGeometry from '@/js/src/lines/LineSegmentsGeometry'
+//import WireframeGeometry2 from '@/js/src/lines/WireframeGeometry2'
+//import Wireframe from '@/js/src/lines/Wireframe'
+
 //import { SMAASearchImageData,SMAAAreaImageData, SMAAEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 const e = function(opt){
+    LineSegmentsGeometry(THREE)    
+    LineGeometry(THREE);
+    //WireframeGeometry2(THREE);
+    LineMaterial(THREE);
+    LineSegments2(THREE);
+    Line2(THREE);
+    //Wireframe(THREE);
+
+    this.resizeUpdate = {
+        matLines: []
+    }
     const {vue,el,TWEEN} = opt    
     const clock = new THREE.Clock()
     let cont =  this.cont = document.querySelector(el)
@@ -54,8 +73,8 @@ const e = function(opt){
     })
     
     table.name = "table"
-    table.position.z = -3
-    table.scale.set(140,57,1)
+    table.position.z = -10
+    table.scale.set(96,66,1)
 
         
     
@@ -165,13 +184,90 @@ const e = function(opt){
         scene.add(group)
     }
 
+    //배팅판
+    var _matLine = new THREE.LineMaterial( {
+        color: 0xffffff,
+        linewidth: 3, // in pixels        
+        dashed: false
+    });    
+    _matLine.resolution.set( width, height );
+    
+    const RoundedRectangle = function (width, height, radius ) {
+        let ctx = new THREE.Shape();
+        let x = -width/2
+        let y = -height/2
+        ctx.moveTo( x, y + radius );
+        ctx.lineTo( x, y + height - radius );
+        ctx.quadraticCurveTo( x, y + height, x + radius, y + height );
+        ctx.lineTo( x + width - radius, y + height );
+        ctx.quadraticCurveTo( x + width, y + height, x + width, y + height - radius );
+        ctx.lineTo( x + width, y + radius );
+        ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
+        ctx.lineTo( x + radius, y );
+        ctx.quadraticCurveTo( x, y, x, y + radius );
+        ctx.autoClose = true;
+        return ctx;        
+    }
+    
+    let _r1 = RoundedRectangle(10, 16, 0.8 ), _r2 = RoundedRectangle(13, 16, 0.8 );
+    
+    let _positions = [], _positions2 = [];    
+    _r1.getPoints().forEach(a=>{
+        _positions.push(a.x,a.y,0)
+    });
+    _r2.getPoints().forEach(a=>{
+        _positions2.push(a.x,a.y,0)
+    });
+
+
+    let _pl_mt = new THREE.MeshPhongMaterial( { color: 0xffffff, opacity:0.3, transparent: true } )
+    let _pl_g1 = new THREE.ShapeBufferGeometry( _r1 ), _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
+    let _pl_m1 = new THREE.Mesh( _pl_g1,  _pl_mt ), _pl_m2 = new THREE.Mesh( _pl_g2,  _pl_mt )
+    _pl_m1.position.z = _pl_m2.position.z = -0.1
+        
+    
+
+    let _geo = new THREE.LineGeometry(), _geo2 = new THREE.LineGeometry();
+
+    _geo.setPositions(_positions)
+    _geo2.setPositions(_positions2)
+    
+    
+    var _line = new THREE.Line2( _geo, _matLine ), _line2 = new THREE.Line2( _geo2, _matLine );
+    _line.computeLineDistances();    
+    _line2.computeLineDistances();
+    
+    let _group = new THREE.Group(),  _group2 = new THREE.Group();
+    _group.add(_line)
+    _group.add(_pl_m1);
+    _group.position.z = -3
+    _group2.add(_line2)
+    _group2.add(_pl_m2)
+    _group2.position.x = 15;
+    _group2.position.z = -5
+
+    scene.add(_group)
+    scene.add(_group2)
+    _group2.rotation.z = Math.PI / 36
+    _group2.position.y = 0.8
+    let _group3 = _group2.clone()
+    _group3.position.x = _group2.position.x * -1
+    _group3.rotation.z = _group2.rotation.z * -1
+    let _group4 = _group2.clone()
+    _group4.position.x = _group2.position.x + 16;
+    _group4.position.y = 3
+    _group4.rotation.z = Math.PI / 16
+    let _group5 = _group4.clone()
+    _group5.position.x = _group4.position.x * -1;
+    _group5.rotation.z = _group4.rotation.z * -1
+
+    scene.add(_group3)
+    scene.add(_group4)
+    scene.add(_group5)
+
+	
 
     animate();
-    
-
-    
-
-    
 
     function animate(time){        
         TWEEN.update(time)
@@ -184,3 +280,4 @@ const e = function(opt){
 }
 
 export default e
+

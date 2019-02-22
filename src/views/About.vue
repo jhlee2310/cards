@@ -1,9 +1,25 @@
 <template>
   <div class="about">
-    <div id="cont_3d"></div>
+    <div id="cont_3d">
+      <div class="rectanges" style="position:absolute;width:500px;height:210px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
+        <div class="col" v-for="(j, i) in 20" :style="{
+          position:'absolute',
+          height:'100%',
+          width:'20px',
+          left: i * 20+'px'}" :key="i">
+            <img src="@/assets/logo.png">
+            <img src="@/assets/logo.png">
+            <img src="@/assets/logo.png">
+          </div> 
+        <svg height="210" width="500">          
+          <line v-for="i in 20" x1="0" :y1="i*delta" x2="500" :y2="i*delta" style="stroke:rgb(0,0,0);stroke-width:1" :key="i"/>
+          <line v-for="i in 20" :x1="i*delta" y1="0" :x2="i*delta" y2="210" style="stroke:rgb(0,0,0);stroke-width:1" :key="i"/>
+        </svg>
+        </div>
+    </div>
     <div class="control">
       <button @click="click">click</button>
-    </div>
+    </div>    
   </div>
 </template>
 
@@ -15,6 +31,7 @@ export default {
   data(){
     return {
       game: null,
+      delta:20,
     }
   },
   mounted(){  
@@ -31,10 +48,17 @@ export default {
       const camera = this.game.camera
       const renderer = this.game.renderer
       const cont = this.game.cont
+      const width = cont.clientWidth
+      const height = cont.clientHeight
 
       camera.aspect = cont.clientWidth / cont.clientHeight;
 			camera.updateProjectionMatrix();
-			renderer.setSize( cont.clientWidth, cont.clientHeight );
+      renderer.setSize( cont.clientWidth, cont.clientHeight );
+      
+      this.game.resizeUpdate.matLine.resolution.set( width, height );
+      if(widht<=750){
+        his.game.resizeUpdate.matLine.linewidth=1
+      }
 		},
     async click(e){
       const scene = this.game.scene
@@ -95,11 +119,17 @@ export default {
 
 <style el="scss">
 body{margin:0;padding:0}
-  .about{height:60vw;position:relative}
+  .about{height:70vw;position:relative}
   #cont_3d{
     position:relative;
     width:100%;
     height:100%;    
   }
+
+.col img{
+  display:block;
+  width:100%;
+  height:20px;
+}
 </style>
 
