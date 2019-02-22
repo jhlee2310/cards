@@ -1,24 +1,41 @@
 <template>
   <div class="about">
+    <span>{{round}}</span>
     <div id="cont_3d">
-      <div class="rectanges" style="position:absolute;width:500px;height:210px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
-        <div class="col" v-for="(j, i) in 20" :style="{
-          position:'absolute',
-          height:'100%',
-          width:'20px',
-          left: i * 20+'px'}" :key="i">
-            <img src="@/assets/logo.png">
-            <img src="@/assets/logo.png">
-            <img src="@/assets/logo.png">
-          </div> 
-        <svg height="210" width="500">          
-          <line v-for="i in 20" x1="0" :y1="i*delta" x2="500" :y2="i*delta" style="stroke:rgb(0,0,0);stroke-width:1" :key="i"/>
-          <line v-for="i in 20" :x1="i*delta" y1="0" :x2="i*delta" y2="210" style="stroke:rgb(0,0,0);stroke-width:1" :key="i"/>
-        </svg>
-        </div>
+      <div class="board">
+      <transition nmae="slide-fade">
+        <div v-if="show" class="rectanges" style="position:absolute;width:280px;height:125px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
+          <div class="col" v-for="(count, i) in winners" :style="{
+            position:'absolute',
+            height:'100%',
+            width:'20px',
+            top: count.top+'px',
+            left: count.left+'px',
+            }"
+            :key="count.round">
+              <div v-if="count.player=='P'" class="is-p-player"/>
+              <div v-else class="is-b-player"/>
+              <!-- <img src="@/assets/logo.png"> -->
+            </div>
+          <svg height="121" width="280">
+            <line v-for="i in 20" x1="0" :y1="i*delta" x2="280" :y2="i*delta" :style="{
+              'stroke':'rgb(0,0,0)',
+              'stroke-width':i%2==0?'2':'1'
+            }" :key="`row${i}`"/>
+            <line v-for="i in 20" :x1="i*delta" y1="0" :x2="i*delta" y2="121" :style="{
+              'stroke':'rgb(0,0,0)',
+              'stroke-width':i%2==0?'2':'1'
+              }" :key="`col${i}`"/>
+          </svg>
+          </div>
+      </transition>
+      </div>
     </div>
     <div class="control">
       <button @click="click">click</button>
+      <button @click="show = !show">
+        toggle
+      </button>
     </div>    
   </div>
 </template>
@@ -32,6 +49,13 @@ export default {
     return {
       game: null,
       delta:20,
+      show: true,
+      round: 1,
+      winners: [],
+      lastWinner: '',
+      left: 0,
+      top: 0,
+      winning: 1,
     }
   },
   mounted(){  
@@ -62,6 +86,14 @@ export default {
 		},
     async click(e){
       const scene = this.game.scene
+
+      o.forEach(function(key, value){
+        key.visible = false
+      });
+
+      // o.forEach(function(i){
+      //   console.log(o[i])
+      // })
 
 
      const card_ord = [1,4,0,3,2,5]
@@ -111,7 +143,55 @@ export default {
         }, 1000);
       })
       }
+      this.nextRound()
 
+    },
+    randomItem(a) {
+      return a[Math.floor(Math.random() * a.length)];
+    },
+    nextRound() {
+      let winner = this.randomItem(['P','B'])
+
+      let cnt = this.round -1
+
+      // let winnerArray = ['P','P','P','P','P','P','P','P','B']
+      // let winner =winnerArray[cnt]
+
+
+      if(this.lastWinner==''){
+        this.lastWinner = winner
+      }else if(this.lastWinner == winner){
+        this.winning++
+        if(this.winning<=6)
+          this.top = this.top+20
+        else
+          this.left = this.left+20
+      }else{
+        let cnt = 0
+        if(this.winning>6){
+          cnt = (this.winning - 6)*20
+        }
+        if(cnt != 0){
+          this.left = this.left-cnt+20
+        }else{
+          this.left = this.left+20
+          
+        }
+        this.winning = 1
+        this.top = 0
+      }
+        this.winners.push(
+          {
+            round: this.round,
+            top: this.top,
+            left: this.left,
+            player: winner,
+          }
+        )
+
+      this.lastWinner = winner
+
+      this.round++
     }
   }
 }
@@ -123,13 +203,44 @@ body{margin:0;padding:0}
   #cont_3d{
     position:relative;
     width:100%;
-    height:100%;    
+    height:100%;
   }
 
-.col img{
+.col .img1{
   display:block;
   width:100%;
   height:20px;
+   background-image: url('../assets/logo.png');
+   background-size: 20px 20px;
+}
+
+/* 애니메이션 진입 및 진출은 다른 지속 시간 및  */
+/* 타이밍 기능을 사용할 수 있습니다. */
+.slide-fade-enter-active {
+  transition: all .3s ease;
+}
+.slide-fade-leave-active {
+  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
+}
+.slide-fade-enter, .slide-fade-leave-to
+/* .slide-fade-leave-active below version 2.1.8 */ {
+  transform: translateX(10px);
+  opacity: 0;
+}
+
+.is-b-player {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin: 1px;
+  border: 1px solid #283283;
+}
+.is-p-player {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin: 1px;
+  border: 1px solid #8f0e0e;
 }
 </style>
 
