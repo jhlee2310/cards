@@ -132,9 +132,9 @@ const e = function(opt){
                 card_mat.back
             ] );
             mesh.name = `card_${imgcnt}`
+            mesh.rotation.x = Math.PI
             if(j !=3 ){
                 mesh.position.x = j * 5.6
-                mesh.rotation.x = Math.PI
             }else{
                 mesh.rotation.z = Math.PI/2
                 mesh.position.y = -10
