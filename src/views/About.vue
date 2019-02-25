@@ -102,7 +102,7 @@ export default {
         
       ],
       typeA: TWEEN.Easing.Linear.None,
-      typeB: TWEEN.Easing.Elastic.Out,
+      typeB: TWEEN.Easing.Elastic.InOut,
     }
   },
   mounted(){  
@@ -141,8 +141,14 @@ export default {
     async click(e){
       const scene = this.game.scene
 
-      o.forEach(function(key, value){
-        key.visible = false
+      o.forEach(function(card, value){
+        card.visible = false
+        if(!card.userData.original_position){
+          card.userData.original_position = card.position.clone()
+          card.userData.original_rotation = card.rotation.clone()
+        }
+        card.position.copy(card.userData.original_position)
+        card.rotation.copy(card.userData.original_rotation)
       });
 
       // o.forEach(function(i){
@@ -150,53 +156,66 @@ export default {
       // })
 
 
-     const card_ord = [1,4,0,3,2,5]
+     const card_ord = [1,3,0,4,2,5]
 
       for(let ord=0;ord<card_ord.length;ord++){
 
         let i = card_ord[ord]
 
         let card = scene.getObjectByName(`card_${i}`)      
-        card.visible = false
+        //card.visible = false
         let speed = 450
 
-      card.userData.original_position = card.position.clone()
-      if(i == 2 || i == 5){
-        card.position.y += 40
-        speed = 1000
-      }else{
-        card.position.y += 8
-      }
-      
-      //Linear.None
-      await new Promise( (resolve,reject) => {
-        setTimeout(() => {
-          
-      card.visible = true
-          new TWEEN.Tween( { rot: 0, pos: card.position.y } )
-          .to( { pos: card.userData.original_position.y},speed )
-          .easing(this.typeA)
-          .onUpdate(a=>{
-            card.position.y = a.pos
-            card.rotation.y = a.rot
-          })
-          .onComplete( ()=>{
-            resolve();
-            console.log("move comp")
-          }).start()
-       new TWEEN.Tween( { rot: 0, y: 0 } )
-        .to( { y: Math.PI }, speed+1000 )
-        .easing( this.typeB )
-        .onUpdate( function (a) {          
-          card.rotation.y = a.y  
-        } )
-        .onComplete( ()=>{
-            resolve();
-            console.log("rot comp")
-          })
-        .start();        
-        }, 1000);
-      })
+        if(i == 2 || i == 5){
+        //  card.position.y += 40
+          //card.rotation.y += 40
+          //speed = 1000
+        }else{
+        }
+          card.position.y += 8
+        
+        //Linear.None
+        await new Promise( (resolve,reject) => {
+          setTimeout(() => {
+            card.visible = true
+            new TWEEN.Tween( { rot: 0, pos: card.position.y } )
+            .to( { pos: card.userData.original_position.y},speed )
+            .easing(this.typeA)
+            .onUpdate(a=>{
+              card.position.y = a.pos
+              card.rotation.y = a.rot
+            })
+            .onComplete( ()=>{
+              resolve();
+              console.log("move comp")
+            }).start()
+            if(i == 2 || i == 5){
+              new TWEEN.Tween( { rot: 0, y: Math.PI } )
+                .to( { y: 0 }, speed+1000 )
+                .easing( this.typeB )
+                .onUpdate( function (a) {          
+                    card.rotation.x = a.y
+                } )
+                .onComplete( ()=>{
+                    resolve();
+                    console.log("rot comp")
+                  })
+                .start();        
+            }else{
+              new TWEEN.Tween( { rot: 0, y: 0 } )
+                .to( { y: Math.PI }, speed+1000 )
+                .easing( this.typeB )
+                .onUpdate( function (a) {          
+                  card.rotation.y = a.y
+                } )
+                .onComplete( ()=>{
+                    resolve();
+                    console.log("rot comp")
+                  })
+                .start();        
+            }
+          }, 1000);
+        })
       }
       this.nextRound()
 

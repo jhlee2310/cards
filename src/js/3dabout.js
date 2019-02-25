@@ -159,7 +159,8 @@ const e = function(opt){
     // 카드 형태 생성
     var shape = new THREE.Shape();
         shape.autoClose = true;
-        ( function roundedRect( ctx, x, y, width, height, radius ) {
+        ( function roundedRect( ctx, width, height, radius ) {
+            let x = width/2*-1, y= height/2*-1
             ctx.moveTo( x, y + radius );
             ctx.lineTo( x, y + height - radius );
             ctx.quadraticCurveTo( x, y + height, x + radius, y + height );
@@ -169,7 +170,7 @@ const e = function(opt){
             ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
             ctx.lineTo( x + radius, y );
             ctx.quadraticCurveTo( x, y, x, y + radius );
-        } )( shape, -4, -4.7, 8, 12.8, 0.8 );
+        } )( shape, 8, 12.8, 0.8 );
         
         var geometry = new THREE.ExtrudeGeometry( shape, { depth: 0.2, bevelEnabled: false } );
         geometry.faces.filter(a=>{
@@ -229,10 +230,11 @@ const e = function(opt){
             mesh.name = `card_${imgcnt}`
             mesh.rotation.x = Math.PI
             if(j !=3 ){
-                mesh.position.x = j * 5.6
+                mesh.position.x = j * 4.5
             }else{
                 mesh.rotation.z = Math.PI/2
-                mesh.position.y = -6
+                mesh.position.y = 2.2
+                mesh.position.x = i* 16
                 mesh.position.z = 1
                 mesh.renderOrder = 999;                
                 mesh.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
@@ -254,7 +256,7 @@ const e = function(opt){
        
 
         //mesh.rotation.x = Math.PI;        
-        group.position.x = i * 20
+        group.position.x = i * 12
         group.position.y = 22
         
         scene.add(group)
