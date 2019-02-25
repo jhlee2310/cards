@@ -254,7 +254,8 @@ export default {
 
 <style el="scss">
 body{margin:0;padding:0}
-  .about{height:70vw;position:relative}
+  .about{height:70vw;max-height:896px;position:relative;
+  max-width:1280px;margin:0 auto;}
   #cont_3d{
     position:relative;
     width:100%;

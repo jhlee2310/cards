@@ -41,6 +41,10 @@ const e = function(opt){
         clicked_coin: null,
     }
 
+    // 배팅용 5개 zone Mesh가 담기는 배열
+    this.betZones = []
+    let betZones = this.betZones;  
+
     function getIntersects(targets ) {        
         raycaster.setFromCamera( mouseVector, camera );        
         if(targets instanceof Array){
@@ -281,100 +285,112 @@ const e = function(opt){
         return ctx;        
     }
     
-    let _r1 = RoundedRectangle(10, 16, 0.8 ), _r2 = RoundedRectangle(13, 16, 0.8 );
     
-    let _positions = [], _positions2 = [];    
-    _r1.getPoints().forEach(a=>{
-        _positions.push(a.x,a.y,0)
-    });
-    _r2.getPoints().forEach(a=>{
-        _positions2.push(a.x,a.y,0)
-    });
-
-
-    let _pl_mt = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity:0.3, transparent: true, depthTest:false } )
-    let _pl_g1 = new THREE.ShapeBufferGeometry( _r1 ), _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
-    let _pl_m1 = new THREE.Mesh( _pl_g1,  _pl_mt ), _pl_m2 = new THREE.Mesh( _pl_g2,  _pl_mt.clone() )
-    forIntersect.betting_zone.push(_pl_m1,_pl_m2);
-    _pl_m1.position.z = _pl_m2.position.z = -0.2
+    // betZones
+    {
+        let _r1 = RoundedRectangle(10, 16, 0.8 ), _r2 = RoundedRectangle(13, 16, 0.8 );
         
-    
+        let _positions = [], _positions2 = [];    
+        _r1.getPoints().forEach(a=>{
+            _positions.push(a.x,a.y,0)
+        });
+        _r2.getPoints().forEach(a=>{
+            _positions2.push(a.x,a.y,0)
+        });
 
-    let _geo = new THREE.LineGeometry(), _geo2 = new THREE.LineGeometry();
 
-    _geo.setPositions(_positions)
-    _geo2.setPositions(_positions2)
-    
-    
-    var _line = new THREE.Line2( _geo, _matLine ), _line2 = new THREE.Line2( _geo2, _matLine );
-    _line.computeLineDistances();    
-    _line2.computeLineDistances();
-    
-    let _group = new THREE.Group(),  _group2 = new THREE.Group();
-    _group.add(_line)
-    _group.add(_pl_m1);
-    _group.position.z = -3
-    _group2.add(_line2)
-    _group2.add(_pl_m2)    
-    _group2.position.x = 15;
-    _group2.position.z = -5
-    _group.name = 'bet_1'
-    _group2.name = 'bet_2'
-    scene.add(_group)
-    scene.add(_group2)
-    _group2.rotation.z = Math.PI / 36
-    _group2.position.y = 0.8
-    let _group3 = _group2.clone()
-    _group3.name = 'bet_3'
-    _group3.position.x = _group2.position.x * -1
-    _group3.rotation.z = _group2.rotation.z * -1
-    let _group4 = _group2.clone()
-    _group4.name = 'bet_4'
-    _group4.position.x = _group2.position.x + 16;
-    _group4.position.y = 3
-    _group4.rotation.z = Math.PI / 16
-    let _group5 = _group4.clone()
-    _group5.name = 'bet_5'
-    _group5.position.x = _group4.position.x * -1;
-    _group5.rotation.z = _group4.rotation.z * -1
+        let _pl_mt = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity:0.3, transparent: true, depthTest:false } )
+        let _pl_g1 = new THREE.ShapeBufferGeometry( _r1 ), _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
+        let _pl_m1 = new THREE.Mesh( _pl_g1,  _pl_mt ), _pl_m2 = new THREE.Mesh( _pl_g2,  _pl_mt.clone() )        
+        _pl_m1.position.z = _pl_m2.position.z = -0.2        
 
-    scene.add(_group3)
-    scene.add(_group4)
-    scene.add(_group5)
+        let _geo = new THREE.LineGeometry(), _geo2 = new THREE.LineGeometry();
 
-    for(let i=3;i <= 5;i++){
-        let tmp = scene.getObjectByName(`bet_${i}`).getObjectByProperty('type',"Mesh")
-        tmp.material = tmp.material.clone()
-        forIntersect.betting_zone.push(tmp)
-    }
+        _geo.setPositions(_positions)
+        _geo2.setPositions(_positions2)        
+        
+        var _line = new THREE.Line2( _geo, _matLine ), _line2 = new THREE.Line2( _geo2, _matLine );
+        _line.computeLineDistances();    
+        _line2.computeLineDistances();
+        
+        let _group = new THREE.Group(),  _group2 = new THREE.Group();
+        _group.add(_line)
+        _group.add(_pl_m1);
+        _group.position.z = -3
+        _group2.add(_line2)
+        _group2.add(_pl_m2)    
+        _group2.position.x = 15;
+        _group2.position.z = -5
+        _group.name = 'bet_2'
+        betZones[2] = _group;
+        _group2.name = 'bet_3'
+        betZones[3] = _group2;
+        scene.add(_group)
+        scene.add(_group2)
+        _group2.rotation.z = Math.PI / 36
+        _group2.position.y = 0.8
+        let _group3 = _group2.clone()
+        _group3.name = 'bet_1'
+        betZones[1] = _group3;
+        _group3.position.x = _group2.position.x * -1
+        _group3.rotation.z = _group2.rotation.z * -1
+        let _group4 = _group2.clone()
+        _group4.name = 'bet_4'
+        betZones[4] = _group4;
+        _group4.position.x = _group2.position.x + 16;
+        _group4.position.y = 3
+        _group4.rotation.z = Math.PI / 16
+        let _group5 = _group4.clone()
+        _group5.name = 'bet_0'
+        betZones[0] = _group5;
+        _group5.position.x = _group4.position.x * -1;
+        _group5.rotation.z = _group4.rotation.z * -1    
+
+        betZones = betZones.map((t,i)=>{
+            scene.add(t);
+            let a = (t.getObjectByProperty('type','Mesh'))
+            a.userData.index = i;
+
+            if(i > 0){
+                a.material = a.material.clone();                
+            }
+            a.name = `betzone_${i}`;
+            return a
+        })
+
+        forIntersect.betting_zone = betZones
+    }    
 
     //sprites
-    const group_sprite = new THREE.Group()
-    let cnt = 0;
-    for(let i of [4,5,6,7,8,9,10,11,12]){
-        let names = [0.1,1,10,50,100,500,1000,5000,100000];
-        let spriteMap = new textureLoader.load( require(`@/images/chips/bet${i}__.png`) );
-        let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
-        let sprite = new THREE.Sprite( spriteMaterial );
-        sprite.name = names[cnt];
-        sprite.scale.set(4.8,4.8,1)
-        sprite.position.x = cnt++ * 7
+    this.group_buy_sprite = [];
+
+    {
+        const group_sprite = new THREE.Group()
+        let cnt = 0;
+        for(let i of [4,5,6,7,8,9,10,11,12]){
+            let names = [0.1,1,10,50,100,500,1000,5000,100000];
+            let spriteMap = new textureLoader.load( require(`@/images/chips/bet${i}__.png`) );
+            let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
+            let sprite = new THREE.Sprite( spriteMaterial );
+            sprite.name = names[cnt];
+            sprite.userData.index = cnt;
+            sprite.scale.set(4.8, 4.8, 1)
+            sprite.position.x = cnt++ * 7            
+            group_sprite.add( sprite );        
+        }
+
+        group_sprite.position.x = -(cnt-1) * 7 /2
+        group_sprite.position.y = -22
+        group_sprite.position.z = 0        
+        forIntersect.coins = group_sprite
+        scene.add(group_sprite)        
         
-        group_sprite.add( sprite );        
-    }
-    group_sprite.position.x = -(cnt-1) * 7 /2
-    group_sprite.position.y = -22
-    group_sprite.position.z = 0
-    scene.add(group_sprite)
-    forIntersect.coins = group_sprite
-    
-    this.group_buy_sprite = {}
-    for(let i of [0.1,1,10,50,100,500,1000,5000,100000]){
-        let spriteMap = new textureLoader.load( require(`@/images/chips/buy${i}_.png`) );
-        let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
-        let sprite = new THREE.Sprite( spriteMaterial );        
-        sprite.scale.set(2.6,2.6)        
-        this.group_buy_sprite[`buy_${i}`] = sprite
+        for(let i of [0.1,1,10,50,100,500,1000,5000,100000]){
+            let spriteMap = textureLoader.load( require(`@/images/chips/buy${i}_.png`) );            
+            let sprite = new THREE.Sprite( new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } ));
+            sprite.scale.set(2.6,2.6)        
+            this.group_buy_sprite.push(sprite)
+        }
     }
 
     const show_bet = (cont, p, q)=>{
@@ -415,56 +431,50 @@ const e = function(opt){
         target.add(coins)
     }
 
-    const do_bet = (cont, p, z)=>{
-        let target;
-        let zones = [];
-        for(let y=-1; y<=1; y++){
-            for(let x=-1; x<=1; x++){
-                zones.push(new THREE.Vector3(x,y,0))
-            }
-        }
-        if(typeof cont == 'number'){
-            switch(cont){
-                case 1: target = _group5;
-                    break;
-                case 2: target = _group3
-                    break;
-                case 3: target = _group
-                    break;
-                case 4: target = _group2
-                    break;
-                case 5: target = _group4
-                    break;
-            }
-        }else{
-            target = cont
-        }
-        
-        //let z = Math.floor(Math.random()*9)
-        let coins = new THREE.Group();
-        coins.position.copy( zones[z].multiplyScalar(3.8) )
-        let coin = this.group_buy_sprite[`buy_${p}`]        
-        for(let i=0;i<1;i++){
-            coin = coin.clone()
-            coin.position.x = (Math.random() - 0.5)*0.7 + ( i*0.05 )
-            coin.position.y = i*0.14            
-            coins.add(coin)
-        }
-        target.add(coins)
-    }
-
-    const saveZ = {
-
-    }
     
-    function bet(sprite,target){        
-        let z;
-        if (!saveZ[target.parent.name]){
-            saveZ[target.parent.name] = Math.floor(Math.random()*9)
+    //세부 영역 정의
+    const definedZones = [];
+    this.definedZones = definedZones;
+    for(let y=-1; y<=1; y++){
+        for(let x=-1; x<=1; x++){
+            const v = new THREE.Vector3(x,y,0)
+            v.multiplyScalar(3.8)
+            definedZones.push(v)
         }
-        z = saveZ[target.parent.name];
+    }    
 
-        do_bet(target.parent,sprite.name,z)
+    const do_bet = (target, sprite, zone)=>{
+        let coins = target.getObjectByName('mycoins');
+        if(!coins){
+            coins = new THREE.Group()
+            coins.name = 'mycoins'
+            coins.position.copy( definedZones[zone] )
+            target.add(coins)
+        }               
+        
+        let index = sprite.userData.index;
+        let coin = this.group_buy_sprite[index]
+        
+        coin = coin.clone()
+        coin.position.x = (Math.random() - 0.5)*0.7 + ( coins.children.length * 0.05 )
+        coin.position.y = coins.children.length* 0.14
+        coin.position.z = coins.children.length* 0.05
+        coins.add(coin)
+                
+    }
+
+    // betting target 정의
+    const saveZone = [null, null, null, null, null]
+    
+    function bet(sprite, target){        
+        let zone;
+        let index = target.userData.index
+        if (!saveZone[index]){
+            saveZone[index] = Math.floor(Math.random()*9)
+        }        
+        zone = saveZone[index];
+
+        do_bet(target, sprite, zone)
     }
     
     
