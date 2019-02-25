@@ -1,14 +1,6 @@
-import * as _THREE from 'three'
-const THREE = _THREE
-
-require('@/js/src/lines/LineSegmentsGeometry.js').default(THREE)
-require('@/js/src/lines/LineGeometry.js').default(THREE);    
-require('@/js/src/lines/LineMaterial.js').default(THREE);
-require('@/js/src/lines/LineSegments2.js').default(THREE);
-require('@/js/src/lines/Line2.js').default(THREE);    
+import * as THREE from 'three-full'
 
 const e = function(opt){
-    
 
     this.resizeUpdate = {
         matLines: []
