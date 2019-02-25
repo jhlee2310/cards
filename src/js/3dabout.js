@@ -1,21 +1,14 @@
-import * as THREE from 'three'
-import LineMaterial from '@/js/src/lines/LineMaterial'
-import LineSegments2 from '@/js/src/lines/LineSegments2'
-import Line2 from '@/js/src/lines/Line2'
-import LineGeometry from '@/js/src/lines/LineGeometry'
-import LineSegmentsGeometry from '@/js/src/lines/LineSegmentsGeometry'
-//import WireframeGeometry2 from '@/js/src/lines/WireframeGeometry2'
-//import Wireframe from '@/js/src/lines/Wireframe'
+import * as _THREE from 'three'
+const THREE = _THREE
 
-//import { SMAASearchImageData,SMAAAreaImageData, SMAAEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
+require('@/js/src/lines/LineSegmentsGeometry.js').default(THREE)
+require('@/js/src/lines/LineGeometry.js').default(THREE);    
+require('@/js/src/lines/LineMaterial.js').default(THREE);
+require('@/js/src/lines/LineSegments2.js').default(THREE);
+require('@/js/src/lines/Line2.js').default(THREE);    
+
 const e = function(opt){
-    LineSegmentsGeometry(THREE)    
-    LineGeometry(THREE);
-    //WireframeGeometry2(THREE);
-    LineMaterial(THREE);
-    LineSegments2(THREE);
-    Line2(THREE);
-    //Wireframe(THREE);   
+    
 
     this.resizeUpdate = {
         matLines: []
