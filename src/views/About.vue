@@ -46,18 +46,21 @@
       <button @click="show = !show">
         toggle
       </button>
-    </div>    
+    </div>
+    <div>{{deal_info}}</div>
   </div>
 </template>
 
 <script>
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
+import process_deal from '@/js/process_deal.js'
 
 
 export default {
   data(){
     return {
+      deal_info: {},
       game: null,
       delta:20,
       show: true,
@@ -106,9 +109,7 @@ export default {
     }
   },
   created(){
-    this.$socket.onmessage = (m)=>{
-      console.log(m);
-    }
+    
   },
   mounted(){
     this.game = new threejs({
@@ -121,12 +122,25 @@ export default {
         type    :"req_enter_room",
         room_id : 1
     }))
-    
+
+    this.$socket.onmessage = (mes)=>{
+      const message = JSON.parse(mes.data)
+      switch(message.type){
+        case 'deal_info':
+          this.deal_info = message
+          this.process_deal(this.deal_info)
+          break;
+      }
+    }
+
+    window.vv = this
+
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
     window.addEventListener('click',this.onMouseClick,false)
   },
   methods: {
+    process_deal,
     onMouseMove(e){      
       this.game.onMouseMove(e);      
     },
