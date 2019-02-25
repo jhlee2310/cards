@@ -30,27 +30,62 @@ const e = function(opt){
     this.intersects = null;
     const raycaster = new THREE.Raycaster();
     const mouseVector = new THREE.Vector3();
-    const forIntersect = [];
+    const forIntersect = {
+        betting_zone: [],
+        coins: []
+    };
+    this.switch = {
+        betting : false,
+    }
+    this.temp = {
+        clicked_coin: null,
+    }
 
-    function getIntersects( x, y ) {
-        x = ( x / width ) * 2 - 1;
-        y = - ( y / height ) * 2 + 1;
-        mouseVector.set( x, y, 0.5 );
+    function getIntersects(targets ) {        
         raycaster.setFromCamera( mouseVector, camera );        
-        return raycaster.intersectObjects( forIntersect, true );
+        if(targets instanceof Array){
+            return raycaster.intersectObjects( targets, true );
+        }else{            
+            return raycaster.intersectObject(targets, true );
+        }
     }
 
     let selectedObject = null
+    this.onMouseClick = function(e){
+        if( selectedObject.type == "Sprite"){            
+            selectedObject.userData.originalScale = new THREE.Vector3()
+            selectedObject.userData.originalScale.copy(selectedObject.scale)
+            selectedObject.scale.set(6,6,1)
+            this.temp.clicked_coin = selectedObject;
+            this.switch.betting = true;
+        }else{
+            if(selectedObject.type == "Mesh"){
+                bet(this.temp.clicked_coin,selectedObject)
+            }
+        }
+    }
 
-    this.onMouseMove = function(e){        
+    this.onMouseMove = function(e){
+        
         e.preventDefault();
+
+        let x = ( e.layerX / width ) * 2 - 1;
+        let y = - ( e.layerY / height ) * 2 + 1;
+        mouseVector.set( x, y, 10 );
+        let targets = [];
+
+        if(y>-0.57){
+            targets = forIntersect.betting_zone
+        }else{
+            targets = forIntersect.coins
+        }
 
         if ( selectedObject ){
             selectedObject.material.color.set( '#FFFFFF' )               
             selectedObject = null
         }
-
-        let intersects = getIntersects( e.layerX, e.layerY );       
+        
+        let intersects = getIntersects( targets);        
         
         if ( intersects.length > 0 ) {
             var res = intersects.filter( function ( res ) {
@@ -58,7 +93,7 @@ const e = function(opt){
             } )[ 0 ];
             if ( res && res.object ) {
                 selectedObject = res.object;
-                selectedObject.material.color.set( '#690' );
+                selectedObject.material.color.set( '#690' );                
             }
 		}
 
@@ -85,7 +120,7 @@ const e = function(opt){
     renderer.setSize( cont.clientWidth, cont.clientHeight );
     cont.appendChild( renderer.domElement );
     camera.position.z = 120;
-    //camera.position.y = -20;
+    //camera.position.y = -80;
     camera.lookAt(0,0,0)
     
     //const renderPass = new THREE.RenderPass( scene, camera );
@@ -130,7 +165,7 @@ const e = function(opt){
             ctx.quadraticCurveTo( x + width, y, x + width - radius, y );
             ctx.lineTo( x + radius, y );
             ctx.quadraticCurveTo( x, y, x, y + radius );
-        } )( shape, -5, -8, 10, 16, 0.8 );
+        } )( shape, -4, -4.7, 8, 12.8, 0.8 );
         
         var geometry = new THREE.ExtrudeGeometry( shape, { depth: 0.2, bevelEnabled: false } );
         geometry.faces.filter(a=>{
@@ -260,7 +295,7 @@ const e = function(opt){
     let _pl_mt = new THREE.MeshBasicMaterial( { color: 0xffffff, opacity:0.3, transparent: true, depthTest:false } )
     let _pl_g1 = new THREE.ShapeBufferGeometry( _r1 ), _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
     let _pl_m1 = new THREE.Mesh( _pl_g1,  _pl_mt ), _pl_m2 = new THREE.Mesh( _pl_g2,  _pl_mt.clone() )
-    forIntersect.push(_pl_m1,_pl_m2);
+    forIntersect.betting_zone.push(_pl_m1,_pl_m2);
     _pl_m1.position.z = _pl_m2.position.z = -0.2
         
     
@@ -310,29 +345,34 @@ const e = function(opt){
     for(let i=3;i <= 5;i++){
         let tmp = scene.getObjectByName(`bet_${i}`).getObjectByProperty('type',"Mesh")
         tmp.material = tmp.material.clone()
-        forIntersect.push(tmp)
+        forIntersect.betting_zone.push(tmp)
     }
 
     //sprites
     const group_sprite = new THREE.Group()
     let cnt = 0;
     for(let i of [4,5,6,7,8,9,10,11,12]){
+        let names = [0.1,1,10,50,100,500,1000,5000,100000];
         let spriteMap = new textureLoader.load( require(`@/images/chips/bet${i}__.png`) );
         let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
         let sprite = new THREE.Sprite( spriteMaterial );
-        sprite.scale.set(4.8,4.8)
+        sprite.name = names[cnt];
+        sprite.scale.set(4.8,4.8,1)
         sprite.position.x = cnt++ * 7
-        group_sprite.add( sprite );
+        
+        group_sprite.add( sprite );        
     }
     group_sprite.position.x = -(cnt-1) * 7 /2
     group_sprite.position.y = -22
+    group_sprite.position.z = 0
     scene.add(group_sprite)
+    forIntersect.coins = group_sprite
     
     this.group_buy_sprite = {}
     for(let i of [0.1,1,10,50,100,500,1000,5000,100000]){
         let spriteMap = new textureLoader.load( require(`@/images/chips/buy${i}_.png`) );
         let spriteMaterial = new THREE.SpriteMaterial( { map: spriteMap, color: 0xffffff } );
-        let sprite = new THREE.Sprite( spriteMaterial );
+        let sprite = new THREE.Sprite( spriteMaterial );        
         sprite.scale.set(2.6,2.6)        
         this.group_buy_sprite[`buy_${i}`] = sprite
     }
@@ -345,17 +385,21 @@ const e = function(opt){
                 zones.push(new THREE.Vector3(x,y,0))
             }
         }
-        switch(cont){
-            case 1: target = _group5;
-                break;
-            case 2: target = _group3
-                break;
-            case 3: target = _group
-                break;
-            case 4: target = _group2
-                break;
-            case 5: target = _group4
-                break;
+        if(typeof cont == 'number'){
+            switch(cont){
+                case 1: target = _group5;
+                    break;
+                case 2: target = _group3
+                    break;
+                case 3: target = _group
+                    break;
+                case 4: target = _group2
+                    break;
+                case 5: target = _group4
+                    break;
+            }
+        }else{
+            target = cont
         }
         
         let z = Math.floor(Math.random()*9)
@@ -370,14 +414,58 @@ const e = function(opt){
         }
         target.add(coins)
     }
+
+    const do_bet = (cont, p, z)=>{
+        let target;
+        let zones = [];
+        for(let y=-1; y<=1; y++){
+            for(let x=-1; x<=1; x++){
+                zones.push(new THREE.Vector3(x,y,0))
+            }
+        }
+        if(typeof cont == 'number'){
+            switch(cont){
+                case 1: target = _group5;
+                    break;
+                case 2: target = _group3
+                    break;
+                case 3: target = _group
+                    break;
+                case 4: target = _group2
+                    break;
+                case 5: target = _group4
+                    break;
+            }
+        }else{
+            target = cont
+        }
+        
+        //let z = Math.floor(Math.random()*9)
+        let coins = new THREE.Group();
+        coins.position.copy( zones[z].multiplyScalar(3.8) )
+        let coin = this.group_buy_sprite[`buy_${p}`]        
+        for(let i=0;i<1;i++){
+            coin = coin.clone()
+            coin.position.x = (Math.random() - 0.5)*0.7 + ( i*0.05 )
+            coin.position.y = i*0.14            
+            coins.add(coin)
+        }
+        target.add(coins)
+    }
+
+    const saveZ = {
+
+    }
     
-    show_bet(1,'50',10)
-    show_bet(3,'0.1',12)
-    show_bet(4,'100000',4)
-    show_bet(4,'100000',10)
-    show_bet(3,'500',10)
-    
-    
+    function bet(sprite,target){        
+        let z;
+        if (!saveZ[target.parent.name]){
+            saveZ[target.parent.name] = Math.floor(Math.random()*9)
+        }
+        z = saveZ[target.parent.name];
+
+        do_bet(target.parent,sprite.name,z)
+    }
     
     
 

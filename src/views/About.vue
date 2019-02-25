@@ -113,10 +113,14 @@ export default {
     })
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
+    window.addEventListener('click',this.onMouseClick,false)
   },
   methods: {
     onMouseMove(e){      
       this.game.onMouseMove(e);      
+    },
+    onMouseClick(e){
+      this.game.onMouseClick(e);
     },
     onWindowResize(e){
       const camera = this.game.camera
