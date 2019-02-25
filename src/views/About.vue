@@ -6,11 +6,11 @@
       <transition nmae="slide-fade">
         <div v-if="show" class="rectanges" style="position:absolute;width:280px;height:125px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
           <div class="col" v-for="(count, i) in winners" :style="{
-            position:'absolute',
-            height:'100%',
-            width:'20px',
-            top: count.top+'px',
-            left: count.left+'px',
+              position:'absolute',
+              height:'100%',
+              width:'20px',
+              top: count.top+'px',
+              left: count.left+'px',
             }"
             :key="count.round">
               <div v-if="count.player=='P'" class="is-p-player"/>
@@ -105,12 +105,23 @@ export default {
       typeB: TWEEN.Easing.Elastic.InOut,
     }
   },
-  mounted(){  
+  created(){
+    this.$socket.onmessage = (m)=>{
+      console.log(m);
+    }
+  },
+  mounted(){
     this.game = new threejs({
       vue: this,
       el: '#cont_3d',
       TWEEN    
     })
+
+    this.$socket.send(JSON.stringify({
+        type    :"req_enter_room",
+        room_id : 1
+    }))
+    
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
     window.addEventListener('click',this.onMouseClick,false)
