@@ -54,8 +54,6 @@
 <script>
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
-import process_deal from '@/js/process_deal.js'
-
 
 export default {
   data(){
@@ -140,7 +138,14 @@ export default {
     window.addEventListener('click',this.onMouseClick,false)
   },
   methods: {
-    process_deal,
+    process_deal(){
+      const info = this.deal_info
+      const b_cards = info.deal.banker.cards
+      const p_cards = info.deal.player.cards
+      this.game.changeCardsMtl(p_cards,b_cards);
+      this.game.animateCards(p_cards,b_cards);
+    
+    },
     onMouseMove(e){      
       this.game.onMouseMove(e);      
     },
