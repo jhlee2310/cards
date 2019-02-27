@@ -15,10 +15,10 @@ export default function init_cards(textureLoader){
       ctx.quadraticCurveTo(x + width, y, x + width - radius, y);
       ctx.lineTo(x + radius, y);
       ctx.quadraticCurveTo(x, y, x, y + radius);
-    })(card_shape, 8, 12.8, 0.8);
+    })(card_shape, 8, 12.8, 0.45);
 
     const card_geometry = new THREE.ExtrudeGeometry(card_shape, {
-      depth: 0.2,
+      depth: 0.001,
       bevelEnabled: false
     });
     card_geometry.faces.filter(a => {
@@ -30,7 +30,12 @@ export default function init_cards(textureLoader){
 
     card_geometry.computeBoundingBox();
     let max = card_geometry.boundingBox.max
-    let min = card_geometry.boundingBox.min;
+    let min = card_geometry.boundingBox.min
+    max.x *= 1.050
+    min.x *= 1.050
+    max.y *= 1.050
+    min.y *= 1.050
+    
     let offset = new THREE.Vector2(0 - min.x, 0 - min.y)
     let range = new THREE.Vector2(max.x - min.x, max.y - min.y);
     let faces = card_geometry.faces;
@@ -54,13 +59,13 @@ export default function init_cards(textureLoader){
 
     // 카드 재질 정의
     const card_mat = {
-      front: new THREE.MeshBasicMaterial({
+      front: new THREE.MeshPhongMaterial({
         color: 0xffffff
       }),
       middle: new THREE.MeshBasicMaterial({
-        color: 0x000000
+        color: 0x777777, side: THREE.BackSide
       }),
-      back: new THREE.MeshBasicMaterial({
+      back: new THREE.MeshPhongMaterial({
         color: 0xffffff
       }),
     }

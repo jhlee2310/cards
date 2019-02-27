@@ -1,9 +1,10 @@
 export default function(width,height,betZones,forIntersect){    
     
     let _matLine = new THREE.LineMaterial({
-        color: 0xffffff,
+        color: 0xAAAAAA,
         linewidth: 3, // in pixels        
-        dashed: false
+        dashed: false,
+
     });    
 
     _matLine.resolution.set(width, height);
@@ -26,8 +27,8 @@ export default function(width,height,betZones,forIntersect){
     return ctx;
     }
 
-    let _r1 = RoundedRectangle(10, 16, 0.8),
-    _r2 = RoundedRectangle(13, 16, 0.8);
+    let _r1 = RoundedRectangle(10, 16, 1),
+    _r2 = RoundedRectangle(13, 16, 1);
 
     let _positions = [],
     _positions2 = [];
@@ -45,9 +46,9 @@ export default function(width,height,betZones,forIntersect){
 
     let _pl_mt = new THREE.MeshBasicMaterial({
       color: 0xffffff,
-      opacity: 0.3,
+      opacity: 0.15,
       transparent: true,
-      depthTest: false
+      //depthTest: false
     })
 
     
@@ -55,7 +56,7 @@ export default function(width,height,betZones,forIntersect){
       _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
     let _pl_m1 = new THREE.Mesh(_pl_g1, _pl_mt),
       _pl_m2 = new THREE.Mesh(_pl_g2, _pl_mt.clone())
-    _pl_m1.position.z = _pl_m2.position.z = -0.2
+    //_pl_m1.position.z = _pl_m2.position.z =0
 
     let _geo = new THREE.LineGeometry(),
       _geo2 = new THREE.LineGeometry();
@@ -72,11 +73,11 @@ export default function(width,height,betZones,forIntersect){
       _group2 = new THREE.Group();
     _group.add(_line)
     _group.add(_pl_m1);
-    _group.position.z = -3
+    //_group.position.z = -3
     _group2.add(_line2)
     _group2.add(_pl_m2)
     _group2.position.x = 15;
-    _group2.position.z = -5
+    //_group2.position.z = -5
     _group.name = 'bet_2'
     betZones[2] = _group;
     _group2.name = 'bet_3'

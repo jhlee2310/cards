@@ -111,7 +111,8 @@ export default {
         room_id : 1
     }))
 
-    this.$socket.onmessage = (mes)=>{      
+    this.$socket.onmessage = (mes)=>{
+        
       const message = JSON.parse(mes.data)
       console.log(message)
       switch(message.type){

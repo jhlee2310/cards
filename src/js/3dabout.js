@@ -65,19 +65,6 @@ const e = function (opt) {
     if (selectedObject.type == "Mesh") {
       bet(vue.selectedCoin, selectedObject)
     }
-   /* 
-    if (selectedObject.type == "Sprite") {
-      selectedObject.userData.originalScale = new THREE.Vector3()
-      selectedObject.userData.originalScale.copy(selectedObject.scale)
-      selectedObject.scale.set(6, 6, 1)
-      this.temp.clicked_coin = selectedObject;
-      this.switch.betting = true;
-    } else {
-      if (selectedObject.type == "Mesh") {
-        bet(this.temp.clicked_coin, selectedObject)
-      }
-    }
-    */
   }
 
   this.onMouseMove = function (e) {
@@ -111,15 +98,13 @@ const e = function (opt) {
         selectedObject.material.color.set('#690');
       }
     }
-
   }
 
   let scene = this.scene = new THREE.Scene();
-  let camera = this.camera = new THREE.PerspectiveCamera(30, cont.clientWidth / cont.clientHeight, 0.1, 1000);
+  let camera = this.camera = new THREE.PerspectiveCamera(25, cont.clientWidth / cont.clientHeight, 0.1, 1000);
   let renderer = this.renderer = new THREE.WebGLRenderer({
     //alpha:true,
-    antialias: true,
-    autoClearDepth: false
+    //antialias: true,    
   });
 
   let o = [];
@@ -134,13 +119,26 @@ const e = function (opt) {
 
   renderer.setSize(cont.clientWidth, cont.clientHeight);
   cont.appendChild(renderer.domElement);
+  renderer.autoClear = false;
+
+  
+  const renderPass = new THREE.RenderPass(scene,camera);
+  //let pass = new THREE.SMAAPass( width * renderer.getPixelRatio(), height * renderer.getPixelRatio() );
+  //pass.renderToScreen = true;  
+  const pass = new THREE.ShaderPass( THREE.FXAAShader );
+  pass.renderToScreen = true;
+  pass.material.uniforms[ 'resolution' ].value.x = 1 / ( width );
+	pass.material.uniforms[ 'resolution' ].value.y = 1 / ( height );
+
+  const composer = new THREE.EffectComposer( renderer );
+	composer.addPass( renderPass );
+	composer.addPass( pass );
+  
   camera.position.z = 120;
-  //camera.position.y = -80;
+  camera.position.y = -80;
   camera.lookAt(0, 0, 0)
 
-  //const renderPass = new THREE.RenderPass( scene, camera );
-  //const fxaaPass = new THREE.ShaderPass( THREE.FXAAShader );
-  //fxaaPass.renderToScreen = true;
+
 
 
   var directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
@@ -150,9 +148,13 @@ const e = function (opt) {
   //const composer1 = new THREE.EffectComposer( renderer );
   //composer1.addPass( renderPass );
   //composer1.addPass( fxaaPass );
-  let table = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+  let table = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshPhongMaterial({
     color: 0xffffff,
   }))
+  let table_group = new THREE.Group();
+  table_group.lookAt(camera.position)
+  table_group.add(table)  
+  
   textureLoader.load(require('@/images/table.jpg'), tex => {
     table.material.map = tex;
     tex.minFilter = tex.magFilter = THREE.LinearFilter;
@@ -160,12 +162,12 @@ const e = function (opt) {
   })
 
   table.name = "table"
-  table.position.z = -10
-  table.scale.set(96, 66, 1)
+  table.position.z = -20
+  table.scale.set(102, 64, 1)
 
 
 
-  scene.add(table)
+  scene.add(table_group)
 
   
   
@@ -351,7 +353,8 @@ const e = function (opt) {
   function animate(time) {    
     timeStamp = time
     TWEEN.update(time)
-    renderer.render(scene, camera)
+    //renderer.render(scene, camera)
+    composer.render()
       //console.log('윈도우 active 상태')
       requestAnimationFrame(animate);
   }
