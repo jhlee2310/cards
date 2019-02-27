@@ -1,10 +1,14 @@
 <template>
   <div class="about">
     <span>{{round}}</span>
+    
     <div id="cont_3d">
+      <!--배팅코인-->
+      <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18"/>
+      <!--배팅코인-->
       <div class="board">
       <transition nmae="slide-fade">
-        <div v-if="show" class="rectanges" style="position:absolute;width:280px;height:125px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
+        <div v-if="false&&show" class="rectanges" style="position:absolute;width:280px;height:125px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
           <div class="col" v-for="(count, i) in winners" :style="{
               position:'absolute',
               height:'100%',
@@ -30,6 +34,20 @@
           </div>
       </transition>
       </div>
+      <!--스코어-->
+      <transition name="fade">
+        <div v-show="score.show" :style="scoreStyle" class="score player" ref="score_player">{{score.player}}</div>
+      </transition>
+      <transition name="fade">
+        <div v-show="score.show" :style="scoreStyle" class="score banker" ref="score_banker">{{score.banker}}</div>
+      </transition>      
+      <!--스코어-->
+      <!--winner-->
+      <div class="winner" ref="winner">WIN</div>
+      <!--winner-->
+      <!--timer-->
+      <div class="timer" v-show="game_status.betting" ref="timer" data-default_size="68" :style="timerStyle">{{timer}}</div>
+      <!--timer-->
     </div>
     <div class="control">
       <select v-model="typeA">
@@ -41,23 +59,44 @@
         <option v-for="type in easing" v-bind:value="type.value" :key="type.text">
           {{ type.text }}
         </option>
-      </select>
-      <button @click="click">click</button>
+      </select>      
       <button @click="show = !show">
         toggle
       </button>
-    </div>
-    <div>{{deal_info}}</div>
+    </div>    
   </div>
 </template>
 
 <script>
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
+import CoinsForBet from '@/components/CoinsForBet.vue'
 
 export default {
+  components:{
+    CoinsForBet
+  },
   data(){
     return {
+      selectedCoin:{
+        index: null,
+        value: null,
+      },
+      CoinsForBet_style:{
+        transformOrigin:'0px 0px',
+      },
+      timer:'--',
+      timerStyle:{},
+      scoreStyle:{width:'40px',height:'40px'},
+      score:{
+        player: 0,
+        banker: 0,
+        show:false,
+      },
+      game_status: {
+        betting: false,
+        bet_start: false,
+      },
       deal_info: {},
       game: null,
       delta:20,
@@ -121,141 +160,85 @@ export default {
         room_id : 1
     }))
 
-    this.$socket.onmessage = (mes)=>{
+    this.$socket.onmessage = (mes)=>{      
       const message = JSON.parse(mes.data)
+      console.log(message)
       switch(message.type){
         case 'deal_info':
           this.deal_info = message
-          this.process_deal(this.deal_info)
+          this.process_deal(message)
           break;
+        case 'room_state':
+          switch(message.state){
+            case 'betting':
+            this.start_betting(3);
+            break;
+          }
       }
     }
-
     window.vv = this
-
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
-    window.addEventListener('click',this.onMouseClick,false)
+    document.querySelector('#cont_3d').addEventListener('click',this.onMouseClick, false)
+    window.addEventListener('visibilitychange',(e)=>{      
+      if(document.hidden){
+        let stamp = this.game.getTimeStamp()        
+        let stampTime = new Date().getTime()
+        console.log('stamp : ' + stamp)    
+        const d = () => {          
+          if(!document.hidden){console.log('백그라운드 종료'); return;}
+          console.log('백그라운드 실행')
+          let nowTime = new Date().getTime();
+          let delta = nowTime - stampTime;
+          console.log(delta);
+          TWEEN.update(stamp + delta);
+          this.game.renderer.render(this.game.scene,this.game.camera);
+          setTimeout(d, 10)        
+        }
+        d(); 
+      }
+    },false)
   },
   methods: {
-    process_deal(){
-      const info = this.deal_info
+    start_betting(time){
+      this.$set(this.game_status,'betting',true);
+
+      const d = ()=>{
+        this.timer = time
+        time--;
+        if(time <= 0) {
+          this.$set(this.game_status,'betting', false);
+          return
+          }
+        setTimeout(d, 1000)
+      }
+      d();     
+    },
+    process_deal(info){
+      
       const b_cards = info.deal.banker.cards
       const p_cards = info.deal.player.cards
+      const result = info.deal.result
+
       this.game.changeCardsMtl(p_cards,b_cards);
-      this.game.animateCards(p_cards,b_cards);
+      this.game.animateCards(p_cards,b_cards,result);
     
     },
     onMouseMove(e){      
       this.game.onMouseMove(e);      
     },
     onMouseClick(e){
+      if( e.target.tagName != 'CANVAS') return;
       this.game.onMouseClick(e);
     },
     onWindowResize(e){
-      const camera = this.game.camera
-      const renderer = this.game.renderer
-      const cont = this.game.cont
-      const width = cont.clientWidth
-      const height = cont.clientHeight
-
-      camera.aspect = cont.clientWidth / cont.clientHeight;
-			camera.updateProjectionMatrix();
-      renderer.setSize( cont.clientWidth, cont.clientHeight );
-      
-      this.game.resizeUpdate.matLine.resolution.set( width, height );
-      if(widht<=750){
-        his.game.resizeUpdate.matLine.linewidth=1
-      }
+      this.game.onResize(e);     
 		},
-    async click(e){
-      const scene = this.game.scene
-
-      o.forEach(function(card, value){
-        card.visible = false
-        if(!card.userData.original_position){
-          card.userData.original_position = card.position.clone()
-          card.userData.original_rotation = card.rotation.clone()
-        }
-        card.position.copy(card.userData.original_position)
-        card.rotation.copy(card.userData.original_rotation)
-      });
-
-      // o.forEach(function(i){
-      //   console.log(o[i])
-      // })
-
-
-     const card_ord = [1,3,0,4,2,5]
-
-      for(let ord=0;ord<card_ord.length;ord++){
-
-        let i = card_ord[ord]
-
-        let card = scene.getObjectByName(`card_${i}`)      
-        //card.visible = false
-        let speed = 450
-
-        if(i == 2 || i == 5){
-        //  card.position.y += 40
-          //card.rotation.y += 40
-          //speed = 1000
-        }else{
-        }
-          card.position.y += 8
-        
-        //Linear.None
-        await new Promise( (resolve,reject) => {
-          setTimeout(() => {
-            card.visible = true
-            new TWEEN.Tween( { rot: 0, pos: card.position.y } )
-            .to( { pos: card.userData.original_position.y},speed )
-            .easing(this.typeA)
-            .onUpdate(a=>{
-              card.position.y = a.pos
-              card.rotation.y = a.rot
-            })
-            .onComplete( ()=>{
-              resolve();
-              console.log("move comp")
-            }).start()
-            if(i == 2 || i == 5){
-              new TWEEN.Tween( { rot: 0, y: Math.PI } )
-                .to( { y: 0 }, speed+1000 )
-                .easing( this.typeB )
-                .onUpdate( function (a) {          
-                    card.rotation.x = a.y
-                } )
-                .onComplete( ()=>{
-                    resolve();
-                    console.log("rot comp")
-                  })
-                .start();        
-            }else{
-              new TWEEN.Tween( { rot: 0, y: 0 } )
-                .to( { y: Math.PI }, speed+1000 )
-                .easing( this.typeB )
-                .onUpdate( function (a) {          
-                  card.rotation.y = a.y
-                } )
-                .onComplete( ()=>{
-                    resolve();
-                    console.log("rot comp")
-                  })
-                .start();        
-            }
-          }, 1000);
-        })
-      }
-      this.nextRound()
-
-    },
     randomItem(a) {
       return a[Math.floor(Math.random() * a.length)];
     },
     nextRound() {
       let winner = this.randomItem(['P','B'])
-
       let cnt = this.round -1
 
       // let winnerArray = ['P','P','P','P','P','P','P','P','B']
@@ -294,14 +277,40 @@ export default {
         )
 
       this.lastWinner = winner
-
       this.round++
     }
   }
 }
 </script>
+<style el="scss">
+.fade-enter-active, .fade-leave-active {
+  transition: opacity .3s;
+}
+.fade-enter, .fade-leave-to{
+  opacity: 0;
+}
+</style>
 
 <style el="scss">
+.timer{  
+  color:#fff;
+  display:flex;
+  justify-content:center;
+  align-items: center;
+  font-size: 36px;
+  position:absolute;
+  left:0;
+  top:0;    
+  transform-origin: 0px 0px;
+  width:100px;
+  height:100px;
+  border:3px solid #fff;
+  box-sizing:border-box;
+  border-radius:50%;
+  
+  
+}
+
 body{margin:0;padding:0}
   .about{height:70vw;max-height:896px;position:relative;
   max-width:1280px;margin:0 auto;}
@@ -333,6 +342,14 @@ body{margin:0;padding:0}
   opacity: 0;
 }
 
+.score{
+  position:absolute;
+  font-size:20px;
+  color:#FFF;
+  transform-origin: 0% 0%;
+  text-align:center;
+}
+
 .is-b-player {
   width: 16px;
   height: 16px;
@@ -346,6 +363,14 @@ body{margin:0;padding:0}
   border-radius: 50%;
   margin: 1px;
   border: 1px solid #8f0e0e;
+}
+
+.winner{
+  position:absolute;
+  font-size:53px;
+  color: #fff;
+  text-shadow: #000;
+  text-shadow: 2px 2px 12px aquamarine;
 }
 </style>
 

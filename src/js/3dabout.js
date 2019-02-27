@@ -1,16 +1,31 @@
 import * as THREE from 'three-full'
+import init_cards from './modules/init_cards' // 카드 세팅
+import init_betting_zone from './modules/init_betting_zone' // 배팅존 세팅
+import pos_coins_for_bet from './modules/pos_coins_for_bet'  // 배팅UI
+import cards_animations from './modules/cards_animations'  // 카드애니메이션
+
 
 const e = function (opt) {
 
-  this.resizeUpdate = {
-    matLines: []
+  const globals = {
+
   }
-  const {
-    vue,
-    el,
-    TWEEN
-  } = opt
-  const clock = new THREE.Clock()
+
+  // 카드 형태 생성
+  this.card_groups = {
+    player: null,
+    banker: null,
+  }
+
+  const card_groups = this.card_groups
+
+  this.resizeUpdate = {
+    
+  }
+  const {  vue,  el, TWEEN } = opt
+
+  this.vue = vue;
+
   let cont = this.cont = document.querySelector(el)
   let width = cont.clientWidth
   let height = cont.clientHeight
@@ -28,8 +43,9 @@ const e = function (opt) {
   }
   this.temp = {
     clicked_coin: null,
-  }
+  }  
 
+  
   // 배팅용 5개 zone Mesh가 담기는 배열
   this.betZones = []
   let betZones = this.betZones;
@@ -45,6 +61,11 @@ const e = function (opt) {
 
   let selectedObject = null
   this.onMouseClick = function (e) {
+    if(!vue.game_status.bet_start) return;    
+    if (selectedObject.type == "Mesh") {
+      bet(vue.selectedCoin, selectedObject)
+    }
+   /* 
     if (selectedObject.type == "Sprite") {
       selectedObject.userData.originalScale = new THREE.Vector3()
       selectedObject.userData.originalScale.copy(selectedObject.scale)
@@ -56,11 +77,12 @@ const e = function (opt) {
         bet(this.temp.clicked_coin, selectedObject)
       }
     }
+    */
   }
 
   this.onMouseMove = function (e) {
-
-    e.preventDefault();
+    if( !vue.game_status.bet_start ) return
+    e.preventDefault();    
 
     let x = (e.layerX / width) * 2 - 1;
     let y = -(e.layerY / height) * 2 + 1;
@@ -145,252 +167,19 @@ const e = function (opt) {
 
   scene.add(table)
 
-  // 카드 형태 생성
-
-  const card_shape = new THREE.Shape();
-  card_shape.autoClose = true;
-  (function (ctx, width, height, radius) {
-    let x = width / 2 * -1,
-      y = height / 2 * -1
-    ctx.moveTo(x, y + radius);
-    ctx.lineTo(x, y + height - radius);
-    ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
-    ctx.lineTo(x + width - radius, y + height);
-    ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-    ctx.lineTo(x + width, y + radius);
-    ctx.quadraticCurveTo(x + width, y, x + width - radius, y);
-    ctx.lineTo(x + radius, y);
-    ctx.quadraticCurveTo(x, y, x, y + radius);
-  })(card_shape, 8, 12.8, 0.8);
-
-  const card_geometry = new THREE.ExtrudeGeometry(card_shape, {
-    depth: 0.2,
-    bevelEnabled: false
-  });
-  card_geometry.faces.filter(a => {
-    return a.materialIndex == 0 && a.normal.z < 0
-  }).forEach(a => {
-    a.materialIndex = 2
-  })
-  card_geometry.groupsNeedUpdate = true;
-
-  card_geometry.computeBoundingBox();
-  let max = card_geometry.boundingBox.max
-  let min = card_geometry.boundingBox.min;
-  let offset = new THREE.Vector2(0 - min.x, 0 - min.y)
-  let range = new THREE.Vector2(max.x - min.x, max.y - min.y);
-  let faces = card_geometry.faces;
-
-  card_geometry.faceVertexUvs[0] = [];
-
-  for (let j = 0; j < faces.length; j++) {
-
-    var v1 = card_geometry.vertices[faces[j].a],
-      v2 = card_geometry.vertices[faces[j].b],
-      v3 = card_geometry.vertices[faces[j].c];
-
-    card_geometry.faceVertexUvs[0].push([
-      new THREE.Vector2((v1.x + offset.x) / range.x, (v1.y + offset.y) / range.y),
-      new THREE.Vector2((v2.x + offset.x) / range.x, (v2.y + offset.y) / range.y),
-      new THREE.Vector2((v3.x + offset.x) / range.x, (v3.y + offset.y) / range.y)
-    ]);
-
-  }
-  card_geometry.uvsNeedUpdate = true;
   
-  // 카드 형태 생성
-  this.card_groups = {
-    player: null,
-    banker: null,
-  }
-  const card_groups = this.card_groups
+  
 
-  // 카드 재질 정의
-  const card_mat = {
-    front: new THREE.MeshBasicMaterial({
-      color: 0xffffff
-    }),
-    middle: new THREE.MeshBasicMaterial({
-      color: 0x000000
-    }),
-    back: new THREE.MeshBasicMaterial({
-      color: 0xffffff
-    }),
-  }
+  init_cards.bind(this)(textureLoader)
+  init_betting_zone.bind(this)(width,height,betZones,forIntersect)
+  
+  
 
-  textureLoader.load(require('@/images/backside.jpg'), tex => {
-    card_mat.back.map = tex;
-    card_mat.back.needsUpdate = true;
-  })
-  let imgcnt = 0;
-
-  for (let i = -1; i <= 1; i += 2) {
-    let group = new THREE.Group()
-    group.name = (i == -1) ? 'card_group_player' : 'card_group_banker'
-
-    for (let j = -1; j <= 3; j += 2) {
-      let mesh = new THREE.Mesh(card_geometry, [
-        card_mat.front.clone(),
-        card_mat.middle,
-        card_mat.back
-      ]);
-      mesh.name = `card_${imgcnt}`
-      mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'      
-      
-      if (j != 3) { //히든카드가 아닐경우
-        mesh.position.x = j * 4.5
-        mesh.userData.isHidden = false;
-        mesh.rotation.y = Math.PI
-      } else {
-        mesh.rotation.z = Math.PI / 2
-        mesh.rotation.x = Math.PI
-        mesh.position.y = 2.2
-        mesh.position.x = i * 16
-        mesh.userData.isHidden = true;
-        //mesh.position.z = 1
-        //mesh.renderOrder = 999;                
-        //mesh.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
-      }
-
-
-      //mesh.visible = false;
-
-      group.add(mesh);
-      o.push(mesh)
-
-      if (i == -1) {
-        card_groups.player = group
-      } else {
-        card_groups.banker = group
-      }
-    }
-
-
-
-    //mesh.rotation.x = Math.PI;        
-    group.position.x = i * 12
-    group.position.y = 22
-
-    scene.add(group)
-  }
-
-  //배팅판
-  var _matLine = new THREE.LineMaterial({
-    color: 0xffffff,
-    linewidth: 3, // in pixels        
-    dashed: false
-  });
-  _matLine.resolution.set(width, height);
-
-  const RoundedRectangle = function (width, height, radius) {
-    let ctx = new THREE.Shape();
-    let x = -width / 2
-    let y = -height / 2
-    ctx.moveTo(x, y + radius);
-    ctx.lineTo(x, y + height - radius);
-    ctx.quadraticCurveTo(x, y + height, x + radius, y + height);
-    ctx.lineTo(x + width - radius, y + height);
-    ctx.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-    ctx.lineTo(x + width, y + radius);
-    ctx.quadraticCurveTo(x + width, y, x + width - radius, y);
-    ctx.lineTo(x + radius, y);
-    ctx.quadraticCurveTo(x, y, x, y + radius);
-    ctx.autoClose = true;
-    return ctx;
-  }
-
-
-  // betZones
-  {
-    let _r1 = RoundedRectangle(10, 16, 0.8),
-      _r2 = RoundedRectangle(13, 16, 0.8);
-
-    let _positions = [],
-      _positions2 = [];
-    _r1.getPoints().forEach(a => {
-      _positions.push(a.x, a.y, 0)
-    });
-    _r2.getPoints().forEach(a => {
-      _positions2.push(a.x, a.y, 0)
-    });
-
-
-    let _pl_mt = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      opacity: 0.3,
-      transparent: true,
-      depthTest: false
-    })
-    let _pl_g1 = new THREE.ShapeBufferGeometry(_r1),
-      _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
-    let _pl_m1 = new THREE.Mesh(_pl_g1, _pl_mt),
-      _pl_m2 = new THREE.Mesh(_pl_g2, _pl_mt.clone())
-    _pl_m1.position.z = _pl_m2.position.z = -0.2
-
-    let _geo = new THREE.LineGeometry(),
-      _geo2 = new THREE.LineGeometry();
-
-    _geo.setPositions(_positions)
-    _geo2.setPositions(_positions2)
-
-    var _line = new THREE.Line2(_geo, _matLine),
-      _line2 = new THREE.Line2(_geo2, _matLine);
-    _line.computeLineDistances();
-    _line2.computeLineDistances();
-
-    let _group = new THREE.Group(),
-      _group2 = new THREE.Group();
-    _group.add(_line)
-    _group.add(_pl_m1);
-    _group.position.z = -3
-    _group2.add(_line2)
-    _group2.add(_pl_m2)
-    _group2.position.x = 15;
-    _group2.position.z = -5
-    _group.name = 'bet_2'
-    betZones[2] = _group;
-    _group2.name = 'bet_3'
-    betZones[3] = _group2;
-    scene.add(_group)
-    scene.add(_group2)
-    _group2.rotation.z = Math.PI / 36
-    _group2.position.y = 0.8
-    let _group3 = _group2.clone()
-    _group3.name = 'bet_1'
-    betZones[1] = _group3;
-    _group3.position.x = _group2.position.x * -1
-    _group3.rotation.z = _group2.rotation.z * -1
-    let _group4 = _group2.clone()
-    _group4.name = 'bet_4'
-    betZones[4] = _group4;
-    _group4.position.x = _group2.position.x + 16;
-    _group4.position.y = 3
-    _group4.rotation.z = Math.PI / 16
-    let _group5 = _group4.clone()
-    _group5.name = 'bet_0'
-    betZones[0] = _group5;
-    _group5.position.x = _group4.position.x * -1;
-    _group5.rotation.z = _group4.rotation.z * -1
-
-    betZones = betZones.map((t, i) => {
-      scene.add(t);
-      let a = (t.getObjectByProperty('type', 'Mesh'))
-      a.userData.index = i;
-
-      if (i > 0) {
-        a.material = a.material.clone();
-      }
-      a.name = `betzone_${i}`;
-      return a
-    })
-
-    forIntersect.betting_zone = betZones
-  }
-
-  //sprites
+  //sprites  
   this.group_buy_sprite = [];
 
   {
+    /*
     const group_sprite = new THREE.Group()
     let cnt = 0;
     for (let i of [4, 5, 6, 7, 8, 9, 10, 11, 12]) {
@@ -413,7 +202,7 @@ const e = function (opt) {
     group_sprite.position.z = 0
     forIntersect.coins = group_sprite
     scene.add(group_sprite)
-
+*/
     for (let i of [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000]) {
       let spriteMap = textureLoader.load(require(`@/images/chips/buy${i}_.png`));
       let sprite = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -489,7 +278,7 @@ const e = function (opt) {
       target.add(coins)
     }
 
-    let index = sprite.userData.index;
+    let index = sprite.index;
     let coin = this.group_buy_sprite[index]
 
     coin = coin.clone()
@@ -497,15 +286,16 @@ const e = function (opt) {
     coin.position.y = coins.children.length * 0.14
     coin.position.z = coins.children.length * 0.05
     coins.add(coin)
-
   }
 
+  //카드 재질및 정보 세팅
   this.changeCardsMtl = function (p_data, b_data) {
     [p_data, b_data].forEach((card_data, i) => {
       let cards = (i == 0) ? card_groups['player'].children : card_groups['banker'].children
-      card_data.forEach((card, i) => {
+      card_data.forEach((data, i) => {
         let c = cards[i];
-        textureLoader.load(require(`@/images/cards/${card.suit.toLowerCase()}${(card.number+'').toLowerCase()}.png`), texture => {
+        c.userData.value = data.value // 카드값 기록        
+        textureLoader.load(require(`@/images/cards/${data.suit.toLowerCase()}${(data.number+'').toLowerCase()}.png`), texture => {
           texture.minFilter = texture.magFilter = THREE.LinearFilter;
           c.material[0].map = texture
           c.material[0].needsUpdate = true;
@@ -514,152 +304,8 @@ const e = function (opt) {
     })
   }
 
-  this.animateCards = function(p_data, b_data) {
-    const p_cards = card_groups['player'].children
-    const b_cards = card_groups['banker'].children
-    const whole_cards = [...p_cards,...b_cards]    
-    const ord_cards = [
-      whole_cards[0],
-      whole_cards[3],
-      whole_cards[1],
-      whole_cards[4],      
-    ]
-    if(p_data.length == 3) ord_cards.push(whole_cards[2])
-    if(b_data.length == 3) ord_cards.push(whole_cards[5])
-
-    card_groups.p_startVector = card_groups['player'].worldToLocal(new THREE.Vector3(0,40,0))
-    card_groups.b_startVector = card_groups['banker'].worldToLocal(new THREE.Vector3(0,40,0))
-
-    //초기화
-    whole_cards.forEach(function (card, value) {
-        card.visible = false
-        if (!card.userData.original_position) {
-          card.userData.original_position = card.position.clone()
-          card.userData.original_rotation = card.rotation.clone()
-        }
-        card.position.copy( (card.userData.parent_type == 'player') ? card_groups.p_startVector : card_groups.b_startVector)
-        card.rotation.z = 0;
-    });
-    
-    const duration = {}
-    let duration_move = 180
-    let duration_delay = 300
-    let duration_rot = 300    
-    let duration_delay2 = 500
-    duration.before_reset = 8000;
-    const init = () => {
-      console.log('철수완료');
-      for(let card of whole_cards){
-        card.visible = false
-        card.position.copy(card.userData.original_position)
-        card.rotation.copy(card.userData.original_rotation)
-      }
-    }
-
-    const reset = async() => {
-      await new Promise(resolve => {
-        setTimeout(resolve, duration.before_reset)
-      })
-
-      //카드 철수
-      const reset_generator = function*(){
-        for(let card of ord_cards){
-          yield new Promise(resolve => {
-            new TWEEN.Tween({
-              x: card.position.x,
-              y: card.position.y,
-              z: card.position.z,
-              rotX: card.rotation.x,
-              rotY: card.rotation.y,
-              rotZ: card.rotation.z
-            })
-            .to({
-              x: -350,
-              y: -200,
-              z: 0,
-              rotX: 0,
-              rotY: 0,
-              rotZ: 0
-            })
-            .onUpdate(a => {
-              card.position.set(a.x,a.y,a.z)
-              card.rotation.set(a.rotX,a.rotY,a.rotZ)
-            })
-            .onComplete(() => {
-              resolve();          
-            })
-            .start()
-          })
-        }
-      }
-
-      const g = reset_generator();
-      
-      new Promise(resolve => {
-        let q = setInterval( () => {
-          let next = g.next()
-          if( next.done ) {
-            clearInterval(q)
-            setTimeout(resolve,1500)            
-          }
-        }, 110)
-      }).then(init)
-        
-    };
-
-    ;(async () => {
-      for(let card of ord_cards) {
-        card.visible = true;
-        await new Promise(resolve => {
-          new TWEEN.Tween({
-            x: card.position.x,
-            y: card.position.y,
-            z: card.position.z,
-            rotZ: card.rotation.z
-          })
-          .to({
-            x: card.userData.original_position.x,
-            y: card.userData.original_position.y,
-            z: card.userData.original_position.z,
-            rotZ: card.userData.original_rotation.z,            
-          }, duration_move)
-          //.easing(this.typeA)
-          .onUpdate(a => {
-            card.position.set(a.x,a.y,a.z)
-            if(card.userData.isHidden) card.rotation.z = a.rotZ
-          })
-          .onComplete(() => {
-            resolve();          
-          })
-          .start()
-        })
-
-        await new Promise(resolve => {
-          setTimeout(resolve, duration_delay)
-        })
-
-        await new Promise(resolve => {
-          new TWEEN.Tween({
-            rot: card.rotation[card.userData.isHidden ? 'x' : 'y'],
-          })
-          .to({
-            rot: 0,
-          }, duration_rot)
-          //.easing(this.typeA)
-          .onUpdate(a => {
-            card.rotation[ card.userData.isHidden ? 'x' : 'y'] = (a.rot)
-          })
-          .onComplete(() => {
-            resolve();          
-          })
-          .start()
-        })
-
-        await new Promise(resolve => {
-          setTimeout(resolve, duration_delay2)
-        })
-      }
-    })().then(reset)
+  this.animateCards = (p_data, b_data, result)=>{
+    cards_animations(TWEEN, vue, card_groups, p_data, b_data, result);
   }
 
   // betting target 정의
@@ -677,17 +323,104 @@ const e = function (opt) {
   }
 
 
+  
+
 
   animate();
 
-  function animate(time) {
+  this.onResize = function(e){   
+    let width = cont.clientWidth;
+    let height = cont.clientHeight
+    camera.aspect = cont.clientWidth / cont.clientHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize( cont.clientWidth, cont.clientHeight );
+    
+    this.resizeUpdate.matLine.resolution.set( width, height );
+    scorePosition(width,height);
+    timerPosition(width,height);
+    coinForBetPosition(width,height);
+
+    if(width<=750){
+      this.resizeUpdate.matLine.linewidth=1
+    }
+  }  
+  let timeStamp = 0
+  const that = this;
+  this.getTimeStamp = () => timeStamp
+  
+  function animate(time) {    
+    timeStamp = time
     TWEEN.update(time)
     renderer.render(scene, camera)
-    requestAnimationFrame(animate)
+      //console.log('윈도우 active 상태')
+      requestAnimationFrame(animate);
+  }
+  
+
+  // score 위치
+  function scorePosition(width,height){
+    let widthHalf = width/2;
+    let heightHalf = height/2;
+    
+    ['player','banker'].forEach( (now, i) => {
+      let el = vue.$refs[`score_${now}`]
+      let group = card_groups[now]
+      let pos = new THREE.Vector3();
+      let scaleFactor = width/1280;
+      let factor = (i == 0) ? -1 : 1;
+      let offset = 40 * scaleFactor / 2
+      pos.y += 13.5
+      pos.x += 12.0 * factor
+      pos.project(camera)
+      
+      pos.x = (pos.x * widthHalf) + widthHalf;
+      pos.y = - (pos.y * heightHalf) + heightHalf;
+      pos.z = 0;
+
+      //el.style.width = 40 * scaleFactor + 'px'
+      //el.style.height = 40 * scaleFactor + 'px'
+      el.style.transform = `translate3d(${pos.x-offset}px, ${pos.y}px, ${pos.z}px) scale(${scaleFactor})`
+    })    
+  }
+
+  // timer 위치
+  function timerPosition(width,height){
+    let widthHalf = width/2;
+    let heightHalf = height/2;    
+    let pos = new THREE.Vector3();
+    let scaleFactor = width / 1280;        
+    let el = vue.$refs.timer
+    let default_size = el.dataset.default_size
+    let offset = default_size * scaleFactor / 2;
+
+    pos.y += 12.5
+    pos.project(camera)      
+    pos.x = (pos.x * widthHalf) + widthHalf;
+    pos.y = - (pos.y * heightHalf) + heightHalf;
+    pos.z = 0;   
+    
+    vue.$set(vue.timerStyle,'width', default_size + 'px')
+    vue.$set(vue.timerStyle,'height', default_size + 'px')
+    vue.$set(vue.timerStyle,'transform',`translate3d(${pos.x-offset}px, ${pos.y-offset}px, ${pos.z}px) scale(${scaleFactor})`)
+    //el.style.height = 100 * scaleFactor + 'px'
+  }
+
+  function coinForBetPosition(width,height){
+    pos_coins_for_bet.bind(that)(width,height)
+  }
+
+  timerPosition(width,height)
+  scorePosition(width,height)
+  coinForBetPosition(width,height)
+  
+
+  function show_winner(){
+    //get position. player or 
 
   }
 
 
+  
 }
 
 export default e
