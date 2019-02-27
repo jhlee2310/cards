@@ -1,39 +1,9 @@
 <template>
   <div class="about">
     <span>{{round}}</span>
-    
     <div id="cont_3d">
       <!--배팅코인-->
       <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18"/>
-      <!--배팅코인-->
-      <div class="board">
-      <transition nmae="slide-fade">
-        <div v-if="false&&show" class="rectanges" style="position:absolute;width:280px;height:125px;left:0;bottom:0;background:rgba(255,255,255,.8);border:1px solid #666">
-          <div class="col" v-for="(count, i) in winners" :style="{
-              position:'absolute',
-              height:'100%',
-              width:'20px',
-              top: count.top+'px',
-              left: count.left+'px',
-            }"
-            :key="count.round">
-              <div v-if="count.player=='P'" class="is-p-player"/>
-              <div v-else class="is-b-player"/>
-              <!-- <img src="@/assets/logo.png"> -->
-            </div>
-          <svg height="121" width="280">
-            <line v-for="i in 20" x1="0" :y1="i*delta" x2="280" :y2="i*delta" :style="{
-              'stroke':'rgb(0,0,0)',
-              'stroke-width':i%2==0?'2':'1'
-            }" :key="`row${i}`"/>
-            <line v-for="i in 20" :x1="i*delta" y1="0" :x2="i*delta" y2="121" :style="{
-              'stroke':'rgb(0,0,0)',
-              'stroke-width':i%2==0?'2':'1'
-              }" :key="`col${i}`"/>
-          </svg>
-          </div>
-      </transition>
-      </div>
       <!--스코어-->
       <transition name="fade">
         <div v-show="score.show" :style="scoreStyle" class="score player" ref="score_player">{{score.player}}</div>
@@ -49,21 +19,7 @@
       <div class="timer" v-show="game_status.betting" ref="timer" data-default_size="68" :style="timerStyle">{{timer}}</div>
       <!--timer-->
     </div>
-    <div class="control">
-      <select v-model="typeA">
-        <option v-for="type in easing" v-bind:value="type.value" :key="type.text">
-          {{ type.text }}
-        </option>
-      </select>
-      <select v-model="typeB">
-        <option v-for="type in easing" v-bind:value="type.value" :key="type.text">
-          {{ type.text }}
-        </option>
-      </select>      
-      <button @click="show = !show">
-        toggle
-      </button>
-    </div>    
+		<board ref="board"></board>
   </div>
 </template>
 
@@ -71,9 +27,11 @@
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
 import CoinsForBet from '@/components/CoinsForBet.vue'
+import Board from '@/components/Board.vue'
 
 export default {
   components:{
+    Board,
     CoinsForBet
   },
   data(){
@@ -99,14 +57,7 @@ export default {
       },
       deal_info: {},
       game: null,
-      delta:20,
-      show: true,
       round: 1,
-      winners: [],
-      lastWinner: '',
-      left: 0,
-      top: 0,
-      winning: 1,
       easing: [
         {text:'Linear.None', value:TWEEN.Easing.Linear.None},
         {text:'Quadratic.In', value:TWEEN.Easing.Quadratic.In},
@@ -147,7 +98,7 @@ export default {
   },
   created(){
     
-  },
+	},
   mounted(){
     this.game = new threejs({
       vue: this,
@@ -174,6 +125,19 @@ export default {
             this.start_betting(3);
             break;
           }
+          break;
+        case 'room_bead':
+          this.$refs.board.nextRound(message)
+          break;
+        case 'room_detail':
+          this.$refs.board.setRound(message)
+          break;
+        // case 'room_state':
+        //   this.$refs.board.setState(message)
+        //   break;
+        default:
+          break;
+          //console.log(message)
       }
     }
     window.vv = this
@@ -234,51 +198,6 @@ export default {
     onWindowResize(e){
       this.game.onResize(e);     
 		},
-    randomItem(a) {
-      return a[Math.floor(Math.random() * a.length)];
-    },
-    nextRound() {
-      let winner = this.randomItem(['P','B'])
-      let cnt = this.round -1
-
-      // let winnerArray = ['P','P','P','P','P','P','P','P','B']
-      // let winner =winnerArray[cnt]
-
-
-      if(this.lastWinner==''){
-        this.lastWinner = winner
-      }else if(this.lastWinner == winner){
-        this.winning++
-        if(this.winning<=6)
-          this.top = this.top+20
-        else
-          this.left = this.left+20
-      }else{
-        let cnt = 0
-        if(this.winning>6){
-          cnt = (this.winning - 6)*20
-        }
-        if(cnt != 0){
-          this.left = this.left-cnt+20
-        }else{
-          this.left = this.left+20
-          
-        }
-        this.winning = 1
-        this.top = 0
-      }
-        this.winners.push(
-          {
-            round: this.round,
-            top: this.top,
-            left: this.left,
-            player: winner,
-          }
-        )
-
-      this.lastWinner = winner
-      this.round++
-    }
   }
 }
 </script>
@@ -328,20 +247,6 @@ body{margin:0;padding:0}
    background-size: 20px 20px;
 }
 
-/* 애니메이션 진입 및 진출은 다른 지속 시간 및  */
-/* 타이밍 기능을 사용할 수 있습니다. */
-.slide-fade-enter-active {
-  transition: all .3s ease;
-}
-.slide-fade-leave-active {
-  transition: all .8s cubic-bezier(1.0, 0.5, 0.8, 1.0);
-}
-.slide-fade-enter, .slide-fade-leave-to
-/* .slide-fade-leave-active below version 2.1.8 */ {
-  transform: translateX(10px);
-  opacity: 0;
-}
-
 .score{
   position:absolute;
   font-size:20px;
@@ -349,22 +254,6 @@ body{margin:0;padding:0}
   transform-origin: 0% 0%;
   text-align:center;
 }
-
-.is-b-player {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin: 1px;
-  border: 1px solid #283283;
-}
-.is-p-player {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  margin: 1px;
-  border: 1px solid #8f0e0e;
-}
-
 .winner{
   position:absolute;
   font-size:53px;
@@ -372,5 +261,6 @@ body{margin:0;padding:0}
   text-shadow: #000;
   text-shadow: 2px 2px 12px aquamarine;
 }
+
 </style>
 

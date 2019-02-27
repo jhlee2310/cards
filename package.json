@@ -10,9 +10,8 @@
   "dependencies": {
     "@tweenjs/tween.js": "^17.3.0",
     "connect-history-api-fallback": "^1.6.0",
-    "three": "^0.101.1",
+    "lodash": "^4.17.11",
     "three-full": "^11.3.2",
-    "three.textsprite": "^19.0.0",
     "vue": "^2.5.22",
     "vue-native-websocket": "^2.0.12",
     "vue-router": "^3.0.1",
