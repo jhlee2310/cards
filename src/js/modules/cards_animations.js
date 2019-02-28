@@ -57,8 +57,8 @@ export default function(TWEEN, vue, card_groups, p_data, b_data, result){
                 rotZ: card.rotation.z
             })
             .to({
-                x: -350,
-                y: -200,
+                x: 0,//-350,
+                y: 250,//-200,
                 z: 0,
                 rotX: 0,
                 rotY: 0,

@@ -1,9 +1,13 @@
-export default function init_cards(textureLoader){
-    const card_shape = new THREE.Shape();
-    const card_groups = this.card_groups
+import { Vector3 } from 'three-full';
 
+export default function init_cards(textureLoader, width, height){
+    const card_shape = new THREE.Shape();
     card_shape.autoClose = true;
-    (function (ctx, width, height, radius) {
+    const card_groups = this.card_groups
+    const whole_cards = [];
+
+    
+    const round_ractangle = function (ctx, width, height, radius) {
       let x = width / 2 * -1,
         y = height / 2 * -1
       ctx.moveTo(x, y + radius);
@@ -15,7 +19,9 @@ export default function init_cards(textureLoader){
       ctx.quadraticCurveTo(x + width, y, x + width - radius, y);
       ctx.lineTo(x + radius, y);
       ctx.quadraticCurveTo(x, y, x, y + radius);
-    })(card_shape, 8, 12.8, 0.45);
+    }
+    //card shape
+    round_ractangle(card_shape, 8, 12.8, 0.45)
 
     const card_geometry = new THREE.ExtrudeGeometry(card_shape, {
       depth: 0.001,
@@ -26,8 +32,7 @@ export default function init_cards(textureLoader){
     }).forEach(a => {
       a.materialIndex = 2
     })
-    card_geometry.groupsNeedUpdate = true;
-
+    card_geometry.groupsNeedUpdate = true;    
     card_geometry.computeBoundingBox();
     let max = card_geometry.boundingBox.max
     let min = card_geometry.boundingBox.min
@@ -79,6 +84,11 @@ export default function init_cards(textureLoader){
     for (let i = -1; i <= 1; i += 2) {
       let group = new THREE.Group()
       group.name = (i == -1) ? 'card_group_player' : 'card_group_banker'
+      //mesh.rotation.x = Math.PI;        
+      group.position.x = i * 12
+      group.position.y = 22
+
+      scene.add(group)
 
       for (let j = -1; j <= 3; j += 2) {
         let mesh = new THREE.Mesh(card_geometry, [
@@ -87,7 +97,7 @@ export default function init_cards(textureLoader){
           card_mat.back
         ]);
         mesh.name = `card_${imgcnt}`
-        mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'      
+        mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'
         
         if (j != 3) { //히든카드가 아닐경우
           mesh.position.x = j * 4.5
@@ -108,7 +118,7 @@ export default function init_cards(textureLoader){
         //mesh.visible = false;
 
         group.add(mesh);
-        o.push(mesh)
+        whole_cards.push(mesh)
 
         if (i == -1) {
           card_groups.player = group
@@ -116,14 +126,40 @@ export default function init_cards(textureLoader){
           card_groups.banker = group
         }
       }
-
-
-
-
-      //mesh.rotation.x = Math.PI;        
-      group.position.x = i * 12
-      group.position.y = 22
-
-      scene.add(group)
     }
+
+    //card position shape
+    const holder_shape = new THREE.Shape();
+    card_shape.autoClose = true;    
+    round_ractangle(holder_shape, 9, 13.8, 0.9)
+    let _matLine = new THREE.LineMaterial({
+      color: 0xAAAAAA,
+      linewidth: 2, // in pixels        
+      dashed: false,
+    });    
+
+    _matLine.resolution.set(width, height);
+    let _geo = new THREE.LineGeometry();
+    const _positions = []
+
+    for(let a of holder_shape.getPoints()){
+      _positions.push(a.x, a.y, 0)    
+    }
+    _geo.setPositions(_positions)   
+
+    let holder_group = new THREE.Group()    
+
+    whole_cards.forEach( (c, i) => {
+      
+
+      let holder = new THREE.Line2(_geo, _matLine);
+      holder.computeLineDistances();
+      //holder.position.copy(worldP)
+      //holder_group.add(holder)
+      //scene.add(holder)
+    })
+    //scene.add(holder_group)
+    
+
+    
   }

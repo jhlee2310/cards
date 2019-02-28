@@ -233,6 +233,9 @@ export default {
 </style>
 
 <style el="scss">
+.about *{
+   user-select: none;
+}
 .timer{  
   color:#fff;
   display:flex;

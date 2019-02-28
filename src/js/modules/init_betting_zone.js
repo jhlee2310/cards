@@ -1,10 +1,11 @@
+import { Scene } from "three-full";
+
 export default function(width,height,betZones,forIntersect){    
     
     let _matLine = new THREE.LineMaterial({
         color: 0xAAAAAA,
-        linewidth: 3, // in pixels        
+        linewidth: 2, // in pixels        
         dashed: false,
-
     });    
 
     _matLine.resolution.set(width, height);
@@ -27,8 +28,8 @@ export default function(width,height,betZones,forIntersect){
     return ctx;
     }
 
-    let _r1 = RoundedRectangle(10, 16, 1),
-    _r2 = RoundedRectangle(13, 16, 1);
+    let _r1 = RoundedRectangle(10, 16, 0.8),
+    _r2 = RoundedRectangle(13, 16, 0.8);
 
     let _positions = [],
     _positions2 = [];
@@ -38,29 +39,27 @@ export default function(width,height,betZones,forIntersect){
         _positions.push(a.x, a.y, 0)    
     }
 
-
     _r2.getPoints().forEach(a => {
       _positions2.push(a.x, a.y, 0)
     });
 
 
-    let _pl_mt = new THREE.MeshBasicMaterial({
-      color: 0xffffff,
-      opacity: 0.15,
+    let _pl_mt = new THREE.MeshPhongMaterial({
+      color: 0x3f675a,
+      opacity: 0.25,
       transparent: true,
-      //depthTest: false
+      alphaTest: 0.25,
     })
 
     
-    let _pl_g1 = new THREE.ShapeBufferGeometry(_r1),
-      _pl_g2 = new THREE.ShapeBufferGeometry(_r2)
-    let _pl_m1 = new THREE.Mesh(_pl_g1, _pl_mt),
-      _pl_m2 = new THREE.Mesh(_pl_g2, _pl_mt.clone())
-    //_pl_m1.position.z = _pl_m2.position.z =0
+    let _pl_g1 = new THREE.ShapeGeometry(_r1),
+      _pl_g2 = new THREE.ShapeGeometry(_r2)
+    let _pl_m1 = new THREE.Mesh(_pl_g1, _pl_mt);
+    let _pl_m2 = new THREE.Mesh(_pl_g2, _pl_mt.clone())    
+    _pl_m1.position.z = _pl_m2.position.z = 0
 
     let _geo = new THREE.LineGeometry(),
       _geo2 = new THREE.LineGeometry();
-
     _geo.setPositions(_positions)
     _geo2.setPositions(_positions2)
 
@@ -69,51 +68,55 @@ export default function(width,height,betZones,forIntersect){
     _line.computeLineDistances();
     _line2.computeLineDistances();
 
-    let _group = new THREE.Group(),
-      _group2 = new THREE.Group();
+    let _group = new THREE.Group();
     _group.add(_line)
     _group.add(_pl_m1);
-    //_group.position.z = -3
-    _group2.add(_line2)
-    _group2.add(_pl_m2)
-    _group2.position.x = 15;
-    //_group2.position.z = -5
     _group.name = 'bet_2'
     betZones[2] = _group;
+
+    let _group2 = new THREE.Group();
+    _group2.add(_line2)
+    _group2.add(_pl_m2)
+    _group2.position.x = 13.5;
     _group2.name = 'bet_3'
     betZones[3] = _group2;
-    scene.add(_group)
-    scene.add(_group2)
-    _group2.rotation.z = Math.PI / 36
-    _group2.position.y = 0.8
+    _group2.rotation.z = Math.PI / 24
+    _group2.position.y = 1
+
     let _group3 = _group2.clone()
     _group3.name = 'bet_1'
     betZones[1] = _group3;
     _group3.position.x = _group2.position.x * -1
     _group3.rotation.z = _group2.rotation.z * -1
+
     let _group4 = _group2.clone()
     _group4.name = 'bet_4'
     betZones[4] = _group4;
-    _group4.position.x = _group2.position.x + 16;
-    _group4.position.y = 3
-    _group4.rotation.z = Math.PI / 16
+    _group4.position.x = _group2.position.x + 15;
+    _group4.position.y = 4.4
+    _group4.rotation.z = Math.PI / 10
+
     let _group5 = _group4.clone()
     _group5.name = 'bet_0'
     betZones[0] = _group5;
     _group5.position.x = _group4.position.x * -1;
-    _group5.rotation.z = _group4.rotation.z * -1
+    _group5.rotation.z = _group4.rotation.z * -1;
 
-    betZones = betZones.map((t, i) => {
-      scene.add(t);
+    betZones = betZones.map((t, i) => {      
       let a = (t.getObjectByProperty('type', 'Mesh'))
-      a.userData.index = i;
+      a.userData.index = i;      
+      scene.add(t);
 
       if (i > 0) {
         a.material = a.material.clone();
       }
       a.name = `betzone_${i}`;
+      a.receiveShadow = true;
+      
       return a
     })
 
+    this.betZones = betZones
+    
     forIntersect.betting_zone = betZones
 }
