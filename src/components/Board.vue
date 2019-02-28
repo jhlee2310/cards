@@ -4,9 +4,9 @@
       <transition nmae="slide-fade">
         <div v-if="show"  style="display:inline;">
           <div style="padding:10px 10px;display:flex;">
-            <div class="bead-p">P</div>
+            <div class="bead-p" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">P</div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pWinCnt}}</div>
-            <div class="bead-b">B</div>
+            <div class="bead-b" @mouseenter="onMouseEnter('B')" @mouseleave="onMouseLeave('B')">B</div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bWinCnt}}</div>
             <div class="bead-t">T</div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{tWinCnt}}</div>
@@ -213,12 +213,9 @@ export default {
       smallRoad: [],
       cockroahRoad: [],
 			road:[],
-			lastWinner: '',
       lastEye: false, 
       lastSmall: false,
       lastCockroah:false,
-      beadTop: 0,
-      beadLeft: 0,
       left: 0,
 			top: 0,
 			eyeLeft: 0,
@@ -227,13 +224,13 @@ export default {
       smallTop: 0,
       cockroahLeft: 0,
       cockroahTop: 0,
-			winning: 1,
       eyeWinning:1,
       smallWinning:1,
       cockroahWinning:1,
       col: 0,
       delta:20,
-      mouseFlg: true,
+      mouseFlg: false,
+      tempData: '',
     }
   },
   computed: {
@@ -271,29 +268,34 @@ export default {
   methods: {
     viewScore(data){
       let prdt = false
+      
       const rn = this.$_.split(data,',')
         //console.log(rn)
-
+      const lastData ="";
       if(rn[2]==99){
-        console.log(data)
+        this.winners
         prdt = true
-        return
-      }else if(rn[2]==-99){
-        // _.dropRight(this.winners)
-        // _.dropRight(this.bigRoad)
-        // _.dropRight(this.road)
-        // _.dropRight(this.bigEyeRoad)
-        // _.dropRight(this.smallRoad)
-        // _.dropRight(this.cockroahRoad)
-        console.log(data)
-        return
+      }else if(rn[2]== -99){
+        this.winners = _.dropRight(this.winners)
+      }else if(this.mouseFlg){
+        this.winners = _.dropRight(this.winners)
       }
 
-      if(!this.mouseFlg){
+      let lastWinner = ''
+      let winning = 1
+      let beadTop = 0
+      let beadLeft = 0
+      let col = 0
+      if(this.winners.length !=0){
+        lastWinner = _.last(_.clone(this.winners)).lastWinner
+        winning =  _.last(_.clone(this.winners)).winning
+        beadTop =  _.last(_.clone(this.winners)).top
+        beadLeft =  _.last(_.clone(this.winners)).left
+        col =  _.last(_.clone(this.winners)).col
       }
 
       const winner = rn[0]
-      let cnt = this.round -1
+      //let cnt = this.winners.lengh -1
 
       const pair = rn[1]
 
@@ -309,13 +311,13 @@ export default {
         pPair = true
       }
 
-      if(this.lastWinner==''){
-				this.lastWinner = winner
+      if(lastWinner==''){
+				lastWinner = winner
 				if(winner=='T'){
 						this.bigRoad.push(
 						{
-							top: this.top,
-							left: this.left,
+							top: 0,
+							left: 0,
 							winner: winner,
 							bPair:bPair,
 							pPair:pPair,
@@ -331,14 +333,14 @@ export default {
 				if(pPair)
 					lastRoad.pPair = pPair
 
-      }else if(this.lastWinner == winner){
-        this.winning++
-        if(this.winning<=6)
+      }else if(lastWinner == winner){
+        winning++
+        if(winning<=6)
           this.top = this.top+20
         else
 					this.left = this.left+20
       }else{
-				if(this.lastWinner=='T'){
+				if(lastWinner=='T'){
 					const lastRoad = _.last(this.bigRoad)
 					lastRoad.winner = winner
 					if(bPair)
@@ -347,8 +349,8 @@ export default {
 						lastRoad.pPair = pPair
 				}else{
 					let cnt = 0
-					if(this.winning>6){
-						cnt = (this.winning - 6)*20
+					if(winning>6){
+						cnt = (winning - 6)*20
 					}
 					if(cnt != 0){
 						this.left = this.left-cnt+20
@@ -356,28 +358,31 @@ export default {
 						this.left = this.left+20
 						
 					}
-					this.winning = 1
+					winning = 1
 					this.top = 0
 				}
-				this.col++
+				col++
       }
 
       if(this.round==1){
       }else if((this.round-1)%6==0){
-        this.beadTop = 0
-        this.beadLeft = this.beadLeft+20
+        beadTop = 0
+        beadLeft = beadLeft+20
       }else{
-        this.beadTop = this.beadTop+20
+        beadTop = beadTop+20
       }
       //this.round
 			this.winners.push(
 				{
-          top: this.beadTop ,
-          left: this.beadLeft,
+          top: beadTop,
+          left: beadLeft,
 					winner: winner,
           bPair:bPair,
           pPair:pPair,
           prdt: prdt,
+          lastWinner: winner=='T'?lastWinner:winner,
+          winning:winning,
+          col: col
         }
       )
 
@@ -392,13 +397,13 @@ export default {
 						isTie:0,
 					}
 				)
-				if(this.winning==1){
+				if(winning==1){
 					const result = []
 					result.push(winner)
 					this.road.push(result)
 				}else{
-					//console.log(this.col)
-					this.road[this.col].push(winner)
+					//console.log(col)
+					this.road[col].push(winner)
 				}
 				if((this.road[1]&&this.road[1].length >= 2) || this.road[2]){
 					const data = {
@@ -406,15 +411,15 @@ export default {
 						left: 0,
 						result: false
 					}
-					//console.log(this.lastWinner,winner)
-					if(this.lastWinner == winner){
-            const lenght = this.road[this.col].length
-						const cols =this.road[this.col-1]
+					//console.log(lastWinner,winner)
+					if(lastWinner == winner){
+            const lenght = this.road[col].length
+						const cols =this.road[col-1]
 						if(cols[lenght-1] === cols[lenght-2])
 							data.result=true
-						//console.log(this.col, cols,data.result)
+						//console.log(col, cols,data.result)
 					}else{
-            if(this.road[this.col-1].length==this.road[this.col-2].length)
+            if(this.road[col-1].length==this.road[col-2].length)
 							data.result=true
 					}
           //console.log("this.lastEye",this.lastEye,this.road.length)
@@ -458,14 +463,14 @@ export default {
 						left: 0,
 						result: false
 					}
-					if(this.lastWinner == winner){
-            const length = this.road[this.col].length
-						const cols =this.road[this.col-2]
+					if(lastWinner == winner){
+            const length = this.road[col].length
+						const cols =this.road[col-2]
 						if(cols[length-1] === cols[length-2])
 							data.result=true
-						//console.log(this.col, cols,data.result)
+						//console.log(col, cols,data.result)
 					}else{
-            if(this.road[this.col-1].length==this.road[this.col-3].length)
+            if(this.road[col-1].length==this.road[col-3].length)
 							data.result=true
 					}
           //console.log("this.lastSmall",this.lastSmall,this.road.length)
@@ -508,14 +513,14 @@ export default {
 						left: 0,
 						result: false
 					}
-					if(this.lastWinner == winner){
-            const length = this.road[this.col].length
-						const cols =this.road[this.col-3]
+					if(lastWinner == winner){
+            const length = this.road[col].length
+						const cols =this.road[col-3]
 						if(cols[length-1] === cols[length-2])
 							data.result=true
-						//console.log(this.col, cols,data.result)
+						//console.log(col, cols,data.result)
 					}else{
-            if(this.road[this.col-1].length==this.road[this.col-4].length)
+            if(this.road[col-1].length==this.road[col-4].length)
 							data.result=true
 					}
           //console.log("this.lastCockroah",this.lastCockroah,this.road.length)
@@ -551,12 +556,14 @@ export default {
 
 					this.cockroahRoad.push(data)
 				}
-        this.lastWinner = winner
+        //lastWinner = winner
       }
       this.round++
     },
     setRound(message) {
       console.log('setRound',message)
+      // this.viewScore('T,0,9')
+      // this.viewScore('T,0,9')
       message.bead_load.some((data,i) => {
         if(i==message.round-1){
           return true
@@ -567,7 +574,7 @@ export default {
     nextRound(message) {
       //this.
       //console.log(message)
-      this.viewScore(message.bead)
+      //this.viewScore(message.bead)
     },
     setState(message) {
       //console.log(message)
@@ -577,12 +584,71 @@ export default {
     },
     onMouseEnter(data) {
       this.mouseFlg = true
-      this.viewScore(data+",0,99")
+      this.tempData = data+",0" 
+      this.viewScore(this.tempData+",99")
     },
     onMouseLeave(data) {
+      //console.log("onMouseLeave")
       this.mouseFlg = false
-      this.viewScore(data+",0,-99")
+      this.tempData = data+",0" 
+      this.viewScore(this.tempData+",-99")
     },
+    writeBoard(data) {
+      const gun =data.gun
+
+      if((this.road[gun]&&this.road[gun].length >= 2) || this.road[gun+1]){
+        const data = {
+          top: 0,
+          left: 0,
+          result: false
+        }
+        //console.log(lastWinner,winner)
+        if(lastWinner == winner){
+          const lenght = this.road[col].length
+          const cols =this.road[col-1]
+          if(cols[lenght-1] === cols[lenght-2])
+            data.result=true
+          //console.log(col, cols,data.result)
+        }else{
+          if(this.road[col-1].length==this.road[col-2].length)
+            data.result=true
+        }
+        //console.log("this.lastEye",this.lastEye,this.road.length)
+        if(!((this.road.length==2 && this.road[1].length == 2)||(this.road.length == 3 && this.road[2].length == 1 && this.road[1].length == 1))){
+          if(this.lastEye==data.result){
+            if(this.eyeWinning >= 6){
+              this.eyeLeft = this.eyeLeft+10
+            }else{
+              this.eyeTop = this.eyeTop+10
+            }
+            this.eyeWinning++
+          }else{
+            if(this.eyeWinning>6){
+              let cnt = 0
+              cnt = (this.eyeWinning - 6)*10
+              if(cnt != 0){
+                this.eyeLeft = this.eyeLeft-cnt+10
+              }else{
+                this.eyeLeft = this.eyeLeft+10                  
+              }
+            }else{
+              this.eyeLeft = this.eyeLeft+10
+            }
+            this.eyeTop = 0
+            //this.eyeLeft = this.eyeLeft+10
+            this.eyeWinning =1
+          }
+        }
+        data.top = this.eyeTop
+        data.left = this.eyeLeft
+
+
+        this.lastEye = data.result
+        
+
+        this.bigEyeRoad.push(data)
+      }
+    }
   }
 }
 </script>
