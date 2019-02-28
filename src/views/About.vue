@@ -110,9 +110,7 @@ export default {
         type    :"req_enter_room",
         room_id : 1
     }))
-
-    this.$socket.onmessage = (mes)=>{
-        
+    this.$socket.onmessage = (mes)=>{      
       const message = JSON.parse(mes.data)
       console.log(message)
       switch(message.type){
@@ -121,16 +119,39 @@ export default {
           this.process_deal(message)
           break;
         case 'room_state':
+          /**
+           * http://192.168.0.7:8081/issues/1126 참조
+           * prepare_game	게임 준비중. 카드슈를 준비하는 상태
+              prepare_game::chain	게임 정보를 체인에 동기화. 클라입장에서는 prepare_game와 같다.
+              prepare_round	라운드를 준비하는 상태
+              prepare_round::chain	라운드 정보를 체인에 동기화. 클라입장에서는 prepare_round와 같다.
+              betting	배팅 가능 상태
+              betting::chain	배팅정보를 체인에 동기화.
+              dealing	카드 오픈
+              dealing::chain	카드 오픈 및 돈분배를 체인에 동기화
+          */
           switch(message.state){
             case 'betting':
-            this.start_betting(3);
-            break;
+              this.round = message.round
+              this.start_betting(3);
+              break;
+            case 'betting::chain':
+              break;
+            case 'prepare_dealing::chain':
+              break;
+            case 'dealing':
+              break;
+            case 'dealing:::chain':
+              break;
+            case 'prepare_round':
+              break;
           }
           break;
         case 'room_bead':
           this.$refs.board.nextRound(message)
           break;
         case 'room_detail':
+          this.round = message.round
           this.$refs.board.setRound(message)
           break;
         // case 'room_state':
