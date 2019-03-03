@@ -1,5 +1,3 @@
-import { Scene } from "three-full";
-
 export default function(width,height,betZones,forIntersect){    
     
     let _matLine = new THREE.LineMaterial({
@@ -44,19 +42,53 @@ export default function(width,height,betZones,forIntersect){
     });
 
 
-    let _pl_mt = new THREE.MeshPhongMaterial({
-      color: 0x3f675a,
-      opacity: 0.25,
-      transparent: true,
-      alphaTest: 0.25,
+    let _pl_mt = new THREE.MeshBasicMaterial({
+      color: 0xffffff,//e2ecf2,
+      blending:4,   
+    })   
+
+    this.textureLoader.load(require(`@/images/betting_zone.jpg`), tex=>{
+      _pl_mt.map = tex;
+      _pl_mt.needsUpdate = true;
     })
 
+    let _pl_g1 = new THREE.ShapeGeometry(_r1);
+    let _pl_g2 = new THREE.ShapeGeometry(_r2);    
+    _pl_g1.computeBoundingBox();
+    _pl_g2.computeBoundingBox();
+
+    let max = _pl_g1.boundingBox.max
+    let min = _pl_g1.boundingBox.min
     
-    let _pl_g1 = new THREE.ShapeGeometry(_r1),
-      _pl_g2 = new THREE.ShapeGeometry(_r2)
+    let offset = new THREE.Vector2(0 - min.x, 0 - min.y)
+    let range = new THREE.Vector2(max.x - min.x, max.y - min.y);
+    let faces = _pl_g1.faces;
+
+    _pl_g1.faceVertexUvs[0] = [];
+
+    for (let j = 0; j < faces.length; j++) {
+
+      var v1 = _pl_g1.vertices[faces[j].a],
+        v2 = _pl_g1.vertices[faces[j].b],
+        v3 = _pl_g1.vertices[faces[j].c];
+
+        _pl_g1.faceVertexUvs[0].push([
+        new THREE.Vector2((v1.x + offset.x) / range.x, (v1.y + offset.y) / range.y),
+        new THREE.Vector2((v2.x + offset.x) / range.x, (v2.y + offset.y) / range.y),
+        new THREE.Vector2((v3.x + offset.x) / range.x, (v3.y + offset.y) / range.y)
+      ]);
+
+    }
+    _pl_g1.uvsNeedUpdate = true;
+
+
+
     let _pl_m1 = new THREE.Mesh(_pl_g1, _pl_mt);
-    let _pl_m2 = new THREE.Mesh(_pl_g2, _pl_mt.clone())    
-    _pl_m1.position.z = _pl_m2.position.z = 0
+    let _pl_m2 = new THREE.Mesh(_pl_g2, _pl_mt);
+    _pl_m1.userData.type = "plane"
+    _pl_m1.name = "zone"
+    _pl_m2.name = "zone"
+    _pl_m2.userData.type = "plane"
 
     let _geo = new THREE.LineGeometry(),
       _geo2 = new THREE.LineGeometry();
@@ -67,10 +99,14 @@ export default function(width,height,betZones,forIntersect){
       _line2 = new THREE.Line2(_geo2, _matLine);
     _line.computeLineDistances();
     _line2.computeLineDistances();
+    
+    _line.name = "border"
+    _line2.material = _line2.material.clone()
+    _line2.name = "border"
 
-    let _group = new THREE.Group();
-    _group.add(_line)
-    _group.add(_pl_m1);
+    let _group = new THREE.Group();    
+    _group.add(_line);
+    _group.add(_pl_m1);    
     _group.name = 'bet_2'
     betZones[2] = _group;
 
@@ -83,40 +119,61 @@ export default function(width,height,betZones,forIntersect){
     _group2.rotation.z = Math.PI / 24
     _group2.position.y = 1
 
-    let _group3 = _group2.clone()
-    _group3.name = 'bet_1'
-    betZones[1] = _group3;
-    _group3.position.x = _group2.position.x * -1
-    _group3.rotation.z = _group2.rotation.z * -1
+    for( let i of [1,4,0] ){
+        let gr = new THREE.Group()
+        gr.name = `bet_${i}`
+        let li = _line2.clone();
+        li.material = li.material.clone()
+        li.name = 'border'        
+        gr.add(li)
+        gr.add(_pl_m2.clone())
+        betZones[i] = gr
 
-    let _group4 = _group2.clone()
-    _group4.name = 'bet_4'
-    betZones[4] = _group4;
-    _group4.position.x = _group2.position.x + 15;
-    _group4.position.y = 4.4
-    _group4.rotation.z = Math.PI / 10
-
-    let _group5 = _group4.clone()
-    _group5.name = 'bet_0'
-    betZones[0] = _group5;
-    _group5.position.x = _group4.position.x * -1;
-    _group5.rotation.z = _group4.rotation.z * -1;
+        if(i == 1){
+            gr.position.x = _group2.position.x * -1
+            gr.position.y = _group2.position.y
+            gr.rotation.z = _group2.rotation.z * -1
+        }else if(i == 4){
+            gr.position.x = _group2.position.x + 15;            
+            gr.position.y = 4.4
+            gr.rotation.z = Math.PI / 10
+        }else if(i == 0){
+            gr.position.x = (_group2.position.x + 15) * -1;
+            gr.position.y = 4.4
+            gr.rotation.z = -1 * Math.PI / 10
+        }
+    }
 
     betZones = betZones.map((t, i) => {      
-      let a = (t.getObjectByProperty('type', 'Mesh'))
+      let a = (t.getObjectByProperty('name', 'zone'))
       a.userData.index = i;      
       scene.add(t);
 
-      if (i > 0) {
-        a.material = a.material.clone();
+      t.userData.toChangeRGB = []
+      t.children.forEach(child => {
+        if(child !== a) t.userData.toChangeRGB.push(child)
+      })
+
+      t.userData.originalRGB = t.userData.toChangeRGB[0].material.color.clone();
+      t.userData.changeRGB = (c) => {
+        for (let o of t.userData.toChangeRGB) {
+          o.material.color.set(c)
+        }
       }
-      a.name = `betzone_${i}`;
-      a.receiveShadow = true;
+      t.userData.restoreRGB = () => {
+        for (let o of t.userData.toChangeRGB) {
+          o.material.color.copy(t.userData.originalRGB)
+        }
+      }
+
+      if (i > 0) {
+        //a.material = a.material.clone();
+      }
+      a.name = `betzone_${i}`;      
       
       return a
     })
 
-    this.betZones = betZones
-    
+    this.betZones = betZones    
     forIntersect.betting_zone = betZones
 }

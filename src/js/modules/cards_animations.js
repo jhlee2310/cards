@@ -28,7 +28,7 @@ export default function(TWEEN, vue, card_groups, p_data, b_data, result){
     const duration = {}
     let duration_move = 180
     let duration_delay = 300
-    let duration_rot = 300    
+    let duration_rot = 230    
     let duration_delay2 = 500
     duration.before_reset = 8000;
     const init = () => {
@@ -133,14 +133,17 @@ export default function(TWEEN, vue, card_groups, p_data, b_data, result){
         // 회전및 스코어 기록
         await new Promise(resolve => {
             new TWEEN.Tween({
-            rot: card.rotation[card.userData.isHidden ? 'x' : 'y'],
+                rot: card.rotation[card.userData.isHidden ? 'x' : 'y'],
+                pos: card.position[!card.userData.isHidden ? 'x' : 'y'],
             })
             .to({
-            rot: 0,
+                rot: !card.userData.isHidden ? 2*Math.PI : 0,
+                pos: card.userData.original_position[ !card.userData.isHidden ? 'x' : 'y'] - ( (!card.userData.isHidden) ? 8 : 8)
             }, duration_rot)
-            //.easing(this.typeA)
+            //.easing(TWEEN.Easing.Circular.InOut)
             .onUpdate(a => {
-            card.rotation[ card.userData.isHidden ? 'x' : 'y'] = (a.rot)
+                card.rotation[ card.userData.isHidden ? 'x' : 'y'] = (a.rot)                
+                card.position[ !card.userData.isHidden ? 'x' : 'y'] = a.pos
             })
             .onComplete(() => {            
             vue.score[card.userData.parent_type] = (vue.score[card.userData.parent_type] + card.userData.value) % 10

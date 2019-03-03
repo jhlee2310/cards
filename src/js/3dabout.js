@@ -1,4 +1,5 @@
 import * as THREE from 'three-full'
+import rasterizeHTML from 'rasterizehtml'
 import init_cards from './modules/init_cards' // 카드 세팅
 import init_betting_zone from './modules/init_betting_zone' // 배팅존 세팅
 import pos_coins_for_bet from './modules/pos_coins_for_bet' // 배팅UI
@@ -53,15 +54,6 @@ const e = function (opt) {
   this.betZones = []
   let betZones = this.betZones;
 
-  function getIntersects(targets) {
-    raycaster.setFromCamera(mouseVector, camera);
-    if (targets instanceof Array) {
-      return raycaster.intersectObjects(targets, true);
-    } else {
-      return raycaster.intersectObject(targets, true);
-    }
-  }
-
   let selectedObject = null
   this.onMouseClick = function (e) {
     if (!vue.game_status.bet_start) return;
@@ -77,30 +69,38 @@ const e = function (opt) {
     let x = (e.layerX / width) * 2 - 1;
     let y = -(e.layerY / height) * 2 + 1;
     mouseVector.set(x, y, 10);
-    let targets = [];
+    let targets = forIntersect.betting_zone
 
-    if (y > -0.57) {
-      targets = forIntersect.betting_zone
-    } else {
-      targets = forIntersect.coins
-    }
+    raycaster.setFromCamera(mouseVector, camera);
 
-    if (selectedObject) {
-      //selectedObject.material.color.set('#FFFFFF')
-      selectedObject = null
-    }
-    
-    let intersects = getIntersects(targets);
+    let intersects = raycaster.intersectObjects(this.betZones);
 
     if (intersects.length > 0) {
-      var res = intersects.filter(function (res) {
-        return res && res.object;
-      })[0];
-      if (res && res.object) {
-        selectedObject = res.object;
-        //selectedObject.material.color.set('#690');
+      let intersect = intersects[0].object
+      document.body.style.cursor = "pointer"
+      if (!selectedObject) {        
+        intersect.parent.userData.changeRGB('#FFFF00')
+        selectedObject = intersect;
+
+      } else if (selectedObject) {
+        if (selectedObject === intersect) {
+          return
+        } else {
+          let toChange = selectedObject
+          toChange.parent.userData.restoreRGB();
+          intersect.parent.userData.changeRGB('#FFFF00')
+          selectedObject = intersect
+        }
+      }
+    } else {
+      document.body.style.cursor = ""
+      if (selectedObject) {        
+        let toChange = selectedObject        
+        toChange.parent.userData.restoreRGB(); 
+        selectedObject = null;       
       }
     }
+    return;   
   }
 
   let scene = this.scene = new THREE.Scene();
@@ -126,20 +126,20 @@ const e = function (opt) {
   //renderer.autoClear = false;
   //renderer.shadowMap.enabled = true;
   //renderer.shadowMap.type = THREE.PCFSoftShadowMap
-/*
+  /*
 
-  const renderPass = new THREE.RenderPass(scene, camera);
-  //let pass = new THREE.SMAAPass( width * renderer.getPixelRatio(), height * renderer.getPixelRatio() );
-  //pass.renderToScreen = true;  
-  const pass = new THREE.ShaderPass(THREE.FXAAShader);
-  pass.renderToScreen = true;
-  pass.material.uniforms['resolution'].value.x = 1 / (width);
-  pass.material.uniforms['resolution'].value.y = 1 / (height);
+    const renderPass = new THREE.RenderPass(scene, camera);
+    //let pass = new THREE.SMAAPass( width * renderer.getPixelRatio(), height * renderer.getPixelRatio() );
+    //pass.renderToScreen = true;  
+    const pass = new THREE.ShaderPass(THREE.FXAAShader);
+    pass.renderToScreen = true;
+    pass.material.uniforms['resolution'].value.x = 1 / (width);
+    pass.material.uniforms['resolution'].value.y = 1 / (height);
 
-  const composer = new THREE.EffectComposer(renderer);
-  composer.addPass(renderPass);
-  composer.addPass(pass);
-*/
+    const composer = new THREE.EffectComposer(renderer);
+    composer.addPass(renderPass);
+    composer.addPass(pass);
+  */
   camera.position.z = 120;
   camera.position.y = -80;
   camera.lookAt(0, 0, 0)
@@ -149,18 +149,18 @@ const e = function (opt) {
 
   var directionalLight1 = new THREE.DirectionalLight(0xffffff, 1);
   //directionalLight1.castShadow = true;
-  directionalLight1.shadow.mapSize.width = 1024;  // default
+  directionalLight1.shadow.mapSize.width = 1024; // default
   directionalLight1.shadow.mapSize.height = 1024; // default
-  directionalLight1.shadow.camera.near = 0.01;       // default
-  directionalLight1.shadow.camera.far = 15000      // default
-  var directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);  
+  directionalLight1.shadow.camera.near = 0.01; // default
+  directionalLight1.shadow.camera.far = 15000 // default
+  var directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
   //directionalLight2.castShadow = true;
-  
+
   directionalLight1.position.set(-500, -500, 500)
   directionalLight2.position.z = 15;
   scene.add(directionalLight1);
   scene.add(directionalLight2);
-  
+
 
   //const composer1 = new THREE.EffectComposer( renderer );
   //composer1.addPass( renderPass );
@@ -189,7 +189,7 @@ const e = function (opt) {
 
 
 
-  init_cards.bind(this)(textureLoader,width, height)
+  init_cards.bind(this)(textureLoader, width, height)
   init_betting_zone.bind(this)(width, height, betZones, forIntersect)
 
 
@@ -250,24 +250,24 @@ const e = function (opt) {
 
   const do_bet = (target, sprite, zone) => {
     let coins = target.parent.getObjectByName('mycoins');
-    let index = sprite.index;    
+    let index = sprite.index;
     let coin = this.betted_coins[index]
-    
+
 
     if (!coins) {
       coins = new THREE.Group()
       coins.name = 'mycoins'
-      let shadow = this.betted_coins[this.betted_coins.length-1].clone()
-      shadow.position.z = 0.1;
+      let shadow = this.betted_coins[this.betted_coins.length - 1].clone()
+      //shadow.position.z = 0.1;
+      //shadow.renderOrder = 0.5
       coins.add(shadow)
       coins.position.copy(definedZones[zone])
       coin = coin.clone()
       coin.position.z = 0.2
-      coins.add(coin)  
+      coins.add(coin)
       target.parent.add(coins)
-    }
-    else{   
-      coin = coin.clone()    
+    } else {
+      coin = coin.clone()
       coin.position.x = (Math.random() - 0.5) * 0.3
       coin.position.y = (Math.random() - 0.5) * 0.3
       coin.position.z = coins.children.length * 0.5
@@ -408,53 +408,94 @@ const e = function (opt) {
     //get position. player or 
   }
 
-  init_betted_coin.bind(this)()  
-  
+  init_betted_coin.bind(this)()
+
   //폰트 라벨
-  ;(() => {
+  ;
+  (() => {
     var loader = new THREE.FontLoader();
-    loader.load( '/brushScript.json', font => {
-      let i = 0;      
-      for(let txt of ['P.PAIR','PLAYER','TIE','BANKER','B.PAIR']){
-        let shapes = font.generateShapes( txt, 1 );
-        let geometry = new THREE.ShapeBufferGeometry( shapes );
+    loader.load('/brushScript.json', font => {
+      let i = 0;
+      for (let txt of ['P.PAIR', 'PLAYER', 'TIE', 'BANKER', 'B.PAIR']) {
+        let shapes = font.generateShapes(txt, 1);
+        let geometry = new THREE.ShapeBufferGeometry(shapes);
         geometry.computeBoundingBox();
-        let xMid = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
-        geometry.translate( xMid, 0, 0 );
-        let text = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({
+        let xMid = -0.5 * (geometry.boundingBox.max.x - geometry.boundingBox.min.x);
+        geometry.translate(xMid, 0, 0);
+        let text = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
           color: 0xCCCCCC
-        }) );
+        }));
 
         text.scale.multiplyScalar(1.2)
         text.position.y = -10.2;
         this.betZones[i].parent.add(text)
+        this.betZones[i].parent.userData.toChangeRGB.push(text)
+        text.name = "label"
         i++;
       }
 
-   
-      
+
+
     })
 
 
-    loader.load( '/Arial_Regular.json', font => {
+    loader.load('/Arial_Regular.json', font => {
       let i = 0;
-      for(let ratio of ['1:1','11:1','8:1','11:1','0.95:1']){
-        let shapes = font.generateShapes( ratio, 1 );
-        let geometry = new THREE.ShapeBufferGeometry( shapes );
+      for (let ratio of ['1:1', '11:1', '8:1', '11:1', '0.95:1']) {
+        let shapes = font.generateShapes(ratio, 1);
+        let geometry = new THREE.ShapeBufferGeometry(shapes);
         geometry.computeBoundingBox();
-        let xMid = - 0.5 * ( geometry.boundingBox.max.x - geometry.boundingBox.min.x );
-        geometry.translate( xMid, 0, 0 );
-        let text = new THREE.Mesh( geometry, new THREE.MeshBasicMaterial({
+        let xMid = -0.5 * (geometry.boundingBox.max.x - geometry.boundingBox.min.x);
+        geometry.translate(xMid, 0, 0);
+        let text = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
           color: 0xCCCCCC
-        }) );
+        }));
 
         text.scale.multiplyScalar(0.9)
+        text.position.z = 0.05;
         text.position.y = -7;
         this.betZones[i].parent.add(text)
-        i++;      
+        this.betZones[i].parent.userData.toChangeRGB.push(text)
+        text.name = "ratio"
+        i++;
       }
     })
   })()
+
+
+  // 데이터 라벨링
+  this.textLabels = [];
+  ;  (function (zones) {    
+    zones.forEach( (z,i) => {      
+      let parent = z.parent;
+      let geo = new THREE.PlaneGeometry(13,2.6)
+      let mat = new THREE.MeshBasicMaterial({      
+        transparent:true,
+        depthTest: false,
+      })
+      let mesh = new THREE.Mesh(geo,mat.clone())
+      let cvs = vue.$refs.hiddenCanvas
+      cvs.getContext('2d').imageSmoothingEnabled = true
+      let map = new THREE.Texture(cvs)
+      map.wrapS = map.wrapT = THREE.RepeatWrapping
+      map.repeat.y = 0.2
+      map.offset.y = -0.2 * (i+1)
+      
+
+
+      mesh.material.map = map
+      mesh.material.map.minFilter = mesh.material.map.magFilter = THREE.LinearFilter;
+      //mesh.material.needsUpdate=true
+      mesh.position.x = ( i==2 ) ? 1.48 : 0
+      mesh.position.y = 6.5
+      mesh.position.z = 0.1
+      parent.add(mesh)
+      this.textLabels.push(mesh)
+    })
+
+
+
+  }.bind(this))(this.betZones)
 
 
 }

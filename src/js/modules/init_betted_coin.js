@@ -87,14 +87,14 @@ export default function(){
  
   let a = new THREE.PlaneGeometry(4.1,4.1)
   let b = new THREE.Mesh(a,new THREE.MeshBasicMaterial({
-    color: 0x222222,
-    transparent: true,
-    alphaTest: 0.05,
+    color: 0xffffff,    
   }))
-  b.renderOrder = 1;
-  textureLoader.load(require(`@/images/chips/coin_shadow.jpg`),tex=>{    
-    b.material.alphaMap = tex;
+  b.position.z = 0.05
+  textureLoader.load(require(`@/images/chips/coin_shadow2.jpg`), tex=>{
+    b.material.map = tex;
+    b.material.blending = THREE.MultiplyBlending
     b.material.needsUpdate = true;
+    
   })
   
   betted_coins.push(b);

@@ -1,5 +1,37 @@
 <template>
   <div class="about">
+    <!--hidden canvas-->
+    <div v-show="true" id="hidden_canvas" style="text-align:left;">
+      <div ref="hiddenDiv" style="width:512px;height:512px;">   
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">00111</span>
+          <span style="margin-right:16px">04</span>
+          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
+        </div> 
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">00222</span>
+          <span style="margin-right:16px">07</span>
+          <span :style="hiddenStyle.percent">22<span style="font-size:0.8em">%</span></span>
+        </div>
+        <div :style="hiddenStyle.div(1)">
+          <span style="margin-right:16px">00333</span>
+          <span>04</span>
+          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
+        </div>
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">00444</span>
+          <span style="margin-right:16px">04</span>
+          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
+        </div>
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">01555</span>
+          <span style="margin-right:16px">02</span>
+          <span :style="hiddenStyle.percent">60<span style="font-size:0.8em">%</span></span>
+        </div>
+      </div>
+      
+      <canvas antialias="true" width="512" height="512" ref="hiddenCanvas"/>
+    </div>
     <span>{{round}}</span>
     <div id="cont_3d">
       <!--배팅코인-->
@@ -17,15 +49,17 @@
       <!--winner-->
       <!--timer-->
       <div class="timer" v-show="game_status.betting" ref="timer" data-default_size="68" :style="timerStyle">{{timer}}</div>
-      <!--timer-->
+      <!--timer-->      
     </div>
 		<board ref="board"></board>
+    
   </div>
 </template>
 
 <script>
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
+import rasterizeHTML from 'rasterizehtml'
 import CoinsForBet from '@/components/CoinsForBet.vue'
 import Board from '@/components/Board.vue'
 
@@ -36,6 +70,36 @@ export default {
   },
   data(){
     return {
+      hiddenStyle:{
+        percent:{          
+          display:'inline-block',
+          width:'90px',
+          height:'90px',
+          border:'5px solid #fff',          
+          borderRadius: '50%',
+          textAlign: 'center',
+          letterSpacing: '-3px',          
+          boxSizing: 'border-box',
+          fontSize: '0.8em',
+          float:'right',          
+        },
+        div(n){
+          return{
+            width: (n==0) ? '' : '76%',
+            fontSize: '56px',
+            lineHeight: '74px',
+            fontFamily: 'Arial',
+            fontWeight: 500,
+            color: '#fff',
+            overflow: 'hidden',
+            opacity: '0.7',
+            height:'102.4px'
+          }
+        }
+      },      
+      hiddenData:[
+        {},{},{},{},{}
+      ],
       selectedCoin:{
         index: null,
         value: null,
@@ -96,10 +160,27 @@ export default {
       typeB: TWEEN.Easing.Elastic.InOut,
     }
   },
+  watch:{
+    hiddenData(newData, oldData){
+      rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
+        
+      })
+      .then((a) => {
+        this.game.textLabels.forEach((label, i) => {
+          console.log(label)
+          label.material.map.needsUpdate = true;
+          label.material.needsUpdate = true;
+        })
+      })
+    },
+  },
   created(){
     
 	},
-  mounted(){
+  mounted(){    
+    setInterval(()=>{
+      this.hiddenData = 3
+    },0)
     this.game = new threejs({
       vue: this,
       el: '#cont_3d',
@@ -250,9 +331,7 @@ export default {
   height:100px;
   border:3px solid #fff;
   box-sizing:border-box;
-  border-radius:50%;
-  
-  
+  border-radius:50%;  
 }
 
 body{margin:0;padding:0}

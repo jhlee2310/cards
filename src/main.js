@@ -8,8 +8,8 @@ Object.defineProperty(Vue.prototype, '$_', { value: _ });
 
 Vue.config.productionTip = false
 
-Vue.use(VueNativeSock, 'ws://192.168.0.14:3100')
-//Vue.use(VueNativeSock, 'ws://eostics.io:3100')
+//Vue.use(VueNativeSock, 'ws://192.168.0.14:3100')
+Vue.use(VueNativeSock, 'ws://eostics.io:3100')
 
 new Vue({
   router,

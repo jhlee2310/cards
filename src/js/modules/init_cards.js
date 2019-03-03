@@ -5,7 +5,7 @@ export default function init_cards(textureLoader, width, height){
     card_shape.autoClose = true;
     const card_groups = this.card_groups
     const whole_cards = [];
-
+    
     
     const round_ractangle = function (ctx, width, height, radius) {
       let x = width / 2 * -1,
@@ -61,6 +61,8 @@ export default function init_cards(textureLoader, width, height){
 
     }
     card_geometry.uvsNeedUpdate = true;
+    card_geometry.translate(4,0,0)
+
 
     // 카드 재질 정의
     const card_mat = {
@@ -100,14 +102,14 @@ export default function init_cards(textureLoader, width, height){
         mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'
         
         if (j != 3) { //히든카드가 아닐경우
-          mesh.position.x = j * 4.5
+          mesh.position.x = (j * 4.5) + 4 
           mesh.userData.isHidden = false;
           mesh.rotation.y = Math.PI
         } else {
           mesh.rotation.z = Math.PI / 2
           mesh.rotation.x = Math.PI
-          mesh.position.y = 2.2
-          mesh.position.x = i * 16
+          mesh.position.y = 6.2
+          mesh.position.x = (i * 16)
           mesh.userData.isHidden = true;
           //mesh.position.z = 1
           //mesh.renderOrder = 999;                
@@ -134,7 +136,7 @@ export default function init_cards(textureLoader, width, height){
     round_ractangle(holder_shape, 9, 13.8, 0.9)
     let _matLine = new THREE.LineMaterial({
       color: 0xAAAAAA,
-      linewidth: 2, // in pixels        
+      linewidth: 1, // in pixels
       dashed: false,
     });    
 
@@ -145,21 +147,12 @@ export default function init_cards(textureLoader, width, height){
     for(let a of holder_shape.getPoints()){
       _positions.push(a.x, a.y, 0)    
     }
-    _geo.setPositions(_positions)   
-
-    let holder_group = new THREE.Group()    
-
-    whole_cards.forEach( (c, i) => {
-      
-
+    _geo.setPositions(_positions)     
+    
+    whole_cards.forEach((card,i)=>{
       let holder = new THREE.Line2(_geo, _matLine);
       holder.computeLineDistances();
-      //holder.position.copy(worldP)
-      //holder_group.add(holder)
-      //scene.add(holder)
+      holder.position.copy(card.position)
+      card.parent.add(holder)
     })
-    //scene.add(holder_group)
-    
-
-    
   }
