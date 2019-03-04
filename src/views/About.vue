@@ -1,7 +1,8 @@
 <template>
   <div class="about">
     <div>
-      <span @click="proc_getIdentity">login</span><span>{{eosAccount}}</span>
+      <span v-if="!eosAccount" @click="proc_getIdentity">login</span>
+      <span v-else="!!eosAccount" @click="proc_forgetIdentity">logOut(<span>{{eosAccount.name}}</span>)</span>
     </div>
     <!--hidden canvas-->
     <div v-show="false" id="hidden_canvas" style="text-align:left;">
@@ -67,6 +68,9 @@ import CoinsForBet from '@/components/CoinsForBet.vue'
 import Board from '@/components/Board.vue'
 import ScatterJS from 'scatterjs-core'
 import ScatterEOS from 'scatterjs-plugin-eosjs'
+import Eos from 'eosjs';
+ScatterJS.plugins( new ScatterEOS() );
+
 
 export default {
   components:{
@@ -74,9 +78,34 @@ export default {
     CoinsForBet
   },
   data(){
+    const that = this;
     return {
+      tosvr:{
+        set_scatter_identity (scatter_identity = undefined ) {
+          //if (!ws || !game_connected) return;
+          const scatter = this.scatter
+
+          if (scatter_identity === undefined) {          
+            if ( scatter && scatter.identity ) {
+              const eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+              scatter_identity = eosAccount.name; 
+              console.log('스캐터 아이디', scatter_identity);
+            }
+          }
+          
+          if (scatter_identity === undefined) return;
+
+          let req_json = {
+            type      :"req_set_scatter_identity",
+            identity  : scatter_identity
+          };
+
+          console.log(scatter_identity)          
+          that.$socket.send(JSON.stringify(req_json));
+        }
+      },
       eosAccount: null,
-      scatter: null,
+      scatter: ScatterJS.scatter,
       eos: null,
       BACCARAT_ACCOUNT: 'baccaratdev1',
       network: ScatterJS.Network.fromJson({
@@ -191,27 +220,31 @@ export default {
     },
   },
   created(){
-    
+    this.connectScatter();
 	},
   mounted(){
     setInterval(()=>{
       this.hiddenData = 3
     },0)
+
+    this.$connect()
+
     this.game = new threejs({
       vue: this,
       el: '#cont_3d',
       TWEEN    
-    })
-
-    this.$socket.send(JSON.stringify({
-        type    :"req_enter_room",
-        room_id : 1
-    }))
-
-    this.$socket.onmessage = (mes)=>{      
+    })    
+    window.vv = this
+    this.$socket.onmessage = (mes)=>{
       const message = JSON.parse(mes.data)
       console.log(message)
       switch(message.type){
+        case 'welcome':          
+          this.$socket.send(JSON.stringify({
+             type    :"req_enter_room",
+          room_id : 1
+          }))
+          break;
         case 'deal_info':
           this.deal_info = message
           this.process_deal(message)
@@ -265,7 +298,7 @@ export default {
           //console.log(message)
       }
     }
-    window.vv = this
+    
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
     document.querySelector('#cont_3d').addEventListener('click',this.onMouseClick, false)
@@ -289,29 +322,70 @@ export default {
     },false)
   },
   methods: {
-    proc_getIdentity(){
+    async proc_forgetIdentity() {
+      if (!this.scatter.identity) return; 
 
+      await this.scatter.forgetIdentity();
+      this.eosAccount = null;
+      
+      //this.tosvr.set_scatter_identity('');
     },
-    connectScatter(){
-      ScatterJS.plugins( new ScatterEOS() );
-      const connectionOptions = {initTimeout:10000};
-      ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions).then(connected => {
-        if(!connected){
-          // Either the user doesn't have Scatter, or it's closed.
-          console.error('Could not connect to Scatter.');
-          return;
-        }
-        console.log('Scatter Connected!')
-        this.scatter = ScatterJS.scatter;
-        this.eos = scatter.eos(network, Eos);
+    async proc_getIdentity(){
+      if(!this.scatter.suggestNetwork){
+        console.log('스캐터가 없습니다.')
+        await this.connectScatter()
+        
+      }
+      console.log('연결됐습니다.')
+      await this.scatter.suggestNetwork(this.network).then(function() {
+        console.log("sugggestNetwork: Succ2!");
+      }).catch(function (error) {
+        console.log("sugggestNetwork: 에러");
+        console.log(error)      
+        return; 
+      });
+      await this.scatter.getIdentity({accounts:[this.network]})
+      .then(identity => {
+        console.log("getIdentity: 성공");
+        let eosAccount = this.eosAccount = identity.accounts.find(account => account.blockchain === 'eos');
+        console.log(this.eosAccount);               
 
-        if (this.scatter.identity) {
-          this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
-        }else{
-          this.eosAccount = null;
-        }
+        // 게임서버에 identity 알림. 
+        this.tosvr.set_scatter_identity(eosAccount.name);
 
       })
+      .catch(function (error) {
+        console.log("에러");
+        console.log(error); 
+      });
+  
+      //console.log(this.scatter.identity);
+    },
+    connectScatter(){
+      return new Promise((resolve, reject)=>{
+        const connectionOptions = {initTimeout:10000};
+        ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions).then( connected => {
+          if(!connected){          
+            console.error('Could not connect to Scatter.');
+            return;
+          }        
+          console.log('Scatter Connected!')
+          this.eos = this.scatter.eos(this.network, Eos);        
+
+          if (this.scatter.identity) {
+            this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+          }else{
+            this.eosAccount = null;
+          }
+
+          resolve(this.tosvr.set_scatter_identity(eosAccount.name));
+        }).catch( ()=>{
+          resolve(this.tosvr.set_scatter_identity(''));
+        } )
+
+      })
+        
+      
     },
     bet_others(message){
       this.game.bet_others(message)

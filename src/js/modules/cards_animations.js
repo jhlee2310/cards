@@ -46,7 +46,7 @@ export default function(TWEEN, vue, card_groups, p_data, b_data, result){
             setTimeout(resolve, duration.before_reset)
         })
 
-        //this.clear_bet_coins();
+        this.clear_bet_coins();
 
         //카드 철수
         const reset_generator = function*(){

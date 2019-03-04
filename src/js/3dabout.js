@@ -279,7 +279,7 @@ const e = function (opt) {
   }
 
   this.animateCards = (p_data, b_data, result) => {
-    cards_animations(TWEEN, vue, card_groups, p_data, b_data, result);
+    cards_animations.bind(this)(TWEEN, vue, card_groups, p_data, b_data, result);
   }
 
   // betting target 정의
