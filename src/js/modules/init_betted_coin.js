@@ -98,4 +98,5 @@ export default function(){
   })
   
   betted_coins.push(b);
+  
 }

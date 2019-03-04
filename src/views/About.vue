@@ -1,7 +1,10 @@
 <template>
   <div class="about">
+    <div>
+      <span @click="proc_getIdentity">login</span><span>{{eosAccount}}</span>
+    </div>
     <!--hidden canvas-->
-    <div v-show="true" id="hidden_canvas" style="text-align:left;">
+    <div v-show="false" id="hidden_canvas" style="text-align:left;">
       <div ref="hiddenDiv" style="width:512px;height:512px;">   
         <div :style="hiddenStyle.div(0)">
           <span style="margin-right:16px">00111</span>
@@ -62,6 +65,8 @@ import threejs from '@/js/3dabout.js'
 import rasterizeHTML from 'rasterizehtml'
 import CoinsForBet from '@/components/CoinsForBet.vue'
 import Board from '@/components/Board.vue'
+import ScatterJS from 'scatterjs-core'
+import ScatterEOS from 'scatterjs-plugin-eosjs'
 
 export default {
   components:{
@@ -70,6 +75,18 @@ export default {
   },
   data(){
     return {
+      eosAccount: null,
+      scatter: null,
+      eos: null,
+      BACCARAT_ACCOUNT: 'baccaratdev1',
+      network: ScatterJS.Network.fromJson({
+        name: 'Kylin',
+        blockchain:'eos',
+        chainId:'5fff1dae8dc8e2fc4d5b23b2c7665c97f9e9d8edf2b6485a86ba311c25639191',
+        host:'api-kylin.eoslaomao.com',
+        port:443,
+        protocol:'https'
+      }),
       hiddenStyle:{
         percent:{          
           display:'inline-block',
@@ -166,8 +183,7 @@ export default {
         
       })
       .then((a) => {
-        this.game.textLabels.forEach((label, i) => {
-          console.log(label)
+        this.game.textLabels.forEach((label, i) => {          
           label.material.map.needsUpdate = true;
           label.material.needsUpdate = true;
         })
@@ -177,7 +193,7 @@ export default {
   created(){
     
 	},
-  mounted(){    
+  mounted(){
     setInterval(()=>{
       this.hiddenData = 3
     },0)
@@ -191,6 +207,7 @@ export default {
         type    :"req_enter_room",
         room_id : 1
     }))
+
     this.$socket.onmessage = (mes)=>{      
       const message = JSON.parse(mes.data)
       console.log(message)
@@ -214,7 +231,7 @@ export default {
           switch(message.state){
             case 'betting':
               this.round = message.round
-              this.start_betting(3);
+              this.start_betting(10);
               break;
             case 'betting::chain':
               break;
@@ -223,6 +240,7 @@ export default {
             case 'dealing':
               break;
             case 'dealing:::chain':
+            this.end_betting();
               break;
             case 'prepare_round':
               break;
@@ -235,6 +253,10 @@ export default {
           this.round = message.round
           this.$refs.board.setRound(message)
           break;
+        case 'room_betting':          
+          this.bet_others(message);
+          break;
+
         // case 'room_state':
         //   this.$refs.board.setState(message)
         //   break;
@@ -267,13 +289,44 @@ export default {
     },false)
   },
   methods: {
+    proc_getIdentity(){
+
+    },
+    connectScatter(){
+      ScatterJS.plugins( new ScatterEOS() );
+      const connectionOptions = {initTimeout:10000};
+      ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions).then(connected => {
+        if(!connected){
+          // Either the user doesn't have Scatter, or it's closed.
+          console.error('Could not connect to Scatter.');
+          return;
+        }
+        console.log('Scatter Connected!')
+        this.scatter = ScatterJS.scatter;
+        this.eos = scatter.eos(network, Eos);
+
+        if (this.scatter.identity) {
+          this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+        }else{
+          this.eosAccount = null;
+        }
+
+      })
+    },
+    bet_others(message){
+      this.game.bet_others(message)
+    },
+    end_betting(){
+      if(this.game_status.betting == false) return
+      this.$set(this.game_status,'betting', false);
+    },
     start_betting(time){
       this.$set(this.game_status,'betting',true);
 
       const d = ()=>{
         this.timer = time
         time--;
-        if(time <= 0) {
+        if(this.timer <= 0) {
           this.$set(this.game_status,'betting', false);
           return
           }

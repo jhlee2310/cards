@@ -5,6 +5,7 @@ import init_betting_zone from './modules/init_betting_zone' // 배팅존 세팅
 import pos_coins_for_bet from './modules/pos_coins_for_bet' // 배팅UI
 import cards_animations from './modules/cards_animations' // 카드애니메이션
 import init_betted_coin from './modules/init_betted_coin.js' // 배팅된 코인
+import bet_others from './modules/bet_others' // 다른유저 배팅
 
 
 const e = function (opt) {
@@ -193,48 +194,7 @@ const e = function (opt) {
   init_betting_zone.bind(this)(width, height, betZones, forIntersect)
 
 
-  const show_bet = (cont, p, q) => {
-    let target;
-    let zones = [];
-    for (let y = -1; y <= 1; y++) {
-      for (let x = -1; x <= 1; x++) {
-        zones.push(new THREE.Vector3(x, y, 0))
-      }
-    }
-    if (typeof cont == 'number') {
-      switch (cont) {
-        case 1:
-          target = _group5;
-          break;
-        case 2:
-          target = _group3
-          break;
-        case 3:
-          target = _group
-          break;
-        case 4:
-          target = _group2
-          break;
-        case 5:
-          target = _group4
-          break;
-      }
-    } else {
-      target = cont
-    }
-
-    let z = Math.floor(Math.random() * 9)
-    let coins = new THREE.Group();
-    coins.position.copy(zones[z].multiplyScalar(3.8))
-    let coin = this.group_buy_sprite[`buy_${p}`]
-    for (let i = 0; i < q; i++) {
-      coin = coin.clone()
-      coin.position.x = (Math.random() - 0.5) * 0.7 + (i * 0.05)
-      coin.position.y = i * 0.14
-      coins.add(coin)
-    }
-    target.add(coins)
-  }
+ 
 
 
   //세부 영역 정의
@@ -247,21 +207,44 @@ const e = function (opt) {
       definedZones.push(v)
     }
   }
-
-  const do_bet = (target, sprite, zone) => {
-    let coins = target.parent.getObjectByName('mycoins');
+  
+  const do_bet = (target, sprite, zone, who) => {
+    
+    let groupName = (typeof who == 'undefined') ? 'mycoins' : who
+    let coins = target.parent.getObjectByName( groupName );
     let index = sprite.index;
     let coin = this.betted_coins[index]
 
+    const randomNumber = (target) => {
+      while(1){   
+        let used = [];
+        target.parent.userData.zones.map(t => {
+          used.push(t.zone)
+        })
+        let rnd =  Math.floor(Math.random() * 9)
+        if(used.indexOf(rnd) == -1) {return rnd}
+        else continue;
+      }
+    }
 
     if (!coins) {
       coins = new THREE.Group()
-      coins.name = 'mycoins'
+      coins.name = groupName
+      coins.userData.type = "coins"
       let shadow = this.betted_coins[this.betted_coins.length - 1].clone()
       //shadow.position.z = 0.1;
       //shadow.renderOrder = 0.5
       coins.add(shadow)
-      coins.position.copy(definedZones[zone])
+      
+      if(typeof target.parent.userData.zones == 'undefined') target.parent.userData.zones = [];
+      let zz = randomNumber(target)
+      target.parent.userData.zones.push({
+        who: groupName,
+        zone: zz,
+      })
+      console.log(target.parent.userData.zones)
+
+      coins.position.copy(definedZones[zz])
       coin = coin.clone()
       coin.position.z = 0.2
       coins.add(coin)
@@ -273,6 +256,10 @@ const e = function (opt) {
       coin.position.z = coins.children.length * 0.5
       coins.add(coin)
     }
+  }
+
+  this.do_bet = (target, sprite, zone, who)=>{
+    do_bet(target, sprite, zone , who);
   }
 
   //카드 재질및 정보 세팅
@@ -492,10 +479,25 @@ const e = function (opt) {
       parent.add(mesh)
       this.textLabels.push(mesh)
     })
-
-
-
   }.bind(this))(this.betZones)
+
+  this.bet_others = (message)=>{
+    bet_others.bind(this)(message,this.betZones)
+  }
+
+  // trigger => cards_animations.js
+  this.clear_bet_coins = ()=>{
+    this.betZones.forEach((zone,i)=>{
+      let parent = zone.parent
+      delete(parent.userData.zones)
+      let whole_coins = parent.children.filter( child => {
+        return child.userData.type == 'coins'
+      })
+      whole_coins.forEach(coins => {
+        parent.remove(coins)
+      })
+    })
+  }
 
 
 }

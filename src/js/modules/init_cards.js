@@ -99,7 +99,9 @@ export default function init_cards(textureLoader, width, height){
           card_mat.back
         ]);
         mesh.name = `card_${imgcnt}`
+        mesh.visible = false;
         mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'
+        mesh.userData.type = 'card';
         
         if (j != 3) { //히든카드가 아닐경우
           mesh.position.x = (j * 4.5) + 4 
@@ -130,10 +132,10 @@ export default function init_cards(textureLoader, width, height){
       }
     }
 
-    //card position shape
+    //card holder shape
     const holder_shape = new THREE.Shape();
     card_shape.autoClose = true;    
-    round_ractangle(holder_shape, 9, 13.8, 0.9)
+    round_ractangle(holder_shape, 8, 12.8, 0.45)
     let _matLine = new THREE.LineMaterial({
       color: 0xAAAAAA,
       linewidth: 1, // in pixels
@@ -142,6 +144,14 @@ export default function init_cards(textureLoader, width, height){
 
     _matLine.resolution.set(width, height);
     let _geo = new THREE.LineGeometry();
+    let holder_geo = new THREE.ShapeGeometry(holder_shape)
+    let holder_mesh = new THREE.Mesh(holder_geo, new THREE.MeshBasicMaterial({
+      color: 0xEEEEEE,
+      blending: 4,
+      map: textureLoader.load(require(`@/images/betting_zone.jpg`), tex => {
+        return tex
+      })
+    }));
     const _positions = []
 
     for(let a of holder_shape.getPoints()){
@@ -149,10 +159,20 @@ export default function init_cards(textureLoader, width, height){
     }
     _geo.setPositions(_positions)     
     
-    whole_cards.forEach((card,i)=>{
+    whole_cards.forEach( (card,i) =>{
       let holder = new THREE.Line2(_geo, _matLine);
       holder.computeLineDistances();
       holder.position.copy(card.position)
-      card.parent.add(holder)
+      holder.rotation.z = card.rotation.z
+      holder.position.z = -0.05;
+      holder.position.x -= (i != 2 && i != 5) ? 4 : 0
+      holder.position.y -= (i == 2 || i == 5) ? 4 : 0
+
+      let clone_mesh = holder_mesh.clone()            
+      clone_mesh.position.copy(holder.position)
+      clone_mesh.rotation.copy(holder.rotation)
+      card.parent.add(clone_mesh)
+      card.parent.add(holder)      
+      
     })
   }
