@@ -8,8 +8,8 @@
     <div v-show="false" id="hidden_canvas" style="text-align:left;">
       <div ref="hiddenDiv" style="width:512px;height:512px;">   
         <div :style="hiddenStyle.div(0)">
-          <span style="margin-right:16px">00111</span>
-          <span style="margin-right:16px">04</span>
+          <span style="margin-right:16px">{{hiddenData[0].value}}</span>
+          <span style="margin-right:16px">{{hiddenData[0].users}}</span>
           <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
         </div> 
         <div :style="hiddenStyle.div(0)">
@@ -34,7 +34,7 @@
         </div>
       </div>
       
-      <canvas antialias="true" width="512" height="512" ref="hiddenCanvas"/>
+      <canvas width="512" height="512" ref="hiddenCanvas"/>
     </div>
     <span>{{round}}</span>
     <div id="cont_3d">
@@ -144,7 +144,11 @@ export default {
         }
       },      
       hiddenData:[
-        {},{},{},{},{}
+        {
+          value: 44444,
+          users: 222,
+        },
+        {},{},{},{}
       ],
       selectedCoin:{
         index: null,
@@ -207,6 +211,7 @@ export default {
     }
   },
   watch:{
+    
     hiddenData(newData, oldData){
       rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
         
@@ -224,8 +229,8 @@ export default {
 	},
   mounted(){
     setInterval(()=>{
-      this.hiddenData = 3
-    },0)
+      this.$set(this.hiddenData, '0', {value:'test',users:'axxx'})
+    },1000)
 
     this.$connect()
 
@@ -462,8 +467,8 @@ export default {
 }
 
 body{margin:0;padding:0}
-  .about{height:70vw;max-height:896px;position:relative;
-  max-width:1280px;margin:0 auto;}
+  .about{height:56.25vw;max-height:1080px;position:relative;
+  max-width:1920px;margin:0 auto;width:100%;}
   #cont_3d{
     position:relative;
     width:100%;
