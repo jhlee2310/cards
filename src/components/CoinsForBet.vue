@@ -63,7 +63,7 @@ export default {
       border-radius:50%;
       transition:all 0.07s;
       &:hover{
-        transform: translateY(-20px);        
+        box-shadow: 0px 0px 20px orange
       }
       &.selected{
         transform: translateY(-20px);

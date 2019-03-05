@@ -1,9 +1,13 @@
-export default function init_cards(textureLoader){
-    const card_shape = new THREE.Shape();
-    const card_groups = this.card_groups
+import { Vector3 } from 'three-full';
 
+export default function init_cards(textureLoader, width, height){
+    const card_shape = new THREE.Shape();
     card_shape.autoClose = true;
-    (function (ctx, width, height, radius) {
+    const card_groups = this.card_groups
+    const whole_cards = [];
+    
+    
+    const round_ractangle = function (ctx, width, height, radius) {
       let x = width / 2 * -1,
         y = height / 2 * -1
       ctx.moveTo(x, y + radius);
@@ -15,7 +19,9 @@ export default function init_cards(textureLoader){
       ctx.quadraticCurveTo(x + width, y, x + width - radius, y);
       ctx.lineTo(x + radius, y);
       ctx.quadraticCurveTo(x, y, x, y + radius);
-    })(card_shape, 8, 12.8, 0.45);
+    }
+    //card shape
+    round_ractangle(card_shape, 8, 12.8, 0.45)
 
     const card_geometry = new THREE.ExtrudeGeometry(card_shape, {
       depth: 0.001,
@@ -26,8 +32,7 @@ export default function init_cards(textureLoader){
     }).forEach(a => {
       a.materialIndex = 2
     })
-    card_geometry.groupsNeedUpdate = true;
-
+    card_geometry.groupsNeedUpdate = true;    
     card_geometry.computeBoundingBox();
     let max = card_geometry.boundingBox.max
     let min = card_geometry.boundingBox.min
@@ -56,6 +61,8 @@ export default function init_cards(textureLoader){
 
     }
     card_geometry.uvsNeedUpdate = true;
+    card_geometry.translate(4,0,0)
+
 
     // 카드 재질 정의
     const card_mat = {
@@ -79,6 +86,11 @@ export default function init_cards(textureLoader){
     for (let i = -1; i <= 1; i += 2) {
       let group = new THREE.Group()
       group.name = (i == -1) ? 'card_group_player' : 'card_group_banker'
+      //mesh.rotation.x = Math.PI;        
+      group.position.x = i * 12
+      group.position.y = 22
+
+      scene.add(group)
 
       for (let j = -1; j <= 3; j += 2) {
         let mesh = new THREE.Mesh(card_geometry, [
@@ -87,17 +99,19 @@ export default function init_cards(textureLoader){
           card_mat.back
         ]);
         mesh.name = `card_${imgcnt}`
-        mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'      
+        mesh.visible = false;
+        mesh.userData.parent_type = (i == -1) ? 'player' : 'banker'
+        mesh.userData.type = 'card';
         
         if (j != 3) { //히든카드가 아닐경우
-          mesh.position.x = j * 4.5
+          mesh.position.x = (j * 4.5) + 4 
           mesh.userData.isHidden = false;
           mesh.rotation.y = Math.PI
         } else {
           mesh.rotation.z = Math.PI / 2
           mesh.rotation.x = Math.PI
-          mesh.position.y = 2.2
-          mesh.position.x = i * 16
+          mesh.position.y = 6.2
+          mesh.position.x = (i * 16)
           mesh.userData.isHidden = true;
           //mesh.position.z = 1
           //mesh.renderOrder = 999;                
@@ -108,7 +122,7 @@ export default function init_cards(textureLoader){
         //mesh.visible = false;
 
         group.add(mesh);
-        o.push(mesh)
+        whole_cards.push(mesh)
 
         if (i == -1) {
           card_groups.player = group
@@ -116,14 +130,49 @@ export default function init_cards(textureLoader){
           card_groups.banker = group
         }
       }
-
-
-
-
-      //mesh.rotation.x = Math.PI;        
-      group.position.x = i * 12
-      group.position.y = 22
-
-      scene.add(group)
     }
+
+    //card holder shape
+    const holder_shape = new THREE.Shape();
+    card_shape.autoClose = true;    
+    round_ractangle(holder_shape, 8, 12.8, 0.45)
+    let _matLine = new THREE.LineMaterial({
+      color: 0xAAAAAA,
+      linewidth: 1, // in pixels
+      dashed: false,
+    });    
+
+    _matLine.resolution.set(width, height);
+    let _geo = new THREE.LineGeometry();
+    let holder_geo = new THREE.ShapeGeometry(holder_shape)
+    let holder_mesh = new THREE.Mesh(holder_geo, new THREE.MeshBasicMaterial({
+      color: 0xEEEEEE,
+      blending: 4,
+      map: textureLoader.load(require(`@/images/betting_zone.jpg`), tex => {
+        return tex
+      })
+    }));
+    const _positions = []
+
+    for(let a of holder_shape.getPoints()){
+      _positions.push(a.x, a.y, 0)    
+    }
+    _geo.setPositions(_positions)     
+    
+    whole_cards.forEach( (card,i) =>{
+      let holder = new THREE.Line2(_geo, _matLine);
+      holder.computeLineDistances();
+      holder.position.copy(card.position)
+      holder.rotation.z = card.rotation.z
+      holder.position.z = -0.05;
+      holder.position.x -= (i != 2 && i != 5) ? 4 : 0
+      holder.position.y -= (i == 2 || i == 5) ? 4 : 0
+
+      let clone_mesh = holder_mesh.clone()            
+      clone_mesh.position.copy(holder.position)
+      clone_mesh.rotation.copy(holder.rotation)
+      card.parent.add(clone_mesh)
+      card.parent.add(holder)      
+      
+    })
   }

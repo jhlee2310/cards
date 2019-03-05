@@ -1,5 +1,41 @@
 <template>
   <div class="about">
+    <div>
+      <span v-if="!eosAccount" @click="proc_getIdentity">login</span>
+      <span v-else="!!eosAccount" @click="proc_forgetIdentity">logOut(<span>{{eosAccount.name}}</span>)</span>
+    </div>
+    <!--hidden canvas-->
+    <div v-show="false" id="hidden_canvas" style="text-align:left;">
+      <div ref="hiddenDiv" style="width:512px;height:512px;">   
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">00111</span>
+          <span style="margin-right:16px">04</span>
+          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
+        </div> 
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">00222</span>
+          <span style="margin-right:16px">07</span>
+          <span :style="hiddenStyle.percent">22<span style="font-size:0.8em">%</span></span>
+        </div>
+        <div :style="hiddenStyle.div(1)">
+          <span style="margin-right:16px">00333</span>
+          <span>04</span>
+          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
+        </div>
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">00444</span>
+          <span style="margin-right:16px">04</span>
+          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
+        </div>
+        <div :style="hiddenStyle.div(0)">
+          <span style="margin-right:16px">01555</span>
+          <span style="margin-right:16px">02</span>
+          <span :style="hiddenStyle.percent">60<span style="font-size:0.8em">%</span></span>
+        </div>
+      </div>
+      
+      <canvas antialias="true" width="512" height="512" ref="hiddenCanvas"/>
+    </div>
     <span>{{round}}</span>
     <div id="cont_3d">
       <!--배팅코인-->
@@ -17,17 +53,24 @@
       <!--winner-->
       <!--timer-->
       <div class="timer" v-show="game_status.betting" ref="timer" data-default_size="68" :style="timerStyle">{{timer}}</div>
-      <!--timer-->
+      <!--timer-->      
     </div>
 		<board ref="board"></board>
+    
   </div>
 </template>
 
 <script>
 import TWEEN from '@tweenjs/tween.js'
 import threejs from '@/js/3dabout.js'
+import rasterizeHTML from 'rasterizehtml'
 import CoinsForBet from '@/components/CoinsForBet.vue'
 import Board from '@/components/Board.vue'
+import ScatterJS from 'scatterjs-core'
+import ScatterEOS from 'scatterjs-plugin-eosjs'
+import Eos from 'eosjs';
+ScatterJS.plugins( new ScatterEOS() );
+
 
 export default {
   components:{
@@ -35,7 +78,74 @@ export default {
     CoinsForBet
   },
   data(){
+    const that = this;
     return {
+      tosvr:{
+        set_scatter_identity (scatter_identity = undefined ) {
+          //if (!ws || !game_connected) return;
+          const scatter = this.scatter
+
+          if (scatter_identity === undefined) {          
+            if ( scatter && scatter.identity ) {
+              const eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+              scatter_identity = eosAccount.name; 
+              console.log('스캐터 아이디', scatter_identity);
+            }
+          }
+          
+          if (scatter_identity === undefined) return;
+
+          let req_json = {
+            type      :"req_set_scatter_identity",
+            identity  : scatter_identity
+          };
+
+          console.log(scatter_identity)          
+          that.$socket.send(JSON.stringify(req_json));
+        }
+      },
+      eosAccount: null,
+      scatter: ScatterJS.scatter,
+      eos: null,
+      BACCARAT_ACCOUNT: 'baccaratdev1',
+      network: ScatterJS.Network.fromJson({
+        name: 'Kylin',
+        blockchain:'eos',
+        chainId:'5fff1dae8dc8e2fc4d5b23b2c7665c97f9e9d8edf2b6485a86ba311c25639191',
+        host:'api-kylin.eoslaomao.com',
+        port:443,
+        protocol:'https'
+      }),
+      hiddenStyle:{
+        percent:{          
+          display:'inline-block',
+          width:'90px',
+          height:'90px',
+          border:'5px solid #fff',          
+          borderRadius: '50%',
+          textAlign: 'center',
+          letterSpacing: '-3px',          
+          boxSizing: 'border-box',
+          fontSize: '0.8em',
+          float:'right',          
+        },
+        div(n){
+          return{
+            width: (n==0) ? '' : '76%',
+            fontSize: '56px',
+            lineHeight: '74px',
+            fontFamily: 'Arial',
+            fontWeight: 500,
+            color: '#fff',
+            overflow: 'hidden',
+            opacity: '0.7',
+            height:'102.4px'
+          }
+        }
+      },      
+      hiddenData:[
+        {},{},{},{},{}
+      ],
       selectedCoin:{
         index: null,
         value: null,
@@ -96,24 +206,45 @@ export default {
       typeB: TWEEN.Easing.Elastic.InOut,
     }
   },
+  watch:{
+    hiddenData(newData, oldData){
+      rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
+        
+      })
+      .then((a) => {
+        this.game.textLabels.forEach((label, i) => {          
+          label.material.map.needsUpdate = true;
+          label.material.needsUpdate = true;
+        })
+      })
+    },
+  },
   created(){
-    
+    this.connectScatter();
 	},
   mounted(){
+    setInterval(()=>{
+      this.hiddenData = 3
+    },0)
+
+    this.$connect()
+
     this.game = new threejs({
       vue: this,
       el: '#cont_3d',
       TWEEN    
-    })
-
-    this.$socket.send(JSON.stringify({
-        type    :"req_enter_room",
-        room_id : 1
-    }))
-    this.$socket.onmessage = (mes)=>{      
+    })    
+    window.vv = this
+    this.$socket.onmessage = (mes)=>{
       const message = JSON.parse(mes.data)
       console.log(message)
       switch(message.type){
+        case 'welcome':          
+          this.$socket.send(JSON.stringify({
+             type    :"req_enter_room",
+          room_id : 1
+          }))
+          break;
         case 'deal_info':
           this.deal_info = message
           this.process_deal(message)
@@ -133,7 +264,7 @@ export default {
           switch(message.state){
             case 'betting':
               this.round = message.round
-              this.start_betting(3);
+              this.start_betting(10);
               break;
             case 'betting::chain':
               break;
@@ -142,6 +273,7 @@ export default {
             case 'dealing':
               break;
             case 'dealing:::chain':
+            this.end_betting();
               break;
             case 'prepare_round':
               break;
@@ -154,6 +286,10 @@ export default {
           this.round = message.round
           this.$refs.board.setRound(message)
           break;
+        case 'room_betting':          
+          this.bet_others(message);
+          break;
+
         // case 'room_state':
         //   this.$refs.board.setState(message)
         //   break;
@@ -162,7 +298,7 @@ export default {
           //console.log(message)
       }
     }
-    window.vv = this
+    
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
     document.querySelector('#cont_3d').addEventListener('click',this.onMouseClick, false)
@@ -186,13 +322,85 @@ export default {
     },false)
   },
   methods: {
+    async proc_forgetIdentity() {
+      if (!this.scatter.identity) return; 
+
+      await this.scatter.forgetIdentity();
+      this.eosAccount = null;
+      
+      //this.tosvr.set_scatter_identity('');
+    },
+    async proc_getIdentity(){
+      if(!this.scatter.suggestNetwork){
+        console.log('스캐터가 없습니다.')
+        await this.connectScatter()
+        
+      }
+      console.log('연결됐습니다.')
+      await this.scatter.suggestNetwork(this.network).then(function() {
+        console.log("sugggestNetwork: Succ2!");
+      }).catch(function (error) {
+        console.log("sugggestNetwork: 에러");
+        console.log(error)      
+        return; 
+      });
+      await this.scatter.getIdentity({accounts:[this.network]})
+      .then(identity => {
+        console.log("getIdentity: 성공");
+        let eosAccount = this.eosAccount = identity.accounts.find(account => account.blockchain === 'eos');
+        console.log(this.eosAccount);               
+
+        // 게임서버에 identity 알림. 
+        this.tosvr.set_scatter_identity(eosAccount.name);
+
+      })
+      .catch(function (error) {
+        console.log("에러");
+        console.log(error); 
+      });
+  
+      //console.log(this.scatter.identity);
+    },
+    connectScatter(){
+      return new Promise((resolve, reject)=>{
+        const connectionOptions = {initTimeout:10000};
+        ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions).then( connected => {
+          if(!connected){          
+            console.error('Could not connect to Scatter.');
+            return;
+          }        
+          console.log('Scatter Connected!')
+          this.eos = this.scatter.eos(this.network, Eos);        
+
+          if (this.scatter.identity) {
+            this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+          }else{
+            this.eosAccount = null;
+          }
+
+          resolve(this.tosvr.set_scatter_identity(eosAccount.name));
+        }).catch( ()=>{
+          resolve(this.tosvr.set_scatter_identity(''));
+        } )
+
+      })
+        
+      
+    },
+    bet_others(message){
+      this.game.bet_others(message)
+    },
+    end_betting(){
+      if(this.game_status.betting == false) return
+      this.$set(this.game_status,'betting', false);
+    },
     start_betting(time){
       this.$set(this.game_status,'betting',true);
 
       const d = ()=>{
         this.timer = time
         time--;
-        if(time <= 0) {
+        if(this.timer <= 0) {
           this.$set(this.game_status,'betting', false);
           return
           }
@@ -233,6 +441,9 @@ export default {
 </style>
 
 <style el="scss">
+.about *{
+   user-select: none;
+}
 .timer{  
   color:#fff;
   display:flex;
@@ -247,9 +458,7 @@ export default {
   height:100px;
   border:3px solid #fff;
   box-sizing:border-box;
-  border-radius:50%;
-  
-  
+  border-radius:50%;  
 }
 
 body{margin:0;padding:0}
