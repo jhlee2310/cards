@@ -143,6 +143,8 @@ const e = function (opt) {
   */
   camera.position.z = 120;
   camera.position.y = -80;
+  camera.position.normalize();
+  camera.position.multiplyScalar(144)
   camera.lookAt(0, 0, 0)
 
 
@@ -181,7 +183,9 @@ const e = function (opt) {
 
   table.name = "table"
   table.position.z = -20
-  table.scale.set(102, 64, 1)
+  table.scale.set(135, 77, 1)
+  table.scale.normalize();
+  table.scale.multiplyScalar(camera.position.length()*1.03)
 
 
 
@@ -307,9 +311,10 @@ const e = function (opt) {
     let _height = cont.clientHeight
     width = _width;
     height = _height;
-    camera.aspect = cont.clientWidth / cont.clientHeight;
+    renderer.setSize(_width, _height);
+    camera.aspect = _width / _height;
     camera.updateProjectionMatrix();
-    renderer.setSize(cont.clientWidth, cont.clientHeight);
+    
 
     this.resizeUpdate.matLine.resolution.set(width, height);
     scorePosition(width, height);
