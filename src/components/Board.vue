@@ -19,7 +19,7 @@
             </div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
           </div>
-          <div class="rectanges" style="margin:0 5px;position: relative;width:240px;height:139px;left:0px;bottom:0;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
+          <div class="rectanges" style="margin:0 5px;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
           <div class="col" v-for="(count, i) in winners" :style="{
               position:'absolute',
               height:'100%',
@@ -58,7 +58,7 @@
               }" :key="`col${i}`"/>
           </svg>
         </div>
-        <div class="rectanges" style="position: relative;width:420px;height:139px;bottom:0;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden;display:inline;float:left;">
+        <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:420px;height:120px;bottom:0;background:rgba(255,255,255,0.9);border:1px solid #666;overflow: hidden;display:inline;float:left;">
           <div class="col" v-for="(count, i) in bigRoad" :style="{
               position:'absolute',
               height:'100%',
@@ -101,7 +101,7 @@
               }" :key="`col${i}`"/>
           </svg>
         </div>
-				<div class="rectanges" style="position: relative;width:600px;height:78px;bottom:1;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden;display:inline;float:left;">
+				<div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:600px;height:60px;bottom:1;background:rgba(255,255,255,0.9);border:1px solid #666;overflow: hidden;display:inline;float:left;">
 					<div class="col" v-for="(count, i) in bigEyeRoad" :style="{
               position:'absolute',
               height:'100%',
@@ -128,8 +128,8 @@
               'stroke-width':'1'
               }" :key="`col${i}`"/>
           </svg>
-        </div>
-        <div class="rectanges" style="position: relative;width:300px;height:78px;bottom:1;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden;float:left;">
+        </div>        
+        <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);border:1px solid #666;overflow: hidden;float:left;">
 					<div class="col" v-for="(count, i) in smallRoad" :style="{
               position:'absolute',
               height:'100%',
@@ -157,7 +157,7 @@
               }" :key="`col${i}`"/>
           </svg>
         </div>
-        <div class="rectanges" style="position: relative;width:300px;height:78px;bottom:1;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden;">
+        <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);border:1px solid #666;overflow: hidden;">
 					<div class="col" v-for="(count, i) in cockroahRoad" :style="{
               position:'absolute',
               height:'100%',
@@ -209,28 +209,10 @@ export default {
       show: true,
       winners: [],
 			bigRoad: [],
-      bigEyeRoad: [],
-      smallRoad: [],
-      cockroahRoad: [],
-			road:[],
-      lastEye: false, 
-      lastSmall: false,
-      lastCockroah:false,
-      left: 0,
-			top: 0,
-			eyeLeft: 0,
-      eyeTop: 0,
-			smallLeft: 0,
-      smallTop: 0,
-      cockroahLeft: 0,
-      cockroahTop: 0,
-      eyeWinning:1,
-      smallWinning:1,
-      cockroahWinning:1,
-      col: 0,
       delta:20,
       mouseFlg: false,
       tempData: '',
+      winner: '',
     }
   },
   computed: {
@@ -264,21 +246,274 @@ export default {
       })
       return result.length
     },
+    roads: function (){
+      let road = []
+
+      this.winners.forEach((data,idx)=> {
+        //console.log(data)
+        const winner = data.winner
+        const winning = data.winning
+        const col = data.col
+        if(winner!='T'){
+          if(winning==1){
+            const result = []
+            result.push(winner)
+            road.push(result)
+          }else{
+            road[col].push(winner)
+          }
+        }
+      })
+      return road
+    },
+    bigEyeRoad: function () {
+      const bigEyeRoad = []
+
+      let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+
+      const road = this.roads
+
+      road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false
+          }
+
+          if(idx==1){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-1]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            } 
+          }else if(idx>1){
+            if(j==0){
+              if(road[idx-1].length==road[idx-2].length)
+                res.result = true
+            }else{
+              const cols =road[idx-1]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>1|| (idx==1&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              //this.eyeLeft = this.eyeLeft+10
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            bigEyeRoad.push(res)
+          }
+        })
+      })
+
+      return bigEyeRoad
+    },
+    smallRoad: function () {
+      const smallRoad = []
+
+      let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+
+      const road = this.roads
+
+      road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false
+          }
+
+          if(idx==2){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-2]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            } 
+          }else if(idx>2){
+            if(j==0){
+              if(road[idx-1].length==road[idx-3].length)
+                res.result = true
+            }else{
+              const cols =road[idx-2]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>2|| (idx==2&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              //this.eyeLeft = this.eyeLeft+10
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            smallRoad.push(res)
+          }
+        })
+      })
+
+      return smallRoad
+    },
+    cockroahRoad: function () {
+      const cockroahRoad = []
+
+      let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+
+      const road = this.roads
+
+      road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false
+          }
+
+          if(idx==3){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-3]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            } 
+          }else if(idx>3){
+            if(j==0){
+              if(road[idx-1].length==road[idx-4].length)
+                res.result = true
+            }else{
+              const cols =road[idx-3]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>3|| (idx==3&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              //this.eyeLeft = this.eyeLeft+10
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            cockroahRoad.push(res)
+          }
+        })
+      })
+
+      return cockroahRoad
+    },
+    
   },
   methods: {
     viewScore(data){
       let prdt = false
-      
       const rn = this.$_.split(data,',')
         //console.log(rn)
-      const lastData ="";
+
       if(rn[2]==99){
-        this.winners
         prdt = true
       }else if(rn[2]== -99){
         this.winners = _.dropRight(this.winners)
+        this.bigRoad = _.dropRight(this.bigRoad)
+        return
       }else if(this.mouseFlg){
         this.winners = _.dropRight(this.winners)
+        this.bigRoad = _.dropRight(this.bigRoad)
+      }
+
+      if(!this.mouseFlg){
       }
 
       let lastWinner = ''
@@ -294,8 +529,17 @@ export default {
         col =  _.last(_.clone(this.winners)).col
       }
 
+      let bigTop = 0
+      let bigLeft = 0
+      if(this.bigRoad.length != 0){
+        bigTop =  _.last(_.clone(this.bigRoad)).top
+        bigLeft =  _.last(_.clone(this.bigRoad)).left
+      }
+
+
+
       const winner = rn[0]
-      //let cnt = this.winners.lengh -1
+      let cnt = this.round -1
 
       const pair = rn[1]
 
@@ -336,9 +580,9 @@ export default {
       }else if(lastWinner == winner){
         winning++
         if(winning<=6)
-          this.top = this.top+20
+          bigTop = bigTop+20
         else
-					this.left = this.left+20
+					bigLeft = bigLeft+20
       }else{
 				if(lastWinner=='T'){
 					const lastRoad = _.last(this.bigRoad)
@@ -353,13 +597,13 @@ export default {
 						cnt = (winning - 6)*20
 					}
 					if(cnt != 0){
-						this.left = this.left-cnt+20
+						bigLeft = bigLeft-cnt+20
 					}else{
-						this.left = this.left+20
+						bigLeft = bigLeft+20
 						
 					}
 					winning = 1
-					this.top = 0
+					bigTop = 0
 				}
 				col++
       }
@@ -374,196 +618,35 @@ export default {
       //this.round
 			this.winners.push(
 				{
-          top: beadTop,
+          top: beadTop ,
           left: beadLeft,
 					winner: winner,
           bPair:bPair,
           pPair:pPair,
           prdt: prdt,
           lastWinner: winner=='T'?lastWinner:winner,
-          winning:winning,
-          col: col
+          winning: winning,
+          col: col,
         }
       )
 
       if(winner!='T'){
 				this.bigRoad.push(
 					{
-						top: this.top,
-						left: this.left,
+						top: bigTop,
+						left: bigLeft,
 						winner: winner,
 						bPair:bPair,
 						pPair:pPair,
 						isTie:0,
 					}
 				)
-				if(winning==1){
-					const result = []
-					result.push(winner)
-					this.road.push(result)
-				}else{
-					//console.log(col)
-					this.road[col].push(winner)
-				}
-				if((this.road[1]&&this.road[1].length >= 2) || this.road[2]){
-					const data = {
-						top: 0,
-						left: 0,
-						result: false
-					}
-					//console.log(lastWinner,winner)
-					if(lastWinner == winner){
-            const lenght = this.road[col].length
-						const cols =this.road[col-1]
-						if(cols[lenght-1] === cols[lenght-2])
-							data.result=true
-						//console.log(col, cols,data.result)
-					}else{
-            if(this.road[col-1].length==this.road[col-2].length)
-							data.result=true
-					}
-          //console.log("this.lastEye",this.lastEye,this.road.length)
-          if(!((this.road.length==2 && this.road[1].length == 2)||(this.road.length == 3 && this.road[2].length == 1 && this.road[1].length == 1))){
-						if(this.lastEye==data.result){
-              if(this.eyeWinning >= 6){
-                this.eyeLeft = this.eyeLeft+10
-              }else{
-                this.eyeTop = this.eyeTop+10
-              }
-							this.eyeWinning++
-						}else{
-              if(this.eyeWinning>6){
-                let cnt = 0
-                cnt = (this.eyeWinning - 6)*10
-                if(cnt != 0){
-                  this.eyeLeft = this.eyeLeft-cnt+10
-                }else{
-                  this.eyeLeft = this.eyeLeft+10                  
-                }
-              }else{
-                this.eyeLeft = this.eyeLeft+10
-              }
-							this.eyeTop = 0
-							//this.eyeLeft = this.eyeLeft+10
-							this.eyeWinning =1
-						}
-          }
-          data.top = this.eyeTop
-          data.left = this.eyeLeft
-
-
-          this.lastEye = data.result
-          
-
-					this.bigEyeRoad.push(data)
-        }
-        if((this.road[2] && this.road[2].length >= 2) || this.road[3]){
-					const data = {
-						top: 0,
-						left: 0,
-						result: false
-					}
-					if(lastWinner == winner){
-            const length = this.road[col].length
-						const cols =this.road[col-2]
-						if(cols[length-1] === cols[length-2])
-							data.result=true
-						//console.log(col, cols,data.result)
-					}else{
-            if(this.road[col-1].length==this.road[col-3].length)
-							data.result=true
-					}
-          //console.log("this.lastSmall",this.lastSmall,this.road.length)
-          if(!((this.road.length==3 && this.road[2].length == 2) || (this.road.length == 4 && this.road[3].length == 1 && this.road[2].length == 1))){
-						if(this.lastSmall==data.result){
-              if(this.smallWinning >= 6){
-                this.smallLeft = this.smallLeft+10
-              }else{
-                this.smallTop = this.smallTop+10
-              }
-							this.smallWinning++
-						}else{
-              if(this.smallWinning > 6){
-                let cnt = 0
-                cnt = (this.smallWinning - 6)*10
-                if(cnt != 0){
-                  this.smallLeft = this.smallLeft-cnt+10
-                }else{
-                  this.smallLeft = this.smallLeft+10                  
-                }
-              }else{
-                this.smallLeft = this.smallLeft+10
-              }
-							this.smallTop = 0
-							//this.eyeLeft = this.eyeLeft+10
-							this.smallWinning =1
-						}
-          }
-          data.top = this.smallTop
-          data.left = this.smallLeft
-
-          this.lastSmall = data.result
-          
-
-					this.smallRoad.push(data)
-				}
-        if((this.road[3] && this.road[3].length >= 2) || this.road[4]){
-					const data = {
-						top: 0,
-						left: 0,
-						result: false
-					}
-					if(lastWinner == winner){
-            const length = this.road[col].length
-						const cols =this.road[col-3]
-						if(cols[length-1] === cols[length-2])
-							data.result=true
-						//console.log(col, cols,data.result)
-					}else{
-            if(this.road[col-1].length==this.road[col-4].length)
-							data.result=true
-					}
-          //console.log("this.lastCockroah",this.lastCockroah,this.road.length)
-          if(!((this.road.length==4 && this.road[3].length == 2) || (this.road.length == 5 && this.road[4].length == 1 && this.road[3].length == 1))){
-						if(this.lastCockroah==data.result){
-              if(this.cockroahWinning >= 6){
-                this.cockroahLeft = this.cockroahLeft+10
-              }else{
-                this.cockroahTop = this.cockroahTop+10
-              }
-							this.cockroahWinning++
-						}else{
-              if(this.cockroahWinning > 6){
-                let cnt = 0
-                cnt = (this.cockroahWinning - 6)*10
-                if(cnt != 0){
-                  this.cockroahLeft = this.cockroahLeft-cnt+10
-                }else{
-                  this.cockroahLeft = this.cockroahLeft+10                  
-                }
-              }else{
-                this.cockroahLeft = this.cockroahLeft+10
-              }
-							this.cockroahTop = 0
-							//this.eyeLeft = this.eyeLeft+10
-							this.cockroahWinning =1
-						}
-          }
-          data.top = this.cockroahTop
-          data.left = this.cockroahLeft
-
-          this.lastCockroah = data.result
-
-					this.cockroahRoad.push(data)
-				}
-        //lastWinner = winner
       }
       this.round++
+      
     },
     setRound(message) {
       console.log('setRound',message)
-      // this.viewScore('T,0,9')
-      // this.viewScore('T,0,9')
       message.bead_load.some((data,i) => {
         if(i==message.round-1){
           return true
@@ -574,7 +657,8 @@ export default {
     nextRound(message) {
       //this.
       //console.log(message)
-      //this.viewScore(message.bead)
+      if(message.room_id=='2')
+      this.viewScore(message.bead)
     },
     setState(message) {
       //console.log(message)
@@ -584,71 +668,12 @@ export default {
     },
     onMouseEnter(data) {
       this.mouseFlg = true
-      this.tempData = data+",0" 
-      this.viewScore(this.tempData+",99")
+      this.viewScore(data+",0,99")
     },
     onMouseLeave(data) {
-      //console.log("onMouseLeave")
       this.mouseFlg = false
-      this.tempData = data+",0" 
-      this.viewScore(this.tempData+",-99")
+      this.viewScore(data+",0,-99")
     },
-    writeBoard(data) {
-      const gun =data.gun
-
-      if((this.road[gun]&&this.road[gun].length >= 2) || this.road[gun+1]){
-        const data = {
-          top: 0,
-          left: 0,
-          result: false
-        }
-        //console.log(lastWinner,winner)
-        if(lastWinner == winner){
-          const lenght = this.road[col].length
-          const cols =this.road[col-1]
-          if(cols[lenght-1] === cols[lenght-2])
-            data.result=true
-          //console.log(col, cols,data.result)
-        }else{
-          if(this.road[col-1].length==this.road[col-2].length)
-            data.result=true
-        }
-        //console.log("this.lastEye",this.lastEye,this.road.length)
-        if(!((this.road.length==2 && this.road[1].length == 2)||(this.road.length == 3 && this.road[2].length == 1 && this.road[1].length == 1))){
-          if(this.lastEye==data.result){
-            if(this.eyeWinning >= 6){
-              this.eyeLeft = this.eyeLeft+10
-            }else{
-              this.eyeTop = this.eyeTop+10
-            }
-            this.eyeWinning++
-          }else{
-            if(this.eyeWinning>6){
-              let cnt = 0
-              cnt = (this.eyeWinning - 6)*10
-              if(cnt != 0){
-                this.eyeLeft = this.eyeLeft-cnt+10
-              }else{
-                this.eyeLeft = this.eyeLeft+10                  
-              }
-            }else{
-              this.eyeLeft = this.eyeLeft+10
-            }
-            this.eyeTop = 0
-            //this.eyeLeft = this.eyeLeft+10
-            this.eyeWinning =1
-          }
-        }
-        data.top = this.eyeTop
-        data.left = this.eyeLeft
-
-
-        this.lastEye = data.result
-        
-
-        this.bigEyeRoad.push(data)
-      }
-    }
   }
 }
 </script>
