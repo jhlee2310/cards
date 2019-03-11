@@ -15,36 +15,9 @@ export default function(message, betZones){
         index: reverseCoin.indexOf(parseFloat(message.value)),
         value: parseFloat(message.value)
     }
-    this.do_bet(target, sprite, -1, message.acc_name)
+    this.do_bet(target, sprite, -1, message.acc_name) // visual
 
-    /*
-    const show_bet = (cont, p, q) => {
-        
-        let zones = [];
-        for (let y = -1; y <= 1; y++) {
-          for (let x = -1; x <= 1; x++) {
-            zones.push(new THREE.Vector3(x, y, 0))
-          }
-        }
-        if (typeof cont == 'number') {
-          switch (cont) {
-            case 1:
-              target = _group5;
-              break;
-            case 2:
-              target = _group3
-              break;
-            case 3:
-              target = _group
-              break;
-            case 4:
-              target = _group2
-              break;
-            case 5:
-              target = _group4
-              break;
-          }
-        } else {
-          target = cont
-        }*/
-}
+    //notice
+    const Vue = this.vue
+    Vue.bet_info.push(message)
+ }

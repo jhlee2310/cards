@@ -219,8 +219,11 @@ const e = function (opt) {
     let index = sprite.index;
     let coin = this.betted_coins[index]
 
+    console.log(target,sprite,index)
+
     const randomNumber = (target) => {
-      while(1){   
+      console.log('target',target)
+      while(1){
         let used = [];
         target.parent.userData.zones.map(t => {
           used.push(t.zone)
@@ -463,11 +466,11 @@ const e = function (opt) {
       let geo = new THREE.PlaneGeometry(13,2.6)
       let mat = new THREE.MeshBasicMaterial({      
         transparent:true,
-        depthTest: false,
+        //depthTest: false,
       })
       let mesh = new THREE.Mesh(geo,mat.clone())
       let cvs = vue.$refs.hiddenCanvas
-      cvs.getContext('2d').imageSmoothingEnabled = true
+      //cvs.getContext('2d').imageSmoothingEnabled = true
       let map = new THREE.Texture(cvs)
       map.wrapS = map.wrapT = THREE.RepeatWrapping
       map.repeat.y = 0.2

@@ -3,34 +3,14 @@
     <div>
       <span v-if="!eosAccount" @click="proc_getIdentity">login</span>
       <span v-else="!!eosAccount" @click="proc_forgetIdentity">logOut(<span>{{eosAccount.name}}</span>)</span>
-    </div>
+    </div>    
     <!--hidden canvas-->
-    <div v-show="false" id="hidden_canvas" style="text-align:left;">
+    <div v-show="false" id="hidden_canvas" style="text-align:left;background-color:black;">
       <div ref="hiddenDiv" style="width:512px;height:512px;">   
-        <div :style="hiddenStyle.div(0)">
-          <span style="margin-right:16px">{{hiddenData[0].value}}</span>
-          <span style="margin-right:16px">{{hiddenData[0].users}}</span>
-          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
-        </div> 
-        <div :style="hiddenStyle.div(0)">
-          <span style="margin-right:16px">00222</span>
-          <span style="margin-right:16px">07</span>
-          <span :style="hiddenStyle.percent">22<span style="font-size:0.8em">%</span></span>
-        </div>
-        <div :style="hiddenStyle.div(1)">
-          <span style="margin-right:16px">00333</span>
-          <span>04</span>
-          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
-        </div>
-        <div :style="hiddenStyle.div(0)">
-          <span style="margin-right:16px">00444</span>
-          <span style="margin-right:16px">04</span>
-          <span :style="hiddenStyle.percent">40<span style="font-size:0.8em">%</span></span>
-        </div>
-        <div :style="hiddenStyle.div(0)">
-          <span style="margin-right:16px">01555</span>
-          <span style="margin-right:16px">02</span>
-          <span :style="hiddenStyle.percent">60<span style="font-size:0.8em">%</span></span>
+        <div v-for="item, index in hiddenData" :style="hiddenStyle.div(index == 2 ? 1 : 0)" :key="`hidden_${index}`">
+          <span style="margin-right:16px">{{item[0]}}</span>
+          <span style="margin-right:16px">{{item[1]}}</span>
+          <span :style="hiddenStyle.percent">{{item[2]}}<span style="font-size:0.8em">%</span></span>
         </div>
       </div>
       
@@ -40,20 +20,36 @@
     <div id="cont_3d">
       <!--배팅코인-->
       <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18"/>
+      
       <!--스코어-->
       <transition name="fade">
         <div v-show="score.show" :style="scoreStyle" class="score player" ref="score_player">{{score.player}}</div>
       </transition>
       <transition name="fade">
         <div v-show="score.show" :style="scoreStyle" class="score banker" ref="score_banker">{{score.banker}}</div>
-      </transition>      
-      <!--스코어-->
+      </transition>            
       <!--winner-->
       <div class="winner" ref="winner">WIN</div>
-      <!--winner-->
+      
       <!--timer-->
       <div class="timer" v-show="game_status.betting" ref="timer" data-default_size="68" :style="timerStyle">{{timer}}</div>
-      <!--timer-->      
+
+      <!-- bet_info -->
+      <div class="bet_info">
+        <div class="bet_info_wrap" :style="bet_info_style">
+          <div v-for="data in bet_info">
+            {{data.symbol}}{{parseFloat(data.value).toFixed(2)}}{{data.acc_name}}
+          </div>
+        </div>
+      </div>
+
+      <!-- bet_info_total -->
+      <div class="bet_info_total">        
+          <div v-for="data,index in bet_info_total">
+            <span>{{index}}</span><span>{{data.acc_name}}</span><span>{{data.totalValue}} EOS</span>
+          </div>        
+      </div>
+      
     </div>
 		<board ref="board"></board>
     
@@ -80,6 +76,9 @@ export default {
   data(){
     const that = this;
     return {
+      bet_info_style:{
+        transform: 'translate(0px, 0px)'
+      },
       tosvr:{
         set_scatter_identity (scatter_identity = undefined ) {
           //if (!ws || !game_connected) return;
@@ -100,7 +99,6 @@ export default {
             identity  : scatter_identity
           };
 
-          console.log(scatter_identity)          
           that.$socket.send(JSON.stringify(req_json));
         }
       },
@@ -138,18 +136,14 @@ export default {
             fontWeight: 500,
             color: '#fff',
             overflow: 'hidden',
-            opacity: '0.7',
+            opacity: '1',
             height:'102.4px'
           }
         }
-      },      
-      hiddenData:[
-        {
-          value: 44444,
-          users: 222,
-        },
-        {},{},{},{}
-      ],
+      },
+      bet_info:[
+        
+      ],      
       selectedCoin:{
         index: null,
         value: null,
@@ -213,24 +207,29 @@ export default {
   watch:{
     
     hiddenData(newData, oldData){
-      rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
-        
-      })
-      .then((a) => {
-        this.game.textLabels.forEach((label, i) => {          
-          label.material.map.needsUpdate = true;
-          label.material.needsUpdate = true;
+      const ctx = this.$refs.hiddenCanvas.getContext('2d');
+      ctx.clearRect(0, 0, 512, 512);
+      this.$nextTick(()=>{
+        rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
+          
+        })
+        .then((a) => {
+          this.game.textLabels.forEach((label, i) => {          
+            label.material.map.needsUpdate = true;            
+          })
         })
       })
-    },
+    },    
   },
   created(){
     this.connectScatter();
 	},
   mounted(){
-    setInterval(()=>{
-      this.$set(this.hiddenData, '0', {value:'test',users:'axxx'})
-    },1000)
+
+    window.addEventListener('message', (e)=>{
+      const msg = e.data      
+      if(msg.type == "room_betting") this.bet_others(msg);
+    })   
 
     this.$connect()
 
@@ -238,8 +237,10 @@ export default {
       vue: this,
       el: '#cont_3d',
       TWEEN    
-    })    
+    })
+
     window.vv = this
+
     this.$socket.onmessage = (mes)=>{
       const message = JSON.parse(mes.data)
       console.log(message)
@@ -247,7 +248,7 @@ export default {
         case 'welcome':          
           this.$socket.send(JSON.stringify({
              type    :"req_enter_room",
-          room_id : 1
+          room_id : 2
           }))
           break;
         case 'deal_info':
@@ -292,7 +293,7 @@ export default {
           this.$refs.board.setRound(message)
           break;
         case 'room_betting':          
-          this.bet_others(message);
+          //this.bet_others(message);
           break;
 
         // case 'room_state':
@@ -302,6 +303,19 @@ export default {
           break;
           //console.log(message)
       }
+      
+      this.$nextTick(()=>{
+        this.$refs.hiddenCanvas.getContext('2d').clearRect(0,0,512,512)
+        rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
+        
+        })
+        .then((a) => {
+          this.game.textLabels.forEach((label, i) => {          
+            label.material.map.needsUpdate = true;            
+          })
+        })
+      })
+       
     }
     
     window.addEventListener('resize',this.onWindowResize,false)
@@ -326,27 +340,112 @@ export default {
       }
     },false)
   },
+  computed:{
+    hiddenData(){      
+      let arrays = [[0,[],0],[0,[],0],[0,[],0],[0,[],0],[0,[],0]];
+      let totalValue = 0;
+      this.bet_info.forEach( (item,index)=>{
+        const rSlot = (i) => {
+          let s = [2,1,3,0,4]
+          return s[i]
+        }
+        totalValue += +item.value;
+
+        let slot = arrays[rSlot(item.slot)]
+        slot[0] += +item.value
+        if( slot[1].indexOf(item.acc_name) == -1) slot[1].push(item.acc_name)        
+      })
+
+      arrays.forEach(slot => {
+        slot[2] = totalValue == 0 ? 0 : parseInt( +slot[0] / totalValue * 100 )
+        slot[1] = slot[1].length
+      })
+
+      
+
+      return arrays
+    },
+    bet_info_total(){
+      const obj = [];
+      this.bet_info.forEach( (t,i)=>{
+        let _obj = obj.filter( item => item.acc_name == t.acc_name)[0];
+        if(!_obj){
+          _obj = {
+            acc_name: t.acc_name,
+            data : [],
+            totalValue: 0,         
+          }
+          obj.push(_obj);
+        }        
+        _obj.data.push(t)
+
+        _obj.totalValue =  (function(){
+          let total = 0;
+          for(let i = 0; i< this.data.length; i++){
+            total += +this.data[i].value;            
+          }
+          return parseFloat(total).toFixed(1);
+        }).bind(_obj)()        
+      })
+      
+      return obj;
+    }
+  },
   methods: {
+    async proc_insert_coin(to_account, token_contract, token_value, token_symbol) {
+    // 토큰 전송은 게임서버와 연결되었을 때만 하자. 
+    if (!game_connected || !scatter.identity) {
+        $("#view_of_result").text('Game not connected or Scatter not logined');
+
+        return; 
+    }
+
+    const account = scatter.identity.accounts.find(x => x.blockchain === 'eos');
+    const opts = { authorization:[`${account.name}@${account.authority}`], requiredFields:{} };
+
+    eos.contract(token_contract).then( contract => {
+        contract.transfer(account.name, to_account, token_value + ' ' + token_symbol, '', opts).then(trx => {
+            //console.log('trx', trx);
+            $("#view_of_result").text(
+                "transfer succ:\n" +
+                JSON.stringify(trx, null, '\t')
+            );
+
+
+            console.log('succ', trx.transaction_id, trx.processed.block_num);
+
+            // 게임서버에 돈 입금을 알린다. 
+            tosvr_notify_insert_coin(trx.processed.block_num, trx.transaction_id, account.name, token_value, token_symbol)
+
+        }).catch(err => {
+            console.error(err);
+            $("#view_of_result").text(
+                "transfer error:\n" +
+                JSON.stringify(err, null, '\t')
+            );
+        });
+
+    }).catch(err => {
+        console.error(err);
+    })
+    },
     async proc_forgetIdentity() {
       if (!this.scatter.identity) return; 
 
       await this.scatter.forgetIdentity();
       this.eosAccount = null;
       
-      //this.tosvr.set_scatter_identity('');
+      this.tosvr.set_scatter_identity('');
     },
-    async proc_getIdentity(){
-      if(!this.scatter.suggestNetwork){
-        console.log('스캐터가 없습니다.')
-        await this.connectScatter()
-        
-      }
-      console.log('연결됐습니다.')
-      await this.scatter.suggestNetwork(this.network).then(function() {
+
+    async proc_getIdentity(){     
+      await this.connectScatter()
+      if(!this.scatter.suggestNetwork) { console.log(!!this.scatter.suggestNetwork); return;}
+      await this.scatter.suggestNetwork(this.network).then( () => {
         console.log("sugggestNetwork: Succ2!");
       }).catch(function (error) {
         console.log("sugggestNetwork: 에러");
-        console.log(error)      
+        console.log(error)    
         return; 
       });
       await this.scatter.getIdentity({accounts:[this.network]})
@@ -368,10 +467,11 @@ export default {
     },
     connectScatter(){
       return new Promise((resolve, reject)=>{
-        const connectionOptions = {initTimeout:10000};
+        const connectionOptions = {initTimeout:3000};
         ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions).then( connected => {
           if(!connected){          
-            console.error('Could not connect to Scatter.');
+            console.log('Could not connect to Scatter.');
+            alert('Please download Scatter if it is not installed')
             return;
           }        
           console.log('Scatter Connected!')
@@ -401,6 +501,22 @@ export default {
     },
     start_betting(time){
       this.$set(this.game_status,'betting',true);
+
+      new TWEEN.Tween({
+        y: 0,
+      })
+      .to({
+        y: -1, 
+      }, 15000)
+      .onUpdate(a => {
+        this.bet_info_style = {
+          transform: `translate(0px, ${a.y*1000}px)`
+        }
+      })
+      .onComplete(() => {
+          
+      })
+      .start()
 
       const d = ()=>{
         this.timer = time
@@ -436,16 +552,17 @@ export default {
   }
 }
 </script>
-<style el="scss">
+
+<style lang="scss">
 .fade-enter-active, .fade-leave-active {
   transition: opacity .3s;
 }
 .fade-enter, .fade-leave-to{
   opacity: 0;
 }
-</style>
 
-<style el="scss">
+
+
 .about *{
    user-select: none;
 }
@@ -467,13 +584,14 @@ export default {
 }
 
 body{margin:0;padding:0}
-  .about{height:56.25vw;max-height:1080px;position:relative;
+.about{height:56.25vw;max-height:1080px;position:relative;
   max-width:1920px;margin:0 auto;width:100%;}
-  #cont_3d{
-    position:relative;
-    width:100%;
-    height:100%;
-  }
+
+#cont_3d{
+  position:relative;
+  width:100%;
+  height:100%;
+}
 
 .col .img1{
   display:block;
@@ -496,6 +614,39 @@ body{margin:0;padding:0}
   color: #fff;
   text-shadow: #000;
   text-shadow: 2px 2px 12px aquamarine;
+  display:none;
+}
+
+.bet_info{
+  font-size:14px;
+  position:absolute;
+  left:0;
+  top:0%;
+  width:180px;
+  height:500px;  
+  color:yellow;
+  overflow:hidden;  
+  -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
+}
+
+.bet_info_wrap{
+  font-size:14px;
+  width:100%;
+  position:absolute;
+  top:500px;
+}
+
+.bet_info_total{
+  color:yellow;
+  position:absolute;
+  right:0;
+  &>div>span{
+    display:inline-block;
+    margin-right:10px;
+    &:nth-child(1){
+
+    }
+  }
 }
 
 </style>
