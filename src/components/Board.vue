@@ -695,7 +695,7 @@ export default {
           result.push(winner)
           road.push(result)
         }else{
-          console.log(lastCol)
+          //console.log(lastCol)
           lastCol.push(winner)
         }
   
@@ -907,8 +907,8 @@ export default {
 				if(lastWinner=='T'){
 				}else{
 					winning = 1
+				  col++
 				}
-				col++
       }
 
       if(round==1){
