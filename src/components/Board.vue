@@ -18,6 +18,23 @@
               <div class="small_blue"></div>
             </div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
+            <div style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
+              P
+              <div v-if="prdtPResult.result1" class="bead-border-b"></div>
+              <div v-else class="bead-border-p"></div>
+              <div v-if="prdtPResult.result2" class="bead-b"></div>
+              <div v-else class="bead-p"></div>
+              <div v-if="prdtPResult.result3" class="cockroah-true"></div>
+              <div v-else class="cockroah-false"></div>
+              B
+              <div v-if="prdtBResult.result1" class="bead-border-b"></div>
+              <div v-else class="bead-border-p"></div>
+              <div v-if="prdtBResult.result2" class="bead-b"></div>
+              <div v-else class="bead-p"></div>
+              <div v-if="prdtBResult.result3" class="cockroah-true"></div>
+              <div v-else class="cockroah-false"></div>
+            </div>
+
           </div>
           <div class="rectanges" style="margin:0 5px;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
           <div class="col" v-for="(count, i) in winners" :style="{
@@ -208,11 +225,11 @@ export default {
       round:1,
       show: true,
       winners: [],
-			bigRoad: [],
+      tempWinners: [],
+      tempBigRoad: [],
       delta:20,
-      mouseFlg: false,
+      mouseOverValue: '',
       tempData: '',
-      winner: '',
     }
   },
   computed: {
@@ -223,7 +240,7 @@ export default {
       return result.length
     },
     bWinCnt: function (){
-      const result = this.winners.filter(data=>{
+      const result = this.winners.filter(data=>{        
         return data.winner == 'B'
       })
       return result.length
@@ -266,6 +283,138 @@ export default {
       })
       return road
     },
+    pPrdtRoad: function () {
+      const road = _.cloneDeep(this.roads)
+      const lastCol = _.last(road)
+      const last = _.last(lastCol)
+
+      let winner = 'P'
+
+      if(last=='B'){
+        const result = []
+        result.push(winner)
+        road.push(result)
+      }else{
+        lastCol.push(winner)
+      }
+      return road
+    },
+    bPrdtRoad: function () {
+      const road = _.cloneDeep(this.roads)
+      const lastCol = _.last(road)
+      const last = _.last(lastCol)
+
+      let winner = 'B'
+
+      if(last=='P'){
+        const result = []
+        result.push(winner)
+        road.push(result)
+      }else{
+        lastCol.push(winner)
+      }
+      return road
+    },
+    bigRoad: function() {
+      let road = []
+      let bigTop = 0
+      let bigLeft = 0
+
+      let winners = _.cloneDeep(this.winners)
+
+      if(this.mouseOverValue!=''){
+        const winner = _.last(winners).winner
+        let winning = _.last(winners).winning
+
+        if(winner==this.mouseOverValue){
+          winning++
+        }
+        winners.push(
+          {
+            winner: this.mouseOverValue,
+            bPair:false,
+            pPair:false,
+            winning: winning,
+          }  
+        )
+      }
+
+      winners.forEach((data,idx)=> {
+        //console.log(data,idx)
+        const winner = data.winner
+        let winning = 1
+        let lastWinner = ''
+        if(winners[idx-1]){
+          lastWinner = this.winners[idx-1].lastWinner
+          winning = this.winners[idx-1].winning
+        }
+
+        
+        const bPair = data.bPair
+        const pPair = data.pPair
+
+        if(idx==0){
+          if(winner=='T'){
+            road.push( {
+              top: 0,
+              left: 0,
+              winner: winner,
+              bPair:bPair,
+              pPair:pPair,
+              isTie:1,
+            })
+          }
+        }else if(winner=='T'){
+          const lastRoad = _.last(this.tempBigRoad)
+          lastRoad.isTie++
+          if(bPair)
+            lastRoad.bPair = bPair
+          if(pPair)
+            lastRoad.pPair = pPair
+        }else if(lastWinner == winner){
+          if(winning<=5)
+            bigTop = bigTop+20
+          else
+            bigLeft = bigLeft+20
+        }else{
+          if(lastWinner=='T'){
+            const lastRoad = _.last(this.tempBigRoad)
+            lastRoad.winner = winner
+            if(bPair)
+              lastRoad.bPair = bPair
+            if(pPair)
+              lastRoad.pPair = pPair
+          }else{
+            let cnt = 0
+            if(winning>6){
+              cnt = (winning - 6)*20
+            }
+            if(cnt != 0){
+              bigLeft = bigLeft-cnt+20
+            }else{
+              bigLeft = bigLeft+20
+              
+            }
+            bigTop = 0
+          }
+        }
+
+        if(winner!='T'){
+          road.push(
+            {
+              top: bigTop,
+              left: bigLeft,
+              winner: winner,
+              bPair:bPair,
+              pPair:pPair,
+              isTie:0,
+            }
+          )
+        }
+        this.tempBigRoad = road
+      })
+      return road
+    },
     bigEyeRoad: function () {
       const bigEyeRoad = []
 
@@ -273,8 +422,14 @@ export default {
       let top = 0
       let winning = 1
       let last = null
+      
+      let road = this.roads
 
-      const road = this.roads
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+      }
 
       road.forEach((data,idx) => {
         road[idx].forEach((row,j)=>{
@@ -293,7 +448,7 @@ export default {
                   res.result = true
                 }
               }
-            } 
+            }
           }else if(idx>1){
             if(j==0){
               if(road[idx-1].length==road[idx-2].length)
@@ -350,7 +505,13 @@ export default {
       let winning = 1
       let last = null
 
-      const road = this.roads
+      let road = this.roads
+
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+      }
 
       road.forEach((data,idx) => {
         road[idx].forEach((row,j)=>{
@@ -426,7 +587,13 @@ export default {
       let winning = 1
       let last = null
 
-      const road = this.roads
+      let road = this.roads
+
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+      }
 
       road.forEach((data,idx) => {
         road[idx].forEach((row,j)=>{
@@ -494,27 +661,193 @@ export default {
 
       return cockroahRoad
     },
-    
+    prdtPResult: function(){
+
+        const road = _.cloneDeep(this.roads)
+        const lastCol = _.last(road)
+        const last = _.last(lastCol)
+  
+        let winner = 'P'
+  
+        if(last=='B'||road.length==0){
+          const result = []
+          result.push(winner)
+          road.push(result)
+        }else{
+          console.log(lastCol)
+          lastCol.push(winner)
+        }
+  
+        let idx =road.length -1
+        const data = _.last(road)
+        const j = data.length-1
+        let result1 = false
+        let result2 = false
+        let result3 = false
+        
+        if(idx==1){
+          if(data.length >= 2){
+            if(j >= 1){
+              const cols =road[idx-1]
+              if(cols[j] === cols[j-1]){
+                result1 = true
+              }
+            }
+          }
+        }else if(idx>1){
+          if(j==0){
+            if(road[idx-1].length==road[idx-2].length)
+              result1 = true
+          }else{
+            const cols =road[idx-1]
+              if(cols[j] === cols[j-1]){
+                result1 = true
+              }
+          }
+        }
+  
+        if(idx==2){
+          if(data.length >= 2){
+            if(j >= 1){
+              const cols =road[idx-2]
+              if(cols[j] === cols[j-1]){
+                result2 = true
+              }
+            }
+          } 
+        }else if(idx>2){
+          if(j==0){
+            if(road[idx-1].length==road[idx-3].length)
+              result2 = true
+          }else{
+            const cols =road[idx-2]
+              if(cols[j] === cols[j-1]){
+                result2 = true
+              }
+          }
+        }
+  
+        if(idx==3){
+          if(data.length >= 2){
+            if(j >= 1){
+              const cols =road[idx-3]
+              if(cols[j] === cols[j-1]){
+                result3 = true
+              }
+            }
+          } 
+        }else if(idx>3){
+          if(j==0){
+            if(road[idx-1].length==road[idx-4].length)
+              result3 = true
+          }else{
+            const cols =road[idx-3]
+              if(cols[j] === cols[j-1]){
+                result3 = true
+              }
+          }
+        }
+  
+        return {result1,result2,result3}
+      
+    },
+    prdtBResult: function(){
+
+        const road = _.cloneDeep(this.roads)
+        const lastCol = _.last(road)
+        const last = _.last(lastCol)
+  
+        let winner = 'B'
+  
+        if(last=='P'||road.length==0){
+          const result = []
+          result.push(winner)
+          road.push(result)
+        }else{
+          lastCol.push(winner)
+        }
+  
+        let idx =road.length -1
+        const data = _.last(road)
+        const j = data.length-1
+        let result1 = false
+        let result2 = false
+        let result3 = false
+        
+        if(idx==1){
+          if(data.length >= 2){
+            if(j >= 1){
+              const cols =road[idx-1]
+              if(cols[j] === cols[j-1]){
+                result1 = true
+              }
+            }
+          }
+        }else if(idx>1){
+          if(j==0){
+            if(road[idx-1].length==road[idx-2].length)
+              result1 = true
+          }else{
+            const cols =road[idx-1]
+              if(cols[j] === cols[j-1]){
+                result1 = true
+              }
+          }
+        }
+  
+        if(idx==2){
+          if(data.length >= 2){
+            if(j >= 1){
+              const cols =road[idx-2]
+              if(cols[j] === cols[j-1]){
+                result2 = true
+              }
+            }
+          } 
+        }else if(idx>2){
+          if(j==0){
+            if(road[idx-1].length==road[idx-3].length)
+              result2 = true
+          }else{
+            const cols =road[idx-2]
+              if(cols[j] === cols[j-1]){
+                result2 = true
+              }
+          }
+        }
+  
+        if(idx==3){
+          if(data.length >= 2){
+            if(j >= 1){
+              const cols =road[idx-3]
+              if(cols[j] === cols[j-1]){
+                result3 = true
+              }
+            }
+          } 
+        }else if(idx>3){
+          if(j==0){
+            if(road[idx-1].length==road[idx-4].length)
+              result3 = true
+          }else{
+            const cols =road[idx-3]
+              if(cols[j] === cols[j-1]){
+                result3 = true
+              }
+          }
+        }
+  
+        return {result1,result2,result3}
+      
+    }
   },
   methods: {
     viewScore(data){
-      let prdt = false
       const rn = this.$_.split(data,',')
         //console.log(rn)
 
-      if(rn[2]==99){
-        prdt = true
-      }else if(rn[2]== -99){
-        this.winners = _.dropRight(this.winners)
-        this.bigRoad = _.dropRight(this.bigRoad)
-        return
-      }else if(this.mouseFlg){
-        this.winners = _.dropRight(this.winners)
-        this.bigRoad = _.dropRight(this.bigRoad)
-      }
-
-      if(!this.mouseFlg){
-      }
+      let tempWinner= '';
+      let round = this.winners.length+1
 
       let lastWinner = ''
       let winning = 1
@@ -522,25 +855,14 @@ export default {
       let beadLeft = 0
       let col = 0
       if(this.winners.length !=0){
-        lastWinner = _.last(_.clone(this.winners)).lastWinner
-        winning =  _.last(_.clone(this.winners)).winning
-        beadTop =  _.last(_.clone(this.winners)).top
-        beadLeft =  _.last(_.clone(this.winners)).left
-        col =  _.last(_.clone(this.winners)).col
+        lastWinner = _.last(_.cloneDeep(this.winners)).lastWinner
+        winning =  _.last(_.cloneDeep(this.winners)).winning
+        beadTop =  _.last(_.cloneDeep(this.winners)).top
+        beadLeft =  _.last(_.cloneDeep(this.winners)).left
+        col =  _.last(_.cloneDeep(this.winners)).col
       }
-
-      let bigTop = 0
-      let bigLeft = 0
-      if(this.bigRoad.length != 0){
-        bigTop =  _.last(_.clone(this.bigRoad)).top
-        bigLeft =  _.last(_.clone(this.bigRoad)).left
-      }
-
-
 
       const winner = rn[0]
-      let cnt = this.round -1
-
       const pair = rn[1]
 
       let bPair = false
@@ -557,59 +879,19 @@ export default {
 
       if(lastWinner==''){
 				lastWinner = winner
-				if(winner=='T'){
-						this.bigRoad.push(
-						{
-							top: 0,
-							left: 0,
-							winner: winner,
-							bPair:bPair,
-							pPair:pPair,
-							isTie:1,
-						}
-					)
-				}
       }else if(winner=='T'){
-				const lastRoad = _.last(this.bigRoad)
-				lastRoad.isTie++
-				if(bPair)
-					lastRoad.bPair = bPair
-				if(pPair)
-					lastRoad.pPair = pPair
-
       }else if(lastWinner == winner){
         winning++
-        if(winning<=6)
-          bigTop = bigTop+20
-        else
-					bigLeft = bigLeft+20
       }else{
 				if(lastWinner=='T'){
-					const lastRoad = _.last(this.bigRoad)
-					lastRoad.winner = winner
-					if(bPair)
-						lastRoad.bPair = bPair
-					if(pPair)
-						lastRoad.pPair = pPair
 				}else{
-					let cnt = 0
-					if(winning>6){
-						cnt = (winning - 6)*20
-					}
-					if(cnt != 0){
-						bigLeft = bigLeft-cnt+20
-					}else{
-						bigLeft = bigLeft+20
-						
-					}
 					winning = 1
-					bigTop = 0
 				}
 				col++
       }
 
-      if(this.round==1){
-      }else if((this.round-1)%6==0){
+      if(round==1){
+      }else if((round-1)%6==0){
         beadTop = 0
         beadLeft = beadLeft+20
       }else{
@@ -618,31 +900,17 @@ export default {
       //this.round
 			this.winners.push(
 				{
+          round: this.round,
           top: beadTop ,
           left: beadLeft,
 					winner: winner,
           bPair:bPair,
           pPair:pPair,
-          prdt: prdt,
           lastWinner: winner=='T'?lastWinner:winner,
           winning: winning,
           col: col,
         }
-      )
-
-      if(winner!='T'){
-				this.bigRoad.push(
-					{
-						top: bigTop,
-						left: bigLeft,
-						winner: winner,
-						bPair:bPair,
-						pPair:pPair,
-						isTie:0,
-					}
-				)
-      }
-      this.round++
+      )     
       
     },
     setRound(message) {
@@ -667,12 +935,10 @@ export default {
       }
     },
     onMouseEnter(data) {
-      this.mouseFlg = true
-      this.viewScore(data+",0,99")
+      this.mouseOverValue = data
     },
     onMouseLeave(data) {
-      this.mouseFlg = false
-      this.viewScore(data+",0,-99")
+      this.mouseOverValue = ''
     },
   }
 }
@@ -896,6 +1162,42 @@ export default {
   align-items: center;
   position: relative;
     background: #cccccc;
+}
+
+.bead-border-p {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid blue;
+}
+
+.bead-border-b {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid red;
+}
+
+.cockroah-true {
+  width: 28px;
+  height: 1px;
+  position: relative;
+  top: 13px;
+  background-color: red;
+  transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
+}
+
+.cockroah-false {
+  width: 28px;
+  height: 1px;
+  position: relative;
+  top: 13px;
+  background-color: blue;
+  transform: rotate(-45deg);
+  -ms-transform: rotate(-45deg);
+  -webkit-transform: rotate(-45deg);
 }
 
 .small_blue {
