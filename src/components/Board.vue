@@ -4,9 +4,9 @@
       <transition nmae="slide-fade">
         <div v-if="show"  style="display:inline;">
           <div style="padding:10px 10px;display:flex;">
-            <div class="bead-p" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">P</div>
+            <div class="bead-p">P</div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pWinCnt}}</div>
-            <div class="bead-b" @mouseenter="onMouseEnter('B')" @mouseleave="onMouseLeave('B')">B</div>
+            <div class="bead-b">B</div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bWinCnt}}</div>
             <div class="bead-t">T</div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{tWinCnt}}</div>
@@ -19,6 +19,7 @@
             </div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
             <div style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
+              <div style="display: inline-flex;" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">
               P
               <div v-if="prdtPResult.result1" class="bead-border-b"></div>
               <div v-else class="bead-border-p"></div>
@@ -26,6 +27,8 @@
               <div v-else class="bead-p"></div>
               <div v-if="prdtPResult.result3" class="cockroah-true"></div>
               <div v-else class="cockroah-false"></div>
+            </div>
+            <div style="display: inline-flex;" @mouseenter="onMouseEnter('B')" @mouseleave="onMouseLeave('B')">
               B
               <div v-if="prdtBResult.result1" class="bead-border-b"></div>
               <div v-else class="bead-border-p"></div>
@@ -34,7 +37,7 @@
               <div v-if="prdtBResult.result3" class="cockroah-true"></div>
               <div v-else class="cockroah-false"></div>
             </div>
-
+            </div>
           </div>
           <div class="rectanges" style="margin:0 5px;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);border:1px solid #666;overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
           <div class="col" v-for="(count, i) in winners" :style="{
@@ -84,7 +87,7 @@
               left: count.left+'px',
             }"
             :key="i">
-            <div v-if="count.winner=='P'" class="is-p-player">
+            <div v-if="count.winner=='P'" :class="count.prdt?'is-p-player blinking':'is-p-player'">
               <div v-if="count.bPair" class="b-pair"></div>
               <div v-if="count.pPair" class="p-pair"></div>
               <div v-if="count.isTie > 0" class="is-tie">
@@ -92,7 +95,7 @@
               </div>
               <div v-if="count.isTie > 0" class="is-tie-line"></div>
             </div>
-            <div v-if="count.winner=='B'" class="is-b-player">
+            <div v-else-if="count.winner=='B'" :class="count.prdt?'is-b-player blinking':'is-b-player'">
               <div v-if="count.bPair" class="b-pair"></div>
               <div v-if="count.pPair" class="p-pair"></div>
               <div v-if="count.isTie > 0" class="is-tie">
@@ -100,7 +103,7 @@
               </div>
               <div v-if="count.isTie > 0" class="is-tie-line"></div>
             </div>
-						<div v-if="count.winner=='T'" class="is-tie is-tie-line">
+						<div v-else-if="count.winner=='T'" class="is-tie is-tie-line">
                 {{count.isTie}}
             </div>
             <!-- <img src="@/assets/logo.png"> -->
@@ -127,9 +130,9 @@
               left: count.left+'px',
             }"
             :key="i">
-            <div v-if="count.result" class="is-eye-true">
+            <div v-if="count.result"  :class="count.prdt?'is-eye-true blinking':'is-eye-true'">
             </div>
-            <div v-else class="is-eye-false">
+            <div v-else :class="count.prdt?'is-eye-false blinking':'is-eye-false'">
             </div>
             <!-- <img src="@/assets/logo.png"> -->
           </div>
@@ -155,9 +158,9 @@
               left: count.left+'px',
             }"
             :key="i">
-            <div v-if="count.result" class="is-small-true">
+            <div v-if="count.result" :class="count.prdt?'is-small-true blinking':'is-small-true'">
             </div>
-            <div v-else class="is-small-false">
+            <div v-else  :class="count.prdt?'is-small-false blinking':'is-small-false'">
             </div>
             <!-- <img src="@/assets/logo.png"> -->
           </div>
@@ -183,9 +186,9 @@
               left: count.left+'px',
             }"
             :key="i">
-            <div v-if="count.result" class="is-cockroah-true">
+            <div v-if="count.result" :class="count.prdt?'is-cockroah-true blinking':'is-cockroah-true'">
             </div>
-            <div v-else class="is-cockroah-false">
+            <div v-else :class="count.prdt?'is-cockroah-false blinking':'is-cockroah-false'">
             </div>
             <!-- <img src="@/assets/logo.png"> -->
           </div>
@@ -335,6 +338,7 @@ export default {
             bPair:false,
             pPair:false,
             winning: winning,
+            prdt: true,
           }  
         )
       }
@@ -344,6 +348,7 @@ export default {
         const winner = data.winner
         let winning = 1
         let lastWinner = ''
+        const prdt = data.prdt?true:false
         if(winners[idx-1]){
           lastWinner = this.winners[idx-1].lastWinner
           winning = this.winners[idx-1].winning
@@ -408,6 +413,7 @@ export default {
               bPair:bPair,
               pPair:pPair,
               isTie:0,
+              prdt:prdt,
             }
           )
         }
@@ -437,7 +443,8 @@ export default {
           const res = {
             top: 0,
             left: 0,
-            result: false
+            result: false,
+            prdt: false
           }
 
           if(idx==1){
@@ -495,6 +502,10 @@ export default {
         })
       })
 
+      if(this.mouseOverValue!=''){
+        _.last(bigEyeRoad).prdt =true
+      }
+
       return bigEyeRoad
     },
     smallRoad: function () {
@@ -519,7 +530,8 @@ export default {
           const res = {
             top: 0,
             left: 0,
-            result: false
+            result: false,
+            prdt: false
           }
 
           if(idx==2){
@@ -577,6 +589,10 @@ export default {
         })
       })
 
+      if(this.mouseOverValue!=''){
+        _.last(smallRoad).prdt =true
+      }
+
       return smallRoad
     },
     cockroahRoad: function () {
@@ -601,7 +617,8 @@ export default {
           const res = {
             top: 0,
             left: 0,
-            result: false
+            result: false,
+            prdt: false,
           }
 
           if(idx==3){
@@ -658,6 +675,10 @@ export default {
           }
         })
       })
+
+      if(this.mouseOverValue!=''){
+        _.last(cockroahRoad).prdt =true
+      }
 
       return cockroahRoad
     },
@@ -1281,6 +1302,25 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg); /* IE 9 */
   -webkit-transform: rotate(-45deg); /* Safari and Chrome */
+}
+
+.blinking{
+	-webkit-animation:blink 1.5s ease-in-out infinite alternate;
+  -moz-animation:blink 1.5s ease-in-out infinite alternate;
+  animation:blink 1.5s ease-in-out infinite alternate;
+}
+
+@-webkit-keyframes blink{
+    0% {opacity:1;}
+    100% {opacity:0;}
+}
+@-moz-keyframes blink{
+    0% {opacity:1;}
+    100% {opacity:0;}
+}
+@keyframes blink{
+    0% {opacity:1;}
+    100% {opacity:0;}
 }
 
 ::-webkit-scrollbar-thumb:hover {
