@@ -1,7 +1,8 @@
 <template>
-  <div id="coins_for_bet">
+  <div id="coins_for_bet" :class="{disabled: !betting}">
+    <div style="color:red"></div>
     <div class="inner_wrap">
-      <div v-for="i,j of 9" :key="`coins${j}`" class="coin_wrap" @click="onClickCoin" :data-index="j" :data-value="values[j]">
+      <div v-for="i,j of 9" :key="`coins${j}`" class="coin_wrap" :class="{active:betting}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
         <img class="coin" :src="require(`@/images/chips/bet${files[j]}__.png`)"/>
         <span class="coin_value">{{ values[j].toString().replace(/000$/,'K') }}</span>
       </div>
@@ -11,9 +12,9 @@
 
 <script>
 export default {
-  props:['default_size','pos_y'],
-  data() {
-    return {
+  props:['default_size','pos_y','betting'],
+  data() {    
+    return {      
       files: [4, 5, 6, 7, 8, 9, 10, 11, 12],
       values: [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000],
       selectedCoin: {
@@ -40,13 +41,24 @@ export default {
         this.$set(this.$parent.selectedCoin,'value',null)
       }
     }
+  },
+  watch:{
+    // 배팅가능상태 여부
+    betting(v){
+      
+    }
   }
 }
 </script>
 
 <style lang="scss">
   #coins_for_bet{
+    z-index:2;
+    &.disabled{
+      filter: grayscale(100%);
+    }
     position:absolute;
+    transition: filter 0.5s;
     overflow-x: hidden;
     .inner_wrap{
       width:1200px;
@@ -59,13 +71,14 @@ export default {
       width:80px;
       height:80px;
       margin-right:20px;
-      cursor:pointer;
+      cursor: default;
       border-radius:50%;
       transition:all 0.07s;
-      &:hover{
+      &.active{cursor:pointer};
+      &.active:hover{
         box-shadow: 0px 0px 20px orange
       }
-      &.selected{
+      &.active.selected{
         transform: translateY(-20px);
         box-shadow: 0px 0px 20px orange
       }

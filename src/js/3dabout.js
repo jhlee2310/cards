@@ -1,5 +1,4 @@
 import * as THREE from 'three-full'
-import rasterizeHTML from 'rasterizehtml'
 import init_cards from './modules/init_cards' // 카드 세팅
 import init_betting_zone from './modules/init_betting_zone' // 배팅존 세팅
 import pos_coins_for_bet from './modules/pos_coins_for_bet' // 배팅UI
@@ -30,6 +29,7 @@ const e = function (opt) {
   } = opt
 
   this.vue = vue;
+  this.TWEEN = TWEEN;
 
   let cont = this.cont = document.querySelector(el)
   let width = cont.clientWidth
@@ -57,9 +57,18 @@ const e = function (opt) {
 
   let selectedObject = null
   this.onMouseClick = function (e) {
+    
     if (!vue.game_status.bet_start) return;
-    if (selectedObject.type == "Mesh") {
-      bet(vue.selectedCoin, selectedObject)
+    if (!selectedObject) return;
+    if (selectedObject.type == "Mesh") {      
+      //vue.proc_insert_coin(vue.BACCARAT_ACCOUNT, 'eosio.token', parseFloat(vue.selectedCoin.value).toFixed(4), 'EOS');      
+      let reverse_index = [3,1,0,2,4]
+      vue.tosvr.req_betting("EOS", parseFloat(vue.selectedCoin.value).toFixed(2), reverse_index[selectedObject.userData.index])
+
+      window.postMessage({
+        type : 'testC',
+        data : { type: "room_betting", acc_name: "eosblackkiko", slot: reverse_index[selectedObject.userData.index], symbol: "EOS", value: parseFloat(vue.selectedCoin.value).toFixed(4) }
+      })      
     }
   }
 
@@ -219,10 +228,9 @@ const e = function (opt) {
     let index = sprite.index;
     let coin = this.betted_coins[index]
 
-    console.log(target,sprite,index)
+    
 
-    const randomNumber = (target) => {
-      console.log('target',target)
+    const randomNumber = (target) => {      
       while(1){
         let used = [];
         target.parent.userData.zones.map(t => {
@@ -248,8 +256,7 @@ const e = function (opt) {
       target.parent.userData.zones.push({
         who: groupName,
         zone: zz,
-      })
-      console.log(target.parent.userData.zones)
+      })      
 
       coins.position.copy(definedZones[zz])
       coin = coin.clone()
@@ -269,25 +276,9 @@ const e = function (opt) {
     do_bet(target, sprite, zone , who);
   }
 
-  //카드 재질및 정보 세팅
-  this.changeCardsMtl = function (p_data, b_data) {
-    [p_data, b_data].forEach((card_data, i) => {
-      let cards = (i == 0) ? card_groups['player'].children : card_groups['banker'].children
-      card_data.forEach((data, i) => {
-        let c = cards[i];
-        c.userData.value = data.value // 카드값 기록        
-        textureLoader.load(require(`@/images/cards/${data.suit.toLowerCase()}${(data.number+'').toLowerCase()}.png`), texture => {
-          texture.minFilter = texture.magFilter = THREE.LinearFilter;
-          c.material[0].map = texture
-          c.material[0].needsUpdate = true;
-        })
-      })
-    })
-  }
+  
+  this.animateCards = new cards_animations(this)
 
-  this.animateCards = (p_data, b_data, result) => {
-    cards_animations.bind(this)(TWEEN, vue, card_groups, p_data, b_data, result);
-  }
 
   // betting target 정의
   const saveZone = [null, null, null, null, null]
@@ -311,7 +302,8 @@ const e = function (opt) {
 
   this.onResize = function (e) {
     let _width = cont.clientWidth;
-    let _height = cont.clientHeight
+    let _height = cont.clientHeight;
+    vue.SET_WINDOW_RESOLUTION([_width,_height]);
     width = _width;
     height = _height;
     renderer.setSize(_width, _height);
@@ -436,7 +428,7 @@ const e = function (opt) {
 
     loader.load('/Arial_Regular.json', font => {
       let i = 0;
-      for (let ratio of ['1:1', '11:1', '8:1', '11:1', '0.95:1']) {
+      for (let ratio of ['11:1', '1:1', '8:1', '0.95:1', '11:1']) {
         let shapes = font.generateShapes(ratio, 1);
         let geometry = new THREE.ShapeBufferGeometry(shapes);
         geometry.computeBoundingBox();

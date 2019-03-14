@@ -19,6 +19,7 @@
     "three-full": "^11.3.2",
     "vue": "^2.5.22",
     "vue-dragscroll": "^1.8.3",
+    "vue-fragment": "^1.5.0",
     "vue-native-websocket": "^2.0.12",
     "vue-router": "^3.0.1",
     "vuex": "^3.0.1"
