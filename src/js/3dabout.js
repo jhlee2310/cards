@@ -498,6 +498,7 @@ const e = function (opt) {
     })
   }
 
+  Texts(this,table_group);
 
 }
 

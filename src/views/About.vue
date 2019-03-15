@@ -43,9 +43,21 @@
 
       <!-- bet_info_total -->
       <div class="bet_info_total">        
-          <div v-for="data, index in bet_info_total" :key="`bet_total${index}`">            
-            <span>{{index}}</span><span>{{data.acc_name}}</span><span>{{data.totalValue}} EOS</span>
-          </div>        
+          <div>
+            <span>PLAYER</span><span>{{bet_info_total[0]}}</span>
+          </div>
+          <div>
+            <span>BANKER</span><span>{{bet_info_total[1]}}</span>
+          </div>
+          <div>
+            <span>TIE</span><span>{{bet_info_total[2]}}</span>
+          </div>
+          <div>
+            <span>P.PAIR</span><span>{{bet_info_total[3]}}</span>
+          </div>
+          <div>
+            <span>B.PAIR</span><span>{{bet_info_total[4]}}</span>
+          </div>
       </div>      
 
       <!--Room Number -->
@@ -388,13 +400,16 @@ export default {
   computed:{
     my_bet_info(){
       let sum = 0;
-      for(let bet of this.bet_info){
-        if(bet.acc_name == this.eosAccount.name){
-          sum = +sum + +bet.value
-          sum = parseFloat(sum).toFixed(4);
+      if(this.eosAccount){
+        for(let bet of this.bet_info){
+          if(bet.acc_name == this.eosAccount.name){
+            sum = +sum + +bet.value
+            sum = parseFloat(sum).toFixed(4);
+          }
         }
       }
       return sum
+      
     },
     ...mapState([
       'resolution'
@@ -424,6 +439,7 @@ export default {
         transform:`translate(${this.resolution.width * 0.70}px, ${this.resolution.height * 0.03}px) scale(${this.scaleFactor})`
       }
     },
+   
     hiddenData(){      
       let arrays = [[0,[],0],[0,[],0],[0,[],0],[0,[],0],[0,[],0]];
       let totalValue = 0;
@@ -448,32 +464,25 @@ export default {
       return arrays
     },
     bet_info_total(){
-      const obj = [];
-      this.bet_info.forEach( (t,i)=>{
-        let _obj = obj.filter( item => item.acc_name == t.acc_name)[0];
-        if(!_obj){
-          _obj = {
-            acc_name: t.acc_name,
-            data : [],
-            totalValue: 0,         
-          }
-          obj.push(_obj);
-        }        
-        _obj.data.push(t)
-
-        _obj.totalValue =  (function(){
-          let total = 0;
-          for(let i = 0; i< this.data.length; i++){
-            total += +this.data[i].value;            
-          }
-          return parseFloat(total).toFixed(1);
-        }).bind(_obj)()        
+      const obj = [0,0,0,0,0];
+      const aTob = index => {
+        let slots = [2,0,1,3,4];
+        return slots[index]
+      }
+      this.bet_info.forEach( (t, i)=>{
+        let s = aTob(t.slot);
+        obj[s] = +obj[s] + parseFloat(t.value);
+        obj[s] = parseFloat(obj[s]).toFixed(1);
       })
       
       return obj;
     }
   },
   methods: {
+     aTobSlot(i){
+      let s = [2,1,3,0,4]
+      return s[i]
+    },
     pause(time){
       return new Promise(resolve=>{
         setTimeout(resolve,time)
@@ -755,15 +764,20 @@ body{margin:0;padding:0;overflow-x:hidden}
 .bet_info_total{
   color:yellow;
   position:absolute;
+  top:10px;
   right:0;
+  width:200px;
   &>div>span{
     display:inline-block;
+    text-align:right;
+    width:40%;
     margin-right:10px;
     &:nth-child(1){
-
+      width:50%;
     }
   }
 }
+
 
 </style>
 

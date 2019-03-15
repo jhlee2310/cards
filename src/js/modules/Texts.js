@@ -1,21 +1,30 @@
-import { FontLoader } from 'three-full'
-import { Scene } from 'three-full';
+export default function(game, table_group){
+  const { THREE, scene } = game;
+  const fontLoader = new THREE.FontLoader()
+    fontLoader.load('/gentilis_bold.typeface.json', font => {
+    let geometry = new THREE.TextGeometry('Player',{
+      font: font,
+      size: 5,
+      height: 1,
+      curveSegments: 6,
+      bevelEnabled: false,      
+      //bevelSegments: 5
+    })
 
-const fontLoader = new FontLoader()
-fontLoader.load('', font => {
-  let geometry = new THREE.TextGeometry('hello three.js',{
-    font: font,
-    size: 80,
-    height: 5,
-		curveSegments: 12,
-		bevelEnabled: true,
-		bevelThickness: 10,
-		bevelSize: 8,
-		bevelSegments: 5
+    let geometry2 = new THREE.TextGeometry('WIN',{
+      font: font,
+      size: 5,
+      height: 1,
+      curveSegments: 6,
+      bevelEnabled: false,      
+      //bevelSegments: 5
+    })
+
+    let player_win = new THREE.Group();
+    let mesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial())
+    let mesh2 = new THREE.Mesh(geometry2, new THREE.MeshPhongMaterial())
+    player_win.add(mesh)
+    player_win.add(mesh2)
+    table_group.add(player_win);
   })
-
-  let mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial())
-  Scene.add(mesh)
-})
-
-export default {}
+}
