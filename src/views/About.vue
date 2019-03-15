@@ -314,7 +314,9 @@ export default {
               dealing::chain	카드 오픈 및 돈분배를 체인에 동기화
           */
           switch(message.state){           
-           
+            case 'betting':
+              this.$set(this.game_status,'round', message.round)
+              break;
             case 'prepare_dealing::chain':
               break;
             case 'dealing':
