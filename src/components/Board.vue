@@ -369,6 +369,7 @@ export default {
               bPair:bPair,
               pPair:pPair,
               isTie:1,
+              prdt:prdt,
             })
           }
         }else if(winner=='T'){
@@ -506,7 +507,9 @@ export default {
       })
 
       if(this.mouseOverValue!=''){
-        _.last(bigEyeRoad).prdt =true
+        if(bigEyeRoad.length > 0){
+          _.last(bigEyeRoad).prdt =true
+        }
       }
 
       return bigEyeRoad
@@ -594,7 +597,9 @@ export default {
       })
 
       if(this.mouseOverValue!=''){
-        _.last(smallRoad).prdt =true
+        if(smallRoad.length > 0) {
+          _.last(smallRoad).prdt =true
+        }
       }
 
       return smallRoad
@@ -681,7 +686,9 @@ export default {
       })
 
       if(this.mouseOverValue!=''){
-        _.last(cockroahRoad).prdt =true
+        if(cockroahRoad.length > 0) {
+          _.last(cockroahRoad).prdt =true
+        }
       }
 
       return cockroahRoad
