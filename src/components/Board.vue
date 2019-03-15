@@ -220,15 +220,14 @@
 <script>
 export default {
   name: 'Board',
-  // props: {
-  //   round: Number
-  // },
+  props: {
+    roomId: Number
+  },
   data() {
     return {
       round:1,
       show: true,
       winners: [],
-      tempWinners: [],
       tempBigRoad: [],
       delta:20,
       mouseOverValue: '',
@@ -286,6 +285,7 @@ export default {
       })
       return road
     },
+    //Player가 이길 경우
     pPrdtRoad: function () {
       const road = _.cloneDeep(this.roads)
       const lastCol = _.last(road)
@@ -302,6 +302,7 @@ export default {
       }
       return road
     },
+    //Banker가 이길 경우
     bPrdtRoad: function () {
       const road = _.cloneDeep(this.roads)
       const lastCol = _.last(road)
@@ -318,6 +319,7 @@ export default {
       }
       return road
     },
+    //본매 표시
     bigRoad: function() {
       let road = []
       let bigTop = 0
@@ -421,6 +423,7 @@ export default {
       })
       return road
     },
+    //중국점1
     bigEyeRoad: function () {
       const bigEyeRoad = []
 
@@ -508,6 +511,7 @@ export default {
 
       return bigEyeRoad
     },
+    //중국점2
     smallRoad: function () {
       const smallRoad = []
 
@@ -595,6 +599,7 @@ export default {
 
       return smallRoad
     },
+    //중국점3
     cockroahRoad: function () {
       const cockroahRoad = []
 
@@ -663,7 +668,6 @@ export default {
                 left = left+10
               }
               top = 0
-              //this.eyeLeft = this.eyeLeft+10
               winning =1
             }
             res.top = top
@@ -682,6 +686,7 @@ export default {
 
       return cockroahRoad
     },
+    //다음 판 Player가 승리할 경우 중국점1,2,3 예상하기
     prdtPResult: function(){
 
         const road = _.cloneDeep(this.roads)
@@ -772,6 +777,7 @@ export default {
         return {result1,result2,result3}
       
     },
+    //다음판 Banker가 승리할 경우 중국점1,2,3 예상하기
     prdtBResult: function(){
 
         const road = _.cloneDeep(this.roads)
@@ -945,8 +951,7 @@ export default {
     },
     nextRound(message) {
       //this.
-      //console.log(message)
-      if(message.room_id=='2')
+      //console.log("nextRound",message)
       this.viewScore(message.bead)
     },
     setState(message) {
@@ -961,6 +966,12 @@ export default {
     onMouseLeave(data) {
       this.mouseOverValue = ''
     },
+    setInit(){
+      this.winners = []
+    },
+    getWinner(){
+      return _.last(this.winners).winner
+    }
   }
 }
 </script>

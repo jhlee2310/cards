@@ -52,7 +52,7 @@
 
       <!-- bet_info_total -->
       <CreditInfo :credit="game_token_info" :bet="my_bet_info">
-        <board ref="board"></board>
+        <board ref="board" :roomId="game_status.table"></board>
       </CreditInfo>
 
       <!--Room Number -->
@@ -230,6 +230,7 @@ export default {
       deal_info: {},
       game: null,
       round: 1,
+      room_bead: '',
     }
   },
   watch:{
@@ -324,11 +325,18 @@ export default {
             
               break;
             case 'prepare_round':
+              this.$refs.board.nextRound(this.room_bead)
+              break;
+            case 'prepare_game':
+              this.roundInit()
               break;
           }
           break;
         case 'room_bead':
-          this.$refs.board.nextRound(message)
+          if(this.game_status.table==message.room_id){
+            this.room_bead = message
+          }
+
           break;
         case 'room_detail':
           this.round = message.round
@@ -644,12 +652,17 @@ export default {
     },
     onWindowResize(e){
       this.game.onResize(e);     
-		},
+    },
+    roundInit(){
+      this.game_status.round = 1
+      this.$refs.board.setInit()
+    },
+
   }
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .fade-enter-active, .fade-leave-active {
   transition: opacity .3s;
 }
@@ -661,6 +674,9 @@ export default {
 
 .about *{
    user-select: none;
+   z-index: 3;
+   position: relative;
+
 }
 .timer{  
   color:#fff;
