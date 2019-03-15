@@ -1,5 +1,5 @@
 <template>
-  <div style="background-color: rgba(0, 0, 0, .77); height:300px">
+  <div style="background-color: rgba(0, 0, 0, .77)">
     <div class="board">
       <transition nmae="slide-fade">
         <div v-if="show"  style="display:inline;">

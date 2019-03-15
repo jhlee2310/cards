@@ -115,7 +115,7 @@ const e = function (opt) {
   }
 
   let scene = this.scene = new THREE.Scene();
-  let camera = this.camera = new THREE.PerspectiveCamera(25, cont.clientWidth / cont.clientHeight, 0.1, 1000);
+  let camera = this.camera = new THREE.PerspectiveCamera(32, cont.clientWidth / cont.clientHeight, 0.1, 1000);
   let renderer = this.renderer = new THREE.WebGLRenderer({
     //alpha:true,
     antialias: true,
@@ -154,8 +154,9 @@ const e = function (opt) {
   camera.position.z = 120;
   camera.position.y = -80;
   camera.position.normalize();
-  camera.position.multiplyScalar(144)
-  camera.lookAt(0, 0, 0)
+  camera.position.multiplyScalar(64)
+  camera.lookAt(0, 6, 0)
+  camera.target = new THREE.Vector3(0,6,0);
 
 
 
@@ -182,6 +183,7 @@ const e = function (opt) {
     color: 0xffffff,
   }))
   let table_group = new THREE.Group();
+  table_group.position.copy(camera.target)
   table_group.lookAt(camera.position)
   table_group.add(table)
 
@@ -193,9 +195,10 @@ const e = function (opt) {
 
   table.name = "table"
   table.position.z = -20
-  table.scale.set(135, 77, 1)
+  table.position.y = -10
+  table.scale.set(135, 80, 1)
   table.scale.normalize();
-  table.scale.multiplyScalar(camera.position.length()*1.03)
+  table.scale.multiplyScalar(camera.position.length()*2.5)
 
 
 
@@ -381,16 +384,10 @@ const e = function (opt) {
     vue.$set(vue.timerStyle, 'height', default_size + 'px')
     vue.$set(vue.timerStyle, 'transform', `translate3d(${pos.x-offset}px, ${pos.y-offset}px, ${pos.z}px) scale(${scaleFactor})`)
     //el.style.height = 100 * scaleFactor + 'px'
-  }
-
-  function coinForBetPosition(width, height) {
-    pos_coins_for_bet.bind(that)(width, height)
-  }
+  }  
 
   timerPosition(width, height)
   scorePosition(width, height)
-  coinForBetPosition(width, height)
-
 
   function show_winner() {
     //get position. player or 

@@ -1,6 +1,5 @@
 <template>
-  <div id="coins_for_bet" :class="{disabled: !betting}">
-    <div style="color:red"></div>
+  <div id="coins_for_bet" :style="styleObj" :class="{disabled: !betting}">    
     <div class="inner_wrap">
       <div v-for="i,j of 9" :key="`coins${j}`" class="coin_wrap" :class="{active:betting}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
         <img class="coin" :src="require(`@/images/chips/bet${files[j]}__.png`)"/>
@@ -11,6 +10,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
   props:['default_size','pos_y','betting'],
   data() {    
@@ -24,21 +25,36 @@ export default {
     }
   },
   methods: {
-    onClickCoin(e){
+    onClickCoin(e){      
       const coin = e.target.parentElement
-      this.$set(this.$parent.game_status,'bet_start',true)
+      const $parent = this.$parent.$parent;
+      this.$set($parent.game_status,'bet_start',true)
       if( !coin.classList.contains('selected')){
         coin.parentElement.querySelectorAll('.coin_wrap').forEach( a => {          
           a.classList.remove('selected')
         })
         coin.classList.add('selected')
-        this.$set(this.$parent.selectedCoin,'index',coin.dataset.index)
-        this.$set(this.$parent.selectedCoin,'value',coin.dataset.value)
+        this.$set($parent.selectedCoin,'index',coin.dataset.index)
+        this.$set($parent.selectedCoin,'value',coin.dataset.value)
       }else{
         coin.classList.remove('selected')
-        this.$set(this.$parent.game_status,'bet_start',false)
-        this.$set(this.$parent.selectedCoin,'index',null)
-        this.$set(this.$parent.selectedCoin,'value',null)
+        this.$set($parent.game_status,'bet_start',false)
+        this.$set($parent.selectedCoin,'index',null)
+        this.$set($parent.selectedCoin,'value',null)
+      }
+    }
+  },
+  computed:{
+    ...mapState([
+      'resolution'
+    ]),
+    styleObj(){
+      return{
+        position: 'absolute',
+        left: '50%',
+        top: '-45%',
+        width: '600px',        
+        transform: `translate(-50%,0) scale(0.9)`   
       }
     }
   },
@@ -63,6 +79,7 @@ export default {
     .inner_wrap{
       width:1200px;
       padding:10px;
+      overflow:hidden;
     }
     .coin_wrap{
       position:relative;

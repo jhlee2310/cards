@@ -18,10 +18,7 @@
       <canvas width="256" height="256" ref="hiddenCanvas"/>
     </div>
     
-    <div id="cont_3d">
-      <!--배팅코인-->
-      <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18" :betting="game_status.betting"/>
-      
+    <div id="cont_3d">      
       <!--스코어-->
       <transition name="fade">
         <div v-show="score.show" :style="scoreStyle" class="score player" ref="score_player">{{score.player}}</div>
@@ -69,6 +66,7 @@
     </div>    
     <!-- bet_info_total -->
     <CreditInfo :credit="game_token_info" :bet="my_bet_info">
+      <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting"/>
       <board ref="board" :roomId="game_status.table"></board>
     </CreditInfo>
   </div>
@@ -118,7 +116,7 @@ export default {
           if (!that.scatter || !that.scatter.identity) return;          
           
           const eosAccount = that.scatter.identity.accounts.find(account => account.blockchain === 'eos');
-
+          
           var req_json = {
               type    : "req_betting",
               account : eosAccount.name,
@@ -209,10 +207,7 @@ export default {
       selectedCoin:{
         index: null,
         value: null,
-      },
-      CoinsForBet_style:{
-        transformOrigin:'0px 0px',
-      },
+      }, 
       timer:'--',
       timerStyle:{},
       scoreStyle:{width:'40px',height:'40px'},
@@ -483,6 +478,8 @@ export default {
         setTimeout(resolve,time)
       })
     },
+
+    
     procssWorker(message){
       let data = message.data;
       console.log(data);
@@ -707,7 +704,7 @@ body{margin:0;padding:0;overflow-x:hidden}
 #cont_3d{
   position:relative;
   width:100%;
-  height:56.25vw;
+  height:36vw;
   
 }
 
