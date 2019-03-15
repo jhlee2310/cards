@@ -322,10 +322,11 @@ export default {
               console.log('배팅정보를 초기화합니다.');
               break;
             case 'dealing:::chain':
-            
+
               break;
             case 'prepare_round':
-              this.$refs.board.nextRound(this.room_bead)
+              if(message.round != 0)
+                this.$refs.board.nextRound(this.room_bead)
               break;
             case 'prepare_game':
               this.roundInit()
