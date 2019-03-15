@@ -501,11 +501,26 @@ export default {
           this.timer = data.value;
         break;
 
-        case "worker::cards":
+        case "worker::cards_drop":
           ;(async()=>{
+            if(data.index >= 2 ){
+
+            }
             this.game.animateCards.moveCard(data.index,600,1)
-            await this.pause(800)
-            this.game.animateCards.rotateCard(data.index,200,2)
+            //await this.pause(800)
+            //this.game.animateCards.rotateCard(data.index,200,2)
+          })()          
+        break;
+
+        case "worker::cards_open_quick":
+          ;(async()=>{
+            this.game.animateCards.rotateCard(data.index,200,4)
+          })()          
+        break;
+
+        case "worker::cards_open_long":
+          ;(async()=>{
+            this.game.animateCards.slideCard(data.index,200)
           })()          
         break;
         

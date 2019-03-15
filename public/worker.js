@@ -49,15 +49,54 @@ async function animationSignal(data){
   const send = index => self.postMessage({
     type: `worker::cards`,
     index: index,    
-  })
-  
-  
+  })  
 
-  await pause(500)    
+  await pause(500)  
+  for(let i = 0; i < 4 ; i++){
+    self.postMessage({
+      type: `worker::cards_drop`,
+      index: i,        
+    })
+    await pause(300)
+  }
+
+  await pause(500)
+  for(let i of [0,1]){
+    self.postMessage({
+      type: `worker::cards_open_quick`,
+      index: i,        
+    })
+    await pause(500)
+  }
+  for(let i of [2,3]){
+    self.postMessage({
+      type: `worker::cards_open_long`,
+      index: i,        
+    })
+    await pause(700)
+  }
+
+  if(limit>4){
+    for(let i = 4; i<limit;i++){
+      self.postMessage({
+        type: `worker::cards_drop`,
+        index: i,        
+      })
+      await pause(650);
+      self.postMessage({
+        type: `worker::cards_open_long`,
+        index: i,        
+      })
+      await pause(400);
+    }
+  }
+   
+  
+/*
   for(let i = 0; i < limit ; i++){
     send(i)    
     await pause(700)
-  }
+  }*/
   //카드철수신호
   setTimeout(()=>{
     self.postMessage({

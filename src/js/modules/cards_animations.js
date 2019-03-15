@@ -50,16 +50,16 @@ export default function (game) {
           rotZ: card.rotation.z
         })
         .to({
-          x: 0, //-350,
-          y: 250, //-200,
-          z: 0,
+          x: card_groups.p_startVector.x, //-350,
+          y: card_groups.p_startVector.y, //-200,
+          z: card_groups.p_startVector.z,
           rotX: 0,
           rotY: 0,
           rotZ: 0
-        }, 1200)
+        }, 300)
         .onUpdate(a => {
           card.position.set(a.x, a.y, a.z)
-          card.rotation.set(a.rotX, a.rotY, a.rotZ)
+          //card.rotation.set(a.rotX, a.rotY, a.rotZ)
         })
         .start()
     }    
@@ -130,6 +130,27 @@ export default function (game) {
 
   this.moveCard = (index, duration, e) => {
     const card = this.ord_cards[index]
+    if(index >= 2){
+      card.rotation.y = 0;      
+      if(index >= 4){
+        card.rotation.x = 0;        
+      }
+      if(!card.children.length){
+        let child = card.clone()
+        child.material[2] = child.material[2].clone()
+        child.material[2].transparent = true;
+        child.rotation.y = Math.PI;
+        child.position.set(8,0,0.1)
+        child.visible=true;
+        card.add(child);        
+      }else{
+        card.children[0].position.set(8,0,0.1)
+        card.children[0].material[2].opacity = 1;   
+        card.children[0].visible=true; 
+      }
+    }
+
+    console.log(card.children.length)
     card.visible = true;
     //new Promise(resolve => {
       new TWEEN.Tween({
@@ -139,8 +160,8 @@ export default function (game) {
           rotZ: card.rotation.z
         })
         .to({
-          x: card.userData.original_position.x,
-          y: card.userData.original_position.y,
+          x: (index == 2 || index == 3) ? card.userData.original_position.x - 8 :  card.userData.original_position.x,
+          y: (index == 4 || index == 5) ? card.userData.original_position.y - 8 : card.userData.original_position.y,
           z: card.userData.original_position.z,
           rotZ: card.userData.original_rotation.z,
         }, duration || 300)
@@ -176,6 +197,34 @@ export default function (game) {
         })
         .start()      
     }
+
+    this.slideCard = (index, duration, e)=>{
+      const card = this.ord_cards[index];
+      const child = card.children[0];      
+            
+        new TWEEN.Tween({
+          //rot: card.rotation[card.userData.isHidden ? 'x' : 'y'],
+          pos: 8,
+          opa: 1,
+        })
+        .to({
+          //rot: !card.userData.isHidden ? 2 * Math.PI : 0,
+          pos: 16,
+          opa: 0,
+        },680)// duration || 300)
+        .onUpdate(a => {
+          //card.rotation[card.userData.isHidden ? 'x' : 'y'] = (a.rot)
+          child.position.x = a.pos
+          child.material[2].opacity = a.opa*1.5
+        })
+        .easing(easing(TWEEN, e||10))
+        .onComplete(() => {
+          vue.score[card.userData.parent_type] = (vue.score[card.userData.parent_type] + card.userData.value) % 10        
+        })
+        .start()      
+    
+    }
+    
      //초기화
 
   this.reset = () => {
