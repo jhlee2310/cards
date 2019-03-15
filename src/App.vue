@@ -17,6 +17,11 @@
     components: {
       'AppHeader': AppHeader,
       'AppFooter': AppFooter
+    },
+    mounted(){
+      document.onload = () => {
+        window.dispatchEvent(new Event('resize'))
+      }
     }
   }
 </script>
@@ -32,7 +37,7 @@
   color: #2c3e50;
   //background-image: url('./assets/bg.png');
   max-width: 1920px;
-  min-width: 1920px;
+  /*min-width: 1920px;*/
   margin: auto;
   position: relative;
 }

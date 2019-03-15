@@ -1,11 +1,13 @@
 <template>  
-  <div id="credit_info" :style="styleObj">
-    <div class="credit_box">
-      <div class="credit_box_bet"><span>BET</span><span>{{bet}}</span></div>
-      <div class="credit_box_credit"><span>CREDIT</span><span>{{credit}}</span></div>      
+  <div class="ui_wrap" :style="wrapperStyle">
+    <div id="credit_info" :style="styleObj">
+      <div class="credit_box">
+        <div class="credit_box_bet"><span>BET</span><span>{{bet}}</span></div>
+        <div class="credit_box_credit"><span>CREDIT</span><span>{{credit}}</span></div>      
+      </div>
+      <div class="credit_buttons"></div>
+      <slot/>
     </div>
-    <div class="credit_buttons"></div>
-    <slot/>
   </div>
 </template>
 
@@ -26,17 +28,20 @@ export default {
     scaleFactor(){
       return this.resolution.width / 1320
     },
+    wrapperStyle(){
+      const el = document.getElementById('credit_info')      
+      return {
+        width: (el?el.clientWidth : 1320) * this.scaleFactor + 'px',
+        height: (el?el.clientHeight : 300) * this.scaleFactor + 'px',
+      }
+    },
     styleObj(){
-      return{
-        position: 'absolute',
+      return{        
         width:'1320px',
         backgroundColor: '#343434',
-        color:'white',
-        top:0, left:0,
-        height:'50px',
-        zIndex:1,
-        transformOrigin: '0% 0%',
-        transform: `translate(0px, ${this.resolution.height/1.3}px) scale(${this.scaleFactor})`,
+        color:'white',                        
+        transform: `scale(${this.scaleFactor})`,
+        transformOrigin: '0 0',
       }
     },
   },    

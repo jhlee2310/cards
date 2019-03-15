@@ -6,6 +6,8 @@ import VueNativeSock from 'vue-native-websocket'
 import _ from 'lodash';
 import VueDragscroll from 'vue-dragscroll'
 import Fragment from 'vue-fragment'
+import '@/assets/global.css'
+
 Object.defineProperty(Vue.prototype, '$_', { value: _ });
 
 Vue.config.productionTip = false

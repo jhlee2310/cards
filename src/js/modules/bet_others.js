@@ -21,6 +21,5 @@ export default function(message, betZones){
     this.do_bet(target, sprite, -1, message.acc_name) // visual
 
     //notice
-    const Vue = this.vue
-    Vue.bet_info.push(message)
+        
  }

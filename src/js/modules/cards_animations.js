@@ -77,7 +77,10 @@ export default function (game) {
   card_groups.p_startVector = card_groups['player'].worldToLocal(new THREE.Vector3(0, 40, 10))
   card_groups.b_startVector = card_groups['banker'].worldToLocal(new THREE.Vector3(0, 40, 10))
 
-  this.init = function(p_data, b_data, result){    
+  this.init = function(p_data, b_data, result){
+    
+    vue.score.show = true; // 스코어 켜기
+
     [p_data, b_data].forEach( (card_data, i ) => {
       let cards = (i == 0) ? card_groups['player'].children : card_groups['banker'].children
       card_data.forEach( (data, i) => {
@@ -133,7 +136,7 @@ export default function (game) {
     if(index >= 2){
       card.rotation.y = 0;      
       if(index >= 4){
-        card.rotation.x = 0;        
+        card.rotation.x = 0;
       }
       if(!card.children.length){
         let child = card.clone()
@@ -150,9 +153,7 @@ export default function (game) {
       }
     }
 
-    console.log(card.children.length)
-    card.visible = true;
-    //new Promise(resolve => {
+    card.visible = true;    
       new TWEEN.Tween({
           x: card.position.x,
           y: card.position.y,
@@ -171,10 +172,10 @@ export default function (game) {
           if (card.userData.isHidden) card.rotation.z = a.rotZ
         })
         .onComplete(() => {
-          //resolve();
+          
         })
         .start()
-    //})
+    
     }
 
     this.rotateCard = (index, duration, e) => {
@@ -193,9 +194,13 @@ export default function (game) {
         })
         .easing(easing(TWEEN, e||0))
         .onComplete(() => {
-          vue.score[card.userData.parent_type] = (vue.score[card.userData.parent_type] + card.userData.value) % 10        
+          //스코어 갱신
+          this.assignScore(card.userData)
         })
         .start()      
+    }
+    this.assignScore = (data) => {      
+      vue.score[data.parent_type] = (vue.score[data.parent_type] + data.value) % 10
     }
 
     this.slideCard = (index, duration, e)=>{
@@ -219,7 +224,7 @@ export default function (game) {
         })
         .easing(easing(TWEEN, e||10))
         .onComplete(() => {
-          vue.score[card.userData.parent_type] = (vue.score[card.userData.parent_type] + card.userData.value) % 10        
+          this.assignScore(card.userData)
         })
         .start()      
     
@@ -235,12 +240,19 @@ export default function (game) {
         let next = this.generator.next()
         if (next.done) {
           clearInterval(q)
+          //스코어 초기화
+          vue.score.player = 0;
+          vue.score.banker = 0;
+          vue.score.show = false;
+
+          //코인판 초기화
+          game.clear_bet_coins();
           resolve();
         }
       }, 110)
     }).then(()=>{
       setTimeout(()=>{
-        this.renew();
+        this.renew();        
         console.log('카드초기화됨')
       },2000)
     })

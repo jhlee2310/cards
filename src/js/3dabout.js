@@ -5,6 +5,7 @@ import pos_coins_for_bet from './modules/pos_coins_for_bet' // 배팅UI
 import cards_animations from './modules/cards_animations' // 카드애니메이션
 import init_betted_coin from './modules/init_betted_coin.js' // 배팅된 코인
 import bet_others from './modules/bet_others' // 다른유저 배팅
+import Texts from './modules/Texts.js' // 3dTexts
 
 
 const e = function (opt) {
@@ -482,6 +483,7 @@ const e = function (opt) {
   }.bind(this))(this.betZones)
 
   this.bet_others = (message)=>{
+    vue.bet_info = vue.bet_info.concat(message)
     bet_others.bind(this)(message,this.betZones)
   }
 

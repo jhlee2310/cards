@@ -1,14 +1,14 @@
 <template>
   <fragment>
-    <div v-if="winner=='player'" class="player-win" :style="player_win">
+    <div v-if="winner=='P'" class="player-win" :style="player_win">
       <div>PLAYER</div>
       <div>WIN</div>
     </div>    
-    <div v-if="winner=='banker'" class="player-win" :style="banker_win">
+    <div v-if="winner=='B'" class="player-win" :style="banker_win">
       <div>BANKER</div>
       <div>WIN</div>
     </div>
-    <div v-if="winner=='tie'" class="player-win" :style="tie_win">
+    <div v-if="winner=='T'" class="player-win" :style="tie_win">
       <div>TIE</div>
     </div>   
   </fragment>

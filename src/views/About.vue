@@ -16,7 +16,8 @@
         </div>
       </div>      
       <canvas width="256" height="256" ref="hiddenCanvas"/>
-    </div>    
+    </div>
+    
     <div id="cont_3d">
       <!--배팅코인-->
       <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18" :betting="game_status.betting"/>
@@ -45,15 +46,10 @@
 
       <!-- bet_info_total -->
       <div class="bet_info_total">        
-          <div v-for="data,index in bet_info_total">
+          <div v-for="data, index in bet_info_total" :key="`bet_total${index}`">            
             <span>{{index}}</span><span>{{data.acc_name}}</span><span>{{data.totalValue}} EOS</span>
           </div>        
-      </div>
-
-      <!-- bet_info_total -->
-      <CreditInfo :credit="game_token_info" :bet="my_bet_info">
-        <board ref="board" :roomId="game_status.table"></board>
-      </CreditInfo>
+      </div>      
 
       <!--Room Number -->
       <div class="table-number" :style="tableNumStyle">
@@ -70,8 +66,14 @@
 
       <!--modal-->
       <Winners :winner="game_status.winner"/>
-    </div>
+    </div>    
+    <!-- bet_info_total -->
+    <CreditInfo :credit="game_token_info" :bet="my_bet_info">
+      <board ref="board" :roomId="game_status.table"></board>
+    </CreditInfo>
   </div>
+
+  
 </template>
 
 <script>
@@ -263,6 +265,7 @@ export default {
     this.worker = new Worker('/worker.js');
 	},
   mounted(){
+    
     let cont3d = document.getElementById('cont_3d')
     this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
     this.connectScatter();
@@ -365,7 +368,7 @@ export default {
     }
 
 
-    window.addEventListener('resize',this.onWindowResize,false)
+    window.addEventListener('resize',this.onWindowResize,false)    
     window.addEventListener('mousemove',this.onMouseMove,false)
     document.querySelector('#cont_3d').addEventListener('click',this.onMouseClick, false)
     window.addEventListener('visibilitychange',(e)=>{      
@@ -540,7 +543,7 @@ export default {
         break;
 
         case "worker::expose_winner":
-          this.$set(this.game_status,'winner',this.game.animateCards.winner);
+          this.$set(this.game_status,'winner', this.room_bead.bead.split(',')[0]);
         break;
       }
     },
@@ -674,7 +677,7 @@ export default {
 
 
 
-.about *{
+.about {
    user-select: none;
    z-index: 3;
    position: relative;
@@ -698,13 +701,14 @@ export default {
 }
 
 body{margin:0;padding:0;overflow-x:hidden}
-.about{height:56.25vw;max-height:1080px;position:relative;
+.about{position:relative;
   max-width:1920px;margin:0 auto;width:100%;}
 
 #cont_3d{
   position:relative;
   width:100%;
-  height:100%;
+  height:56.25vw;
+  
 }
 
 .col .img1{
