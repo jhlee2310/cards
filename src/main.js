@@ -5,11 +5,13 @@ import store from './store'
 import VueNativeSock from 'vue-native-websocket'
 import _ from 'lodash';
 import VueDragscroll from 'vue-dragscroll'
+import Fragment from 'vue-fragment'
 Object.defineProperty(Vue.prototype, '$_', { value: _ });
 
 Vue.config.productionTip = false
 
 //Vue.use(VueNativeSock, 'ws://192.168.0.14:3100')
+Vue.use(Fragment.Plugin)
 Vue.use(VueNativeSock, 'ws://eostics.io:3100', {
   connectManually: true,
 })

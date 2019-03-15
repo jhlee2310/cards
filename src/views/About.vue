@@ -3,23 +3,23 @@
     <div>
       <span v-if="!eosAccount" @click="proc_getIdentity">login</span>
       <span v-else="!!eosAccount" @click="proc_forgetIdentity">logOut(<span>{{eosAccount.name}}</span>)</span>
-    </div>    
+    </div>
     <!--hidden canvas-->
     <div v-show="false" id="hidden_canvas" style="text-align:left;background-color:black;">
-      <div ref="hiddenDiv" style="width:512px;height:512px;">   
+      <div ref="hiddenDiv" style="width:256px;height:256px;">   
         <div v-for="item, index in hiddenData" :style="hiddenStyle.div(index == 2 ? 1 : 0)" :key="`hidden_${index}`">
-          <span style="margin-right:16px">{{item[0]}}</span>
-          <span style="margin-right:16px">{{item[1]}}</span>
-          <span :style="hiddenStyle.percent">{{item[2]}}<span style="font-size:0.8em">%</span></span>
+          <div style="font-size:26px;position:relative">
+            <span style="margin-right:16px">{{item[0]}}</span>
+            <span style="position:absolute;left:60px;top:-6px"><img src="@/images/human.png" style="width:30px;height:30px;position:relative;top:3px">{{item[1]}}</span>
+            <span :style="hiddenStyle.percent">{{item[2]}}%<span style="font-size:0.8em"></span></span>
+          </div>
         </div>
-      </div>
-      
-      <canvas width="512" height="512" ref="hiddenCanvas"/>
-    </div>
-    <span>{{round}}</span>
+      </div>      
+      <canvas width="256" height="256" ref="hiddenCanvas"/>
+    </div>    
     <div id="cont_3d">
       <!--배팅코인-->
-      <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18"/>
+      <CoinsForBet ref="coins_for_bet" :style="CoinsForBet_style" default_size="600,140" pos_y="-18" :betting="game_status.betting"/>
       
       <!--스코어-->
       <transition name="fade">
@@ -49,10 +49,28 @@
             <span>{{index}}</span><span>{{data.acc_name}}</span><span>{{data.totalValue}} EOS</span>
           </div>        
       </div>
-      
+
+      <!-- bet_info_total -->
+      <CreditInfo :credit="game_token_info" :bet="my_bet_info">
+        <board ref="board"></board>
+      </CreditInfo>
+
+      <!--Room Number -->
+      <div class="table-number" :style="tableNumStyle">
+        <span>TABLE</span><span style="margin-left:20px;">{{game_status.table}}</span>
+      </div>
+
+      <!--Room Number -->
+      <div class="round-number" :style="roundNumStyle">
+        <span>ROUND</span><span style="margin-left:20px;">{{game_status.round}}</span>
+      </div>
+
+      <!--modal-->
+      <Modal/>
+
+      <!--modal-->
+      <Winners :winner="game_status.winner"/>
     </div>
-		<board ref="board"></board>
-    
   </div>
 </template>
 
@@ -64,29 +82,58 @@ import CoinsForBet from '@/components/CoinsForBet.vue'
 import Board from '@/components/Board.vue'
 import ScatterJS from 'scatterjs-core'
 import ScatterEOS from 'scatterjs-plugin-eosjs'
+import CreditInfo from '@/components/CreditInfo.vue'
 import Eos from 'eosjs';
-ScatterJS.plugins( new ScatterEOS() );
+import { mapState } from 'vuex'
+import { mapMutations } from 'vuex'
+import Modal from '@/components/Modal.vue'
+import Winners from '@/components/Winners.vue'
 
+ScatterJS.plugins( new ScatterEOS() );
 
 export default {
   components:{
     Board,
-    CoinsForBet
+    CoinsForBet,
+    CreditInfo,
+    Modal,
+    Winners
   },
   data(){
     const that = this;
     return {
+      nowAnimate: null,
+      worker: null,
+      game_token_info: '',
+      game_connected: false,
       bet_info_style:{
         transform: 'translate(0px, 0px)'
       },
       tosvr:{
+        req_betting(symbol, value, slot) {
+          
+          if (!that.$socket || !that.game_connected) return;
+          if (!that.scatter || !that.scatter.identity) return;          
+          
+          const eosAccount = that.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+
+          var req_json = {
+              type    : "req_betting",
+              account : eosAccount.name,
+              symbol  : symbol,
+              value   : value,
+              slot    : slot
+          };        
+          
+          that.$socket.send(JSON.stringify(req_json)); 
+        },
         set_scatter_identity (scatter_identity = undefined ) {
-          //if (!ws || !game_connected) return;
-          const scatter = this.scatter
+          if (!that.$socket || !that.game_connected) return;
+          const scatter = that.scatter
 
           if (scatter_identity === undefined) {          
             if ( scatter && scatter.identity ) {
-              const eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+              const eosAccount = that.scatter.identity.accounts.find(account => account.blockchain === 'eos');
               scatter_identity = eosAccount.name; 
               console.log('스캐터 아이디', scatter_identity);
             }
@@ -100,6 +147,20 @@ export default {
           };
 
           that.$socket.send(JSON.stringify(req_json));
+          console.log(req_json)
+        },
+        notify_insert_coin(block_num, trx_id, token_sender, token_value, token_symbol) {
+          if (!this.$socket || !this. game_connected) return; 
+          console.log(token_sender); 
+          var req_json = {
+              type        : "req_notify_insert_coin",
+              block_num   : block_num,
+              trx_id      : trx_id, 
+              from        : token_sender,
+              value       : token_value,
+              symbol      : token_symbol
+          };
+          this.$socket.send(JSON.stringify(req_json)); 
         }
       },
       eosAccount: null,
@@ -116,28 +177,27 @@ export default {
       }),
       hiddenStyle:{
         percent:{          
-          display:'inline-block',
-          width:'90px',
-          height:'90px',
-          border:'5px solid #fff',          
-          borderRadius: '50%',
+          //display: 'inline-block',
+          //width:'1em',
+          //height:'1em',
+          //border:'1px solid #fff',          
+          //borderRadius: '50%',
           textAlign: 'center',
-          letterSpacing: '-3px',          
-          boxSizing: 'border-box',
-          fontSize: '0.8em',
+          //letterSpacing: '-3px',          
+          //boxSizing: 'border-box',
+          fontSize: '1em',
           float:'right',          
         },
         div(n){
           return{
-            width: (n==0) ? '' : '76%',
-            fontSize: '56px',
-            lineHeight: '74px',
+            width: (n==0) ? '100%' : '76%',
+            fontSize: '1em',
+            //lineHeight: '1em',
             fontFamily: 'Arial',
             fontWeight: 500,
             color: '#fff',
-            overflow: 'hidden',
-            opacity: '1',
-            height:'102.4px'
+            overflow: 'hidden',            
+            height:'51.2px'
           }
         }
       },
@@ -162,99 +222,84 @@ export default {
       game_status: {
         betting: false,
         bet_start: false,
+        table:0,
+        round:0,
+        winner: '',
       },
+      game_status_betting: false,
       deal_info: {},
       game: null,
       round: 1,
-      easing: [
-        {text:'Linear.None', value:TWEEN.Easing.Linear.None},
-        {text:'Quadratic.In', value:TWEEN.Easing.Quadratic.In},
-        {text:'Quadratic.Out', value:TWEEN.Easing.Quadratic.Out},
-        {text:'Quadratic.InOut',  value:TWEEN.Easing.Quadratic.InOut},
-        {text:'Cubic.In',  value:TWEEN.Easing.Cubic.In},
-        {text:'Cubic.Out',  value:TWEEN.Easing.Cubic.Out},
-        {text:'Cubic.InOut',  value:TWEEN.Easing.Cubic.InOut},
-        {text:'Quartic.In',  value:TWEEN.Easing.Quartic.In},
-        {text:'Quartic.Out',  value:TWEEN.Easing.Quartic.Out},
-        {text:'Quartic.InOut',  value:TWEEN.Easing.Quartic.InOut},
-        {text:'Quintic.In',  value:TWEEN.Easing.Quintic.In},
-        {text:'Quintic.Out',  value:TWEEN.Easing.Quintic.Out},
-        {text:'Quintic.InOut',  value:TWEEN.Easing.Quintic.InOut},
-        {text:'Sinusoidal.In',  value:TWEEN.Easing.Sinusoidal.In},
-        {text:'Sinusoidal.Out',  value:TWEEN.Easing.Sinusoidal.Out},
-        {text:'Sinusoidal.InOut',  value:TWEEN.Easing.Sinusoidal.InOut},
-        {text:'Exponential.In',  value:TWEEN.Easing.Exponential.In},
-        {text:'Exponential.Out',  value:TWEEN.Easing.Exponential.Out},
-        {text:'Exponential.InOut',  value:TWEEN.Easing.Exponential.InOut},
-        {text:'Circular.In',  value:TWEEN.Easing.Circular.In},
-        {text:'Circular.Out',  value:TWEEN.Easing.Circular.Out},
-        {text:'Circular.InOut',  value:TWEEN.Easing.Circular.InOut},
-        {text:'Elastic.In',  value:TWEEN.Easing.Elastic.In},
-        {text:'Elastic.Out',  value:TWEEN.Easing.Elastic.Out},
-        {text:'Elastic.InOut',  value:TWEEN.Easing.Elastic.InOut},
-        {text:'Back.In',  value:TWEEN.Easing.Back.In},
-        {text:'Back.Out',  value:TWEEN.Easing.Back.Out},
-        {text:'Back.InOut',  value:TWEEN.Easing.Back.InOut},
-        {text:'Bounce.In',  value:TWEEN.Easing.Bounce.In},
-        {text:'Bounce.Out',  value:TWEEN.Easing.Bounce.Out},
-        {text:'Bounce.InOut',  value:TWEEN.Easing.Bounce.InOut},
-        
-      ],
-      typeA: TWEEN.Easing.Linear.None,
-      typeB: TWEEN.Easing.Elastic.InOut,
     }
   },
   watch:{
-    
-    hiddenData(newData, oldData){
-      const ctx = this.$refs.hiddenCanvas.getContext('2d');
-      ctx.clearRect(0, 0, 512, 512);
-      this.$nextTick(()=>{
-        rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
-          
-        })
-        .then((a) => {
-          this.game.textLabels.forEach((label, i) => {          
-            label.material.map.needsUpdate = true;            
+    game_status: {
+        handler(nv, ov){
+          if(nv.betting !== ov.betting){
+            //this.$refs.coins_for_bet
+          }
+        },
+        deep: true
+    },
+    hiddenData: {
+      handler(nv,ov){
+        const ctx = this.$refs.hiddenCanvas.getContext('2d');      
+        ctx.clearRect(0, 0, 255, 255);
+        this.$nextTick(()=>{        
+          rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas)
+         .then((a) => {
+            this.game.textLabels.forEach((label, i) => {          
+              label.material.map.needsUpdate = true;            
+            })
           })
         })
-      })
+      },
+      deep: true,
+      //immediate: true,
     },    
   },
   created(){
-    this.connectScatter();
+    this.worker = new Worker('/worker.js');
 	},
   mounted(){
-
-    window.addEventListener('message', (e)=>{
-      const msg = e.data      
-      if(msg.type == "room_betting") this.bet_others(msg);
-    })   
-
+    let cont3d = document.getElementById('cont_3d')
+    this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
+    this.connectScatter();
     this.$connect()
+
+    this.worker.onmessage = this.procssWorker
+
+    this.worker.postMessage({
+        type:'init',
+        
+      })
 
     this.game = new threejs({
       vue: this,
       el: '#cont_3d',
-      TWEEN    
+      TWEEN 
     })
-
     window.vv = this
+    this.$socket.onmessage = (mes)=>{      
+    const message = JSON.parse(mes.data)
+    this.worker.postMessage(message)
 
-    this.$socket.onmessage = (mes)=>{
-      const message = JSON.parse(mes.data)
-      console.log(message)
       switch(message.type){
-        case 'welcome':          
+        case 'welcome':
+          this.game_connected = true;
+          console.log('game_connected');
+
           this.$socket.send(JSON.stringify({
              type    :"req_enter_room",
-          room_id : 2
+            room_id : 5
           }))
           break;
+
         case 'deal_info':
           this.deal_info = message
           this.process_deal(message)
           break;
+
         case 'room_state':
           /**
            * http://192.168.0.7:8081/issues/1126 참조
@@ -267,19 +312,16 @@ export default {
               dealing	카드 오픈
               dealing::chain	카드 오픈 및 돈분배를 체인에 동기화
           */
-          switch(message.state){
-            case 'betting':
-              this.round = message.round
-              this.start_betting(10);
-              break;
-            case 'betting::chain':
-              break;
+          switch(message.state){           
+           
             case 'prepare_dealing::chain':
               break;
             case 'dealing':
+              this.init_betting_info(5000); // delay1
+              console.log('배팅정보를 초기화합니다.');
               break;
             case 'dealing:::chain':
-            this.end_betting();
+            
               break;
             case 'prepare_round':
               break;
@@ -290,12 +332,16 @@ export default {
           break;
         case 'room_detail':
           this.round = message.round
+          this.$set(this.game_status,'table', message.room_id)
+          this.$set(this.game_status,'round', message.round)
           this.$refs.board.setRound(message)
           break;
         case 'room_betting':          
-          //this.bet_others(message);
+          this.bet_others(message);
           break;
-
+        case 'game_token_info':
+          this.game_token_info = message.value;
+          break;
         // case 'room_state':
         //   this.$refs.board.setState(message)
         //   break;
@@ -304,20 +350,11 @@ export default {
           //console.log(message)
       }
       
-      this.$nextTick(()=>{
-        this.$refs.hiddenCanvas.getContext('2d').clearRect(0,0,512,512)
-        rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$refs.hiddenCanvas, {
-        
-        })
-        .then((a) => {
-          this.game.textLabels.forEach((label, i) => {          
-            label.material.map.needsUpdate = true;            
-          })
-        })
-      })
+
        
     }
-    
+
+
     window.addEventListener('resize',this.onWindowResize,false)
     window.addEventListener('mousemove',this.onMouseMove,false)
     document.querySelector('#cont_3d').addEventListener('click',this.onMouseClick, false)
@@ -327,42 +364,78 @@ export default {
         let stampTime = new Date().getTime()
         console.log('stamp : ' + stamp)    
         const d = () => {          
-          if(!document.hidden){console.log('백그라운드 종료'); return;}
-          console.log('백그라운드 실행')
-          let nowTime = new Date().getTime();
-          let delta = nowTime - stampTime;
-          console.log(delta);
-          TWEEN.update(stamp + delta);
-          this.game.renderer.render(this.game.scene,this.game.camera);
-          setTimeout(d, 10)        
-        }
+          if(!document.hidden){console.log('백그라운드 종료'); return;}          
+            let nowTime = new Date().getTime();
+            let delta = nowTime - stampTime;
+            console.log(delta);
+            TWEEN.update(stamp + delta);
+            this.game.renderer.render(this.game.scene,this.game.camera);
+            setTimeout(d, 10)        
+          }
         d(); 
       }
     },false)
   },
   computed:{
+    my_bet_info(){
+      let sum = 0;
+      for(let bet of this.bet_info){
+        if(bet.acc_name == this.eosAccount.name){
+          sum = +sum + +bet.value
+          sum = parseFloat(sum).toFixed(4);
+        }
+      }
+      return sum
+    },
+    ...mapState([
+      'resolution'
+    ]),
+    scaleFactor(){
+      return this.resolution.width / 1320
+    },
+    tableNumStyle(){
+      return {
+        color: '#fff',
+        transformOrigin: '0 0',
+        fontSize: '24px',
+        position: 'absolute',
+        top:0,
+        left:0,
+        transform:`translate(${this.resolution.width * 0.2}px, ${this.resolution.height * 0.03}px) scale(${this.scaleFactor})`
+      }
+    },
+    roundNumStyle(){
+      return {
+        color: '#fff',
+        transformOrigin: '0 0',
+        fontSize: '24px',
+        position: 'absolute',
+        top:0,
+        left:0,
+        transform:`translate(${this.resolution.width * 0.70}px, ${this.resolution.height * 0.03}px) scale(${this.scaleFactor})`
+      }
+    },
     hiddenData(){      
       let arrays = [[0,[],0],[0,[],0],[0,[],0],[0,[],0],[0,[],0]];
       let totalValue = 0;
-      this.bet_info.forEach( (item,index)=>{
-        const rSlot = (i) => {
+       const rSlot = (i) => {
           let s = [2,1,3,0,4]
           return s[i]
         }
-        totalValue += +item.value;
 
-        let slot = arrays[rSlot(item.slot)]
-        slot[0] += +item.value
+      for(let item of this.bet_info){       
+        totalValue += +item.value;
+        let slot = arrays[rSlot(item.slot)]        
+        slot[0] = (+slot[0] + +item.value).toFixed(1)
+        
+
         if( slot[1].indexOf(item.acc_name) == -1) slot[1].push(item.acc_name)        
-      })
+      }
 
       arrays.forEach(slot => {
-        slot[2] = totalValue == 0 ? 0 : parseInt( +slot[0] / totalValue * 100 )
+        slot[2] = totalValue == 0 ? 0 : parseInt( slot[0] / totalValue * 100 )
         slot[1] = slot[1].length
       })
-
-      
-
       return arrays
     },
     bet_info_total(){
@@ -392,42 +465,105 @@ export default {
     }
   },
   methods: {
+    pause(time){
+      return new Promise(resolve=>{
+        setTimeout(resolve,time)
+      })
+    },
+    procssWorker(message){
+      let data = message.data;
+      console.log(data);
+      switch(data.type){
+        case "welcome":
+        break;
+        case "room_state":
+          switch(data.state){
+            case "betting": // 배팅 시작을 알림
+              this.game_status.betting = true;
+              new TWEEN.Tween({ y: 0 })
+              .to({y: -1}, 20000)
+              .onUpdate(a => {
+                this.bet_info_style = {
+                  transform: `translate(0px, ${a.y*1000}px)`
+                }
+              })
+              .onComplete(() => {})
+              .start()
+            break;
+            case "betting::chain":
+            this.game_status.betting = false;
+            'betting::chain'
+            break;
+          }          
+        break;
+
+        case "worker::timer":
+          this.timer = data.value;
+        break;
+
+        case "worker::cards_drop":
+          ;(async()=>{
+            if(data.index >= 2 ){
+
+            }
+            this.game.animateCards.moveCard(data.index,600,1)
+            //await this.pause(800)
+            //this.game.animateCards.rotateCard(data.index,200,2)
+          })()          
+        break;
+
+        case "worker::cards_open_quick":
+          ;(async()=>{
+            this.game.animateCards.rotateCard(data.index,200,4)
+          })()          
+        break;
+
+        case "worker::cards_open_long":
+          ;(async()=>{
+            this.game.animateCards.slideCard(data.index,200)
+          })()          
+        break;
+        
+        case "worker::cards_out":
+          this.game.animateCards.reset();
+          this.$set(this.game_status,'winner','')
+        break;
+
+        case "worker::expose_winner":
+          this.$set(this.game_status,'winner',this.game.animateCards.winner);
+        break;
+      }
+    },
+    ...mapMutations([
+      'SET_WINDOW_RESOLUTION' // [width,height]
+    ]),
+    async init_betting_info(delay1){
+      await new Promise(resolve => {
+        setTimeout(resolve, delay1)        
+      })
+
+      this.bet_info = [];      
+    },
     async proc_insert_coin(to_account, token_contract, token_value, token_symbol) {
-    // 토큰 전송은 게임서버와 연결되었을 때만 하자. 
-    if (!game_connected || !scatter.identity) {
-        $("#view_of_result").text('Game not connected or Scatter not logined');
+      // 토큰 전송은 게임서버와 연결되었을 때만 하자. 
+      if (!this.game_connected || !this.scatter.identity) {
+          return; 
+      }
 
-        return; 
-    }
-
-    const account = scatter.identity.accounts.find(x => x.blockchain === 'eos');
-    const opts = { authorization:[`${account.name}@${account.authority}`], requiredFields:{} };
-
-    eos.contract(token_contract).then( contract => {
-        contract.transfer(account.name, to_account, token_value + ' ' + token_symbol, '', opts).then(trx => {
-            //console.log('trx', trx);
-            $("#view_of_result").text(
-                "transfer succ:\n" +
-                JSON.stringify(trx, null, '\t')
-            );
-
-
+      const account = this.scatter.identity.accounts.find(x => x.blockchain === 'eos');
+      const opts = { authorization:[`${account.name}@${account.authority}`], requiredFields:{} };
+      console.log(to_account, token_contract, token_value);
+      return;
+      this.eos.contract(token_contract)
+      .then( contract => {
+        contract.transfer(account.name, to_account, token_value + ' ' + token_symbol, '', opts)        
+        .then( trx => {
+            console.log("transfer succ:\n" + JSON.stringify(trx, null, '\t'));
             console.log('succ', trx.transaction_id, trx.processed.block_num);
-
-            // 게임서버에 돈 입금을 알린다. 
+            // 게임서버에 돈 입금을 알린다.
             tosvr_notify_insert_coin(trx.processed.block_num, trx.transaction_id, account.name, token_value, token_symbol)
-
-        }).catch(err => {
-            console.error(err);
-            $("#view_of_result").text(
-                "transfer error:\n" +
-                JSON.stringify(err, null, '\t')
-            );
-        });
-
-    }).catch(err => {
-        console.error(err);
-    })
+        }).catch(err => {console.error(err) });
+      }).catch(err => { console.error(err) })
     },
     async proc_forgetIdentity() {
       if (!this.scatter.identity) return; 
@@ -465,79 +601,39 @@ export default {
   
       //console.log(this.scatter.identity);
     },
-    connectScatter(){
-      return new Promise((resolve, reject)=>{
-        const connectionOptions = {initTimeout:3000};
-        ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions).then( connected => {
-          if(!connected){          
-            console.log('Could not connect to Scatter.');
-            alert('Please download Scatter if it is not installed')
-            return;
-          }        
-          console.log('Scatter Connected!')
-          this.eos = this.scatter.eos(this.network, Eos);        
+    async connectScatter(){
+      const connectionOptions = {initTimeout:5000};
+      const connected = await ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions)
+                
+      if(!connected){          
+        console.log('Could not connect to Scatter.');
+        //alert('Please download Scatter if it is not installed')
+        return;
+      }
 
-          if (this.scatter.identity) {
-            this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
-          }else{
-            this.eosAccount = null;
-          }
-
-          resolve(this.tosvr.set_scatter_identity(eosAccount.name));
-        }).catch( ()=>{
-          resolve(this.tosvr.set_scatter_identity(''));
-        } )
-
-      })
-        
-      
+      console.log('Scatter Connected!')
+      this.eos = this.scatter.eos(this.network, Eos);          
+      if (this.scatter.identity) {            
+        this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+        this.tosvr.set_scatter_identity(this.eosAccount.name);
+      }else{            
+        this.eosAccount = null;
+        this.tosvr.set_scatter_identity('');
+      }      
     },
     bet_others(message){
       this.game.bet_others(message)
     },
     end_betting(){
       if(this.game_status.betting == false) return
-      this.$set(this.game_status,'betting', false);
-    },
-    start_betting(time){
-      this.$set(this.game_status,'betting',true);
-
-      new TWEEN.Tween({
-        y: 0,
-      })
-      .to({
-        y: -1, 
-      }, 15000)
-      .onUpdate(a => {
-        this.bet_info_style = {
-          transform: `translate(0px, ${a.y*1000}px)`
-        }
-      })
-      .onComplete(() => {
-          
-      })
-      .start()
-
-      const d = ()=>{
-        this.timer = time
-        time--;
-        if(this.timer <= 0) {
-          this.$set(this.game_status,'betting', false);
-          return
-          }
-        setTimeout(d, 1000)
-      }
-      d();     
+      this.game_status.betting = false
     },
     process_deal(info){
-      
+      //카드 딜링 정보 전달
       const b_cards = info.deal.banker.cards
       const p_cards = info.deal.player.cards
-      const result = info.deal.result
-
-      this.game.changeCardsMtl(p_cards,b_cards);
-      this.game.animateCards(p_cards,b_cards,result);
-    
+      const result = info.deal.result      
+      this.game.animateCards.init(p_cards,b_cards,result);
     },
     onMouseMove(e){      
       this.game.onMouseMove(e);      
@@ -583,7 +679,7 @@ export default {
   border-radius:50%;  
 }
 
-body{margin:0;padding:0}
+body{margin:0;padding:0;overflow-x:hidden}
 .about{height:56.25vw;max-height:1080px;position:relative;
   max-width:1920px;margin:0 auto;width:100%;}
 
