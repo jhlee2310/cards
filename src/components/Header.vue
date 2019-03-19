@@ -6,7 +6,7 @@
 				<img src="@/assets/logo.png"/>
 			</router-link>
 			</div>
-			<div style="display:flex;justify-content: space-between;-webkit-flex: 5;flex: 5;align-items: baseline;">
+			<div style="display:flex;justify-content: space-between;-webkit-flex: 7;flex: 7;align-items: baseline;">
 	<router-link to="#lobby" tag="div" style="font-size: 18px;
   font-weight: normal;
   font-style: normal;
@@ -40,14 +40,29 @@
 	cursor: pointer;">
 				Fairness
 				</router-link>
-			<div style="width: 199px;
-		height: 30px;
-		border-radius: 15px;
-		background-color: #00a8ff;
-		font-size: 16px;
-		line-height: 1.88;
-		cursor: pointer;
-		">
+				<div v-if="eosAccount" style="border-radius: 15px;background-color: #ffa025;
+				font-size: 16px;
+				width: 114px;
+  font-weight: 600;
+  font-style: normal;
+  font-stretch: normal;
+  line-height: 1.88;
+  letter-spacing: normal;
+  text-align: center;
+  color: #000000;
+				">
+					Deposit
+				</div>
+			<div :style="{
+				width: '199px',
+				height: '30px',
+				'border-radius': '15px',
+				'background-color': eosAccount==null?'#00a8ff':'unset',
+				'border': eosAccount==null?'none':'solid 1px #00a8ff',
+				'font-size': '16px',
+				'line-height': '1.88',
+				cursor: 'pointer',
+			}">
 				<span v-if="!eosAccount" @click="proc_getIdentity">Log in with <span style="font-weight: bold;">Scatter</span></span>
 				<span v-else @click="proc_forgetIdentity"><span>{{eosAccount.name}}</span></span>
 			</div>
