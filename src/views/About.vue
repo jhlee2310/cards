@@ -34,9 +34,12 @@
 
       <!-- bet_info -->
       <div class="bet_info">
-        <div class="bet_info_wrap" :style="bet_info_style">
-          <div v-for="data in bet_info">
-            {{data.symbol}}{{parseFloat(data.value).toFixed(2)}}{{data.acc_name}}
+        <div class="bet_info_wrap" style="top:0"><!--:style="bet_info_style"-->
+          <div v-for="data in bet_info_test" class="bet_info_item">
+            <span :class="classBtoA(data.slot)"><div class="is-pair"></div></span>
+            <span>{{data.acc_name}}</span
+            <span>{{parseFloat(data.value).toFixed(2)}}</span>
+            <span>{{data.symbol}}</span>
           </div>
         </div>
       </div>
@@ -74,7 +77,7 @@
       <Modal/>
 
       <!--modal-->
-      <Winners :winner="game_status.winner"/>
+      <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN"/>
     </div>    
     <!-- bet_info_total -->
     <CreditInfo :bet="my_bet_info">
@@ -111,6 +114,19 @@ export default {
   data(){
     const that = this;
     return {
+      bet_info_test:[
+       {slot:0,acc_name:"oranke",value:12.48},
+       {slot:1,acc_name:"oranke",value:12.48},
+       {slot:2,acc_name:"oranke",value:12.48},
+       {slot:3,acc_name:"oranke",value:12.48},
+       {slot:4,acc_name:"oranke",value:12.48},
+       {slot:0,acc_name:"oranke",value:12.48},
+       {slot:1,acc_name:"oranke",value:12.48},
+       {slot:2,acc_name:"oranke",value:12.48},
+       {slot:3,acc_name:"oranke",value:12.48},
+       {slot:4,acc_name:"oranke",value:12.48},
+      ],
+      TWEEN,
       nowAnimate: null,
       worker: null,
       //game_token_info: '',
@@ -257,8 +273,8 @@ export default {
   created(){
     this.worker = new Worker('/worker.js');
 	},
-  async mounted(){
-    
+  mounted(){
+    //setInterval(()=>{this.$chat.send(JSON.stringify({type:'chat',txt:'abcdefg'}))},1000)
     let cont3d = document.getElementById('cont_3d')
     this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
     // this.connectScatter();
@@ -483,7 +499,26 @@ export default {
     }
   },
   methods: {
-     aTobSlot(i){
+    classBtoA(index){
+      switch(index){
+        case 0:
+        return "beadRoad-t";
+        break;
+        case 1:
+        return "beadRoad-p";
+        break;
+        case 2:
+        return "beadRoad-b";
+        break;
+        case 3:
+        return "beadRoad-p pair";
+        break;
+        case 4:
+        return "beadRoad-b pair";
+        break;
+      }
+    },
+    aTobSlot(i){
       let s = [2,1,3,0,4]
       return s[i]
     },
@@ -495,9 +530,7 @@ export default {
       return new Promise(resolve=>{
         setTimeout(resolve,time)
       })
-    },
-
-    
+    },    
     procssWorker(message){
       let data = message.data;
       console.log(data);
@@ -730,6 +763,90 @@ body{margin:0;padding:0;overflow-x:hidden}
   }
 }
 
+.bet_info_item{
+  margin-bottom:5px;
+  margin-left:5px;
+  text-align:left;
+  &>span{
+    margin-right:8px;
+  }
+}
 
+@mixin bet-info{
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  display: inline-flex;  
+  color:white;
+  -webkit-box-pack: center;
+  -ms-flex-pack: center;
+  justify-content: center;
+  -webkit-box-align: center;
+  -ms-flex-align: center;
+  align-items: center;
+  position: relative;
+}
+.beadRoad-b {
+  @include bet-info;
+  background-color: red;
+  &::after{
+    content:"B";
+  }
+  .is-pair{
+    display:none;
+    position:absolute;
+  }
+  &.pair{
+    background-color:#cccccc;
+    color:#cccccc;    
+    .is-pair{
+      display:block;
+      top:0;
+      left:0;
+      width:6px;
+      height:6px;
+      background-color:red;
+      border-radius:50%;
+    }
+  }
+  
+
+}
+.beadRoad-p {
+  @include bet-info;
+  background-color: blue;
+  &::after{
+    content:"P";
+  }
+  &.pair{
+    background-color:#cccccc;
+    color:#cccccc;    
+    .is-pair{
+      display:block;
+      bottom:0;
+      right:0;
+      width:6px;
+      height:6px;
+      background-color:blue;
+      border-radius:50%;
+    }
+  }
+  .is-pair{
+    display:none;
+    position:absolute;
+  }
+}
+.beadRoad-t {
+  @include bet-info;
+  background-color: green; 
+  &::after{
+    content:"T";
+  }
+  .is-pair{
+    display:none;
+  }
+  //margin: 1px;
+  //font-size:10px;
+}
 </style>
 

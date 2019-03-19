@@ -115,6 +115,7 @@ const e = function (opt) {
   }
 
   let scene = this.scene = new THREE.Scene();
+  let scene2 = this.scene2 = new THREE.Scene();
   let camera = this.camera = new THREE.PerspectiveCamera(32, cont.clientWidth / cont.clientHeight, 0.1, 1000);
   let renderer = this.renderer = new THREE.WebGLRenderer({
     //alpha:true,
@@ -318,7 +319,7 @@ const e = function (opt) {
     this.resizeUpdate.matLine.resolution.set(width, height);
     scorePosition(width, height);
     timerPosition(width, height);
-    coinForBetPosition(width, height);
+    //coinForBetPosition(width, height);
 
     if (width <= 750) {
       this.resizeUpdate.matLine.linewidth = 1
@@ -331,7 +332,13 @@ const e = function (opt) {
   function animate(time) {
     timeStamp = time
     TWEEN.update(time)
+    renderer.autoClear = true;
+    
     renderer.render(scene, camera)
+    renderer.autoClear = false;
+    renderer.clearDepth();
+    renderer.render(scene2, camera)
+    
     //composer.render()
     //console.log('윈도우 active 상태')
     requestAnimationFrame(animate);
