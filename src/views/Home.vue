@@ -96,7 +96,7 @@
     cursor: pointer;
     z-index: 2;
     ">
-    <router-link to="/baccarat" tag="div">
+    <router-link to="/baccarat/12" tag="div">
     Play Now
 	</router-link>
     </div>

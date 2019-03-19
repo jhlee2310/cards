@@ -1,41 +1,52 @@
 <template>
 	<header style="padding:0 9.1%;position:relative;z-index:2;">
 		<nav id="nav">
-			<router-link to="/" tag="div" style="-webkit-flex: 4;flex: 4;text-align: left;">
+			<div style="-webkit-flex: 4;flex: 4;text-align: left;">
+			<router-link to="/" style="cursor: pointer;">
 				<img src="@/assets/logo.png"/>
 			</router-link>
+			</div>
 			<div style="display:flex;justify-content: space-between;-webkit-flex: 5;flex: 5;align-items: baseline;">
-	<router-link to="#bonus" tag="div" style="font-size: 18px;
+	<router-link to="#lobby" tag="div" style="font-size: 18px;
   font-weight: normal;
   font-style: normal;
   font-stretch: normal;
-  letter-spacing: normal;">
+  letter-spacing: normal;
+	cursor: pointer;">
 	Baccarat Lobby
 	</router-link>
-			<router-link to="#vip" tag="div" style="font-size: 18px;
+			<router-link to="#bouns" tag="div" style="font-size: 18px;
   font-weight: normal;
   font-style: normal;
   font-stretch: normal;
-  letter-spacing: normal;">
+  letter-spacing: normal;
+	cursor: pointer;">
 	Bonus
 	</router-link>
-			<router-link to="#referral" tag="div" style="font-size: 18px;
+			<router-link to="#freecpu" tag="div" style="font-size: 18px;
   font-weight: normal;
   font-style: normal;
   font-stretch: normal;
-  letter-spacing: normal;">
+  letter-spacing: normal;
+	cursor: pointer;">
 	Free CPU
 	</router-link>
 			<!-- <div style="line-height:0;"><img src="@/assets/speaker.png"/></div> -->
-			<div>
+			<router-link to="#fairness" tag="div" style="font-size: 18px;
+  font-weight: normal;
+  font-style: normal;
+  font-stretch: normal;
+  letter-spacing: normal;
+	cursor: pointer;">
 				Fairness
-				</div>
+				</router-link>
 			<div style="width: 199px;
 		height: 30px;
 		border-radius: 15px;
 		background-color: #00a8ff;
 		font-size: 16px;
 		line-height: 1.88;
+		cursor: pointer;
 		">
 				<span v-if="!eosAccount" @click="proc_getIdentity">Log in with <span style="font-weight: bold;">Scatter</span></span>
 				<span v-else @click="proc_forgetIdentity"><span>{{eosAccount.name}}</span></span>
@@ -178,7 +189,6 @@ export default {
 	padding: 48px 0 44px;
 	align-items: flex-end;
 	div {
-		cursor: pointer;
 		color: #ffffff;
 		&.router-link-exact-active {
 			color: #ffd324;

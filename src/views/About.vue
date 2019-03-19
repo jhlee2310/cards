@@ -86,6 +86,9 @@ import Modal from '@/components/Modal.vue'
 import Winners from '@/components/Winners.vue'
 
 export default {
+	props: [
+		'room_id',
+	],
   components:{
     Board,
     CoinsForBet,
@@ -279,7 +282,7 @@ export default {
 
           this.$socket.send(JSON.stringify({
              type    :"req_enter_room",
-            room_id : 12
+            room_id : this.room_id
 					}))
 										
 					this.$socket.send(JSON.stringify({
