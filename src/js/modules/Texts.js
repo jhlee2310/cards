@@ -70,7 +70,7 @@ export default function(game, table_group){
     
     let text_material = new THREE.MeshStandardMaterial({
       //metalness:1,
-      color: '#000000'
+      color: 'orange'
       //envMapIntensity: 0.0,
       //envMap: envMap,
       

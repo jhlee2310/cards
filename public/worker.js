@@ -115,6 +115,11 @@ async function animationSignal(data){
 
 function timerSignal() {
   let timer = times.betting / 1000
+
+  self.postMessage({
+    type: 'worker::timer_start',    
+  })
+
   let x = () => {
     self.postMessage({
       type: 'worker::timer',

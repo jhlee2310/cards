@@ -34,10 +34,10 @@
 
       <!-- bet_info -->
       <div class="bet_info">
-        <div class="bet_info_wrap" style="top:0"><!--:style="bet_info_style"-->
-          <div v-for="data in bet_info_test" class="bet_info_item">
+        <div class="bet_info_wrap" :style="bet_info_style">
+          <div v-for="data in bet_info" class="bet_info_item">
             <span :class="classBtoA(data.slot)"><div class="is-pair"></div></span>
-            <span>{{data.acc_name}}</span
+            <span>{{data.acc_name}}</span>
             <span>{{parseFloat(data.value).toFixed(2)}}</span>
             <span>{{data.symbol}}</span>
           </div>
@@ -74,7 +74,7 @@
       </div>
 
       <!--modal-->
-      <Modal/>
+      <Modal :start_betting="game_status.betting"/>
 
       <!--modal-->
       <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN"/>
@@ -115,16 +115,16 @@ export default {
     const that = this;
     return {
       bet_info_test:[
-       {slot:0,acc_name:"oranke",value:12.48},
-       {slot:1,acc_name:"oranke",value:12.48},
-       {slot:2,acc_name:"oranke",value:12.48},
-       {slot:3,acc_name:"oranke",value:12.48},
-       {slot:4,acc_name:"oranke",value:12.48},
-       {slot:0,acc_name:"oranke",value:12.48},
-       {slot:1,acc_name:"oranke",value:12.48},
-       {slot:2,acc_name:"oranke",value:12.48},
-       {slot:3,acc_name:"oranke",value:12.48},
-       {slot:4,acc_name:"oranke",value:12.48},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
+       {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
       ],
       TWEEN,
       nowAnimate: null,
@@ -558,6 +558,10 @@ export default {
           }          
         break;
 
+        case "worker::timer_start":
+          
+        break;
+
         case "worker::timer":
           this.timer = data.value;
         break;
@@ -728,22 +732,22 @@ body{margin:0;padding:0;overflow-x:hidden}
 }
 
 .bet_info{
-  font-size:14px;
+  font-size:13px;
   position:absolute;
   left:0;
   top:0%;
-  width:180px;
+  width:200px;
   height:500px;  
   color:yellow;
   overflow:hidden;  
   -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
 }
 
-.bet_info_wrap{
-  font-size:14px;
+.bet_info_wrap{  
   width:100%;
   position:absolute;
   top:500px;
+  white-space: nowrap;
 }
 
 .bet_info_total{
