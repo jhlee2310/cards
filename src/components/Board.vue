@@ -948,9 +948,14 @@ export default {
       
     },
     setRound(message) {
-      console.log('setRound',message)
+      //console.log('setRound',message)
+      let minus= -1
+      if(message.state=='dealing::chain'){
+        minus=0
+      }
+      console.log("minus",minus)
       message.bead_load.some((data,i) => {
-        if(i==message.round-1){
+        if(i==message.round+minus){
           return true
         }
         this.viewScore(data)

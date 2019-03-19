@@ -1,9 +1,9 @@
 <template>
   <div class="about">
-    <div>
+    <!-- <div>
       <span v-if="!eosAccount" @click="proc_getIdentity">login</span>
       <span v-else="!!eosAccount" @click="proc_forgetIdentity">logOut(<span>{{eosAccount.name}}</span>)</span>
-    </div>
+    </div> -->
     <!--hidden canvas-->
     <div v-show="false" id="hidden_canvas" style="text-align:left;background-color:black;">
       <div ref="hiddenDiv" style="width:256px;height:256px;">   
@@ -77,7 +77,7 @@
       <Winners :winner="game_status.winner"/>
     </div>    
     <!-- bet_info_total -->
-    <CreditInfo :credit="game_token_info" :bet="my_bet_info">
+    <CreditInfo :bet="my_bet_info">
       <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting"/>
       <board ref="board" :roomId="game_status.table"></board>
     </CreditInfo>
@@ -92,18 +92,15 @@ import threejs from '@/js/3dabout.js'
 import rasterizeHTML from 'rasterizehtml'
 import CoinsForBet from '@/components/CoinsForBet.vue'
 import Board from '@/components/Board.vue'
-import ScatterJS from 'scatterjs-core'
-import ScatterEOS from 'scatterjs-plugin-eosjs'
 import CreditInfo from '@/components/CreditInfo.vue'
-import Eos from 'eosjs';
-import { mapState } from 'vuex'
-import { mapMutations } from 'vuex'
+import { mapState, mapGetters, mapActions, mapMutations} from 'vuex'
 import Modal from '@/components/Modal.vue'
 import Winners from '@/components/Winners.vue'
 
-ScatterJS.plugins( new ScatterEOS() );
-
 export default {
+	props: [
+		'room_id',
+	],
   components:{
     Board,
     CoinsForBet,
@@ -116,8 +113,8 @@ export default {
     return {
       nowAnimate: null,
       worker: null,
-      game_token_info: '',
-      game_connected: false,
+      //game_token_info: '',
+      //game_connected: false,
       bet_info_style:{
         transform: 'translate(0px, 0px)'
       },
@@ -175,18 +172,7 @@ export default {
           this.$socket.send(JSON.stringify(req_json)); 
         }
       },
-      eosAccount: null,
-      scatter: ScatterJS.scatter,
-      eos: null,
       BACCARAT_ACCOUNT: 'baccaratdev1',
-      network: ScatterJS.Network.fromJson({
-        name: 'Kylin',
-        blockchain:'eos',
-        chainId:'5fff1dae8dc8e2fc4d5b23b2c7665c97f9e9d8edf2b6485a86ba311c25639191',
-        host:'api-kylin.eoslaomao.com',
-        port:443,
-        protocol:'https'
-      }),
       hiddenStyle:{
         percent:{          
           //display: 'inline-block',
@@ -271,12 +257,17 @@ export default {
   created(){
     this.worker = new Worker('/worker.js');
 	},
-  mounted(){
+  async mounted(){
     
     let cont3d = document.getElementById('cont_3d')
     this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
-    this.connectScatter();
-    this.$connect()
+    // this.connectScatter();
+		this.$connect()
+		// 게임서버에 identity 알림. 
+		//this.tosvr.set_scatter_identity(eosAccount.name);
+		
+		
+
 
     this.worker.onmessage = this.procssWorker
 
@@ -296,14 +287,20 @@ export default {
     this.worker.postMessage(message)
 
       switch(message.type){
-        case 'welcome':
-          this.game_connected = true;
+				case 'welcome':
+					this.setGameConnected(true)
+          //this.game_connected = true;
           console.log('game_connected');
 
           this.$socket.send(JSON.stringify({
              type    :"req_enter_room",
-            room_id : 5
-          }))
+            room_id : this.room_id
+					}))
+										
+					this.$socket.send(JSON.stringify({
+						type      :"req_set_scatter_identity",
+						identity  : this.eosAccount.name
+					}));
           break;
 
         case 'deal_info':
@@ -360,8 +357,9 @@ export default {
         case 'room_betting':          
           this.bet_others(message);
           break;
-        case 'game_token_info':
-          this.game_token_info = message.value;
+				case 'game_token_info':
+					//this.game_token_info = message.value
+					this.setCredit(message.value)
           break;
         // case 'room_state':
         //   this.$refs.board.setState(message)
@@ -371,7 +369,6 @@ export default {
           //console.log(message)
       }
       
-
        
     }
 
@@ -398,6 +395,13 @@ export default {
     },false)
   },
   computed:{
+		...mapGetters({
+      eosAccount: 'getEosAccount',
+      scatter: 'getScatter',
+			network: 'getNetwork',
+			eos: 'getEos',
+			game_connected: 'getGameConnected',
+    }),
     my_bet_info(){
       let sum = 0;
       if(this.eosAccount){
@@ -483,6 +487,10 @@ export default {
       let s = [2,1,3,0,4]
       return s[i]
     },
+		...mapActions({
+			setCredit: 'setCredit',
+			setGameConnected: 'setGameConnected',
+		}),
     pause(time){
       return new Promise(resolve=>{
         setTimeout(resolve,time)
@@ -584,62 +592,6 @@ export default {
             tosvr_notify_insert_coin(trx.processed.block_num, trx.transaction_id, account.name, token_value, token_symbol)
         }).catch(err => {console.error(err) });
       }).catch(err => { console.error(err) })
-    },
-    async proc_forgetIdentity() {
-      if (!this.scatter.identity) return; 
-
-      await this.scatter.forgetIdentity();
-      this.eosAccount = null;
-      
-      this.tosvr.set_scatter_identity('');
-    },
-
-    async proc_getIdentity(){     
-      await this.connectScatter()
-      if(!this.scatter.suggestNetwork) { console.log(!!this.scatter.suggestNetwork); return;}
-      await this.scatter.suggestNetwork(this.network).then( () => {
-        console.log("sugggestNetwork: Succ2!");
-      }).catch(function (error) {
-        console.log("sugggestNetwork: 에러");
-        console.log(error)    
-        return; 
-      });
-      await this.scatter.getIdentity({accounts:[this.network]})
-      .then(identity => {
-        console.log("getIdentity: 성공");
-        let eosAccount = this.eosAccount = identity.accounts.find(account => account.blockchain === 'eos');
-        console.log(this.eosAccount);               
-
-        // 게임서버에 identity 알림. 
-        this.tosvr.set_scatter_identity(eosAccount.name);
-
-      })
-      .catch(function (error) {
-        console.log("에러");
-        console.log(error); 
-      });
-  
-      //console.log(this.scatter.identity);
-    },
-    async connectScatter(){
-      const connectionOptions = {initTimeout:5000};
-      const connected = await ScatterJS.scatter.connect('game-eosbaccarat3', connectionOptions)
-                
-      if(!connected){          
-        console.log('Could not connect to Scatter.');
-        //alert('Please download Scatter if it is not installed')
-        return;
-      }
-
-      console.log('Scatter Connected!')
-      this.eos = this.scatter.eos(this.network, Eos);          
-      if (this.scatter.identity) {            
-        this.eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
-        this.tosvr.set_scatter_identity(this.eosAccount.name);
-      }else{            
-        this.eosAccount = null;
-        this.tosvr.set_scatter_identity('');
-      }      
     },
     bet_others(message){
       this.game.bet_others(message)

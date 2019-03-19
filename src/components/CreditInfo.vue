@@ -12,10 +12,10 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState,mapGetters } from 'vuex'
 
 export default {
-  props: ['credit', 'bet'],  
+  props: ['bet'],  
   data() {
     return {
       el : '',
@@ -25,6 +25,9 @@ export default {
     
   },
   computed: {
+    ...mapGetters({
+      credit: 'getCredit',
+    }),
     ...mapState([
       'resolution'
     ]),

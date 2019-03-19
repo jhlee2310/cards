@@ -58,7 +58,7 @@
     color: #ffffff;
     position: absolute;
     top: 266px;
-    right: 405px;
+    right: 436px;
     ">
         Baccarat
       </div>
@@ -74,7 +74,7 @@
     width: 684px;
     position: absolute;
     top: 344px;
-    right: -4px;
+    right: 27px;
     ">
         Baccarat is the ultimate card casino game. It attracts more high rollers than any other game, and once you play Baccarat you’ll know why. You are one click away from the world’s most majestic casino card game.
       </div>
@@ -92,11 +92,11 @@
     color: #000000;
     position: absolute;
     top: 477px;
-    right: 465px;
+    right: 496px;
     cursor: pointer;
     z-index: 2;
     ">
-    <router-link to="/baccarat" tag="div">
+    <router-link to="/baccarat/12" tag="div">
     Play Now
 	</router-link>
     </div>
