@@ -1,6 +1,6 @@
 <template>
   
-  <div style="background:#000000;width: 100%;position: relative;margin: 0px 9.1%;">
+  <div style="width: 100%;position: relative;margin: 0px 9.1%;">
     <div>
       <div style="text-align: left;">
       <!-- <img src="@/assets/bg.png" style="position: absolute;top: 0px;left: 0px;width:100%;height:100%;"/> -->

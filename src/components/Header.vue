@@ -1,5 +1,6 @@
 <template>
-	<header style="padding:0 9.1%;position:relative;z-index:2;">
+	<header style="padding:0 9.1%;position:relative;">
+		<Credit v-if="deposit_open"/>
 		<nav id="nav">
 			<div style="-webkit-flex: 4;flex: 4;text-align: left;">
 			<router-link to="/" style="cursor: pointer;">
@@ -40,7 +41,7 @@
 	cursor: pointer;">
 				Fairness
 				</router-link>
-				<div v-if="eosAccount" style="border-radius: 15px;background-color: #ffa025;
+				<div v-if="eosAccount" @click="()=>{this.deposit_open = true}" style="border-radius: 15px;background-color: #ffa025;
 				font-size: 16px;
 				width: 114px;
   font-weight: 600;
@@ -49,6 +50,7 @@
   line-height: 1.88;
   letter-spacing: normal;
   text-align: center;
+	cursor:pointer;
   color: #000000;
 				">
 					Deposit
@@ -77,13 +79,17 @@ import { mapGetters, mapActions } from 'vuex'
 // import ScatterEOS from 'scatterjs-plugin-eosjs'
 // ScatterJS.plugins( new ScatterEOS() );
 import Eos from 'eosjs';
-
+import Credit from '@/components/Credit.vue'
 
 export default {
 		name: 'appheader',
+		components:{
+			Credit
+		},
 		data(){
 			const that = this;
 			return {
+				deposit_open: false,
 				tosvr:{
 					set_scatter_identity (scatter_identity = undefined ) {
 						console.log("set_scatter_identity")

@@ -1,13 +1,13 @@
 <template>
   <div id="app">
-    <div>
-      <AppHeader></AppHeader>
+    
+      <AppHeader :url="url"></AppHeader>
       <main style="display:flex;font-family:Montserrat;">
         <router-view/>
       </main>
       <AppFooter></AppFooter>
     </div>
-  </div>
+  
 </template>
 
 <script>
@@ -18,7 +18,12 @@
       'AppHeader': AppHeader,
       'AppFooter': AppFooter
     },
-    mounted(){
+    data(){
+      return {
+        url: window.location.pathname,
+      }
+    },
+    mounted(){      
       document.onload = () => {
         window.dispatchEvent(new Event('resize'))
       }
@@ -41,9 +46,9 @@
   margin: auto;
   position: relative;
 }
-#app:after  {
+#app:before  {
   content: '';
-  // display: none;
+  //display: none;
   position: absolute;
   width: 100%;
   height: 100%;

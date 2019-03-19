@@ -274,6 +274,7 @@ export default {
     this.worker = new Worker('/worker.js');
 	},
   mounted(){
+    
     //setInterval(()=>{this.$chat.send(JSON.stringify({type:'chat',txt:'abcdefg'}))},1000)
     let cont3d = document.getElementById('cont_3d')
     this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
@@ -298,6 +299,7 @@ export default {
       TWEEN 
     })
     window.vv = this
+    this.bet_info = [];
     this.$socket.onmessage = (mes)=>{      
     const message = JSON.parse(mes.data)
     this.worker.postMessage(message)
@@ -342,9 +344,7 @@ export default {
               break;
             case 'prepare_dealing::chain':
               break;
-            case 'dealing':
-              this.init_betting_info(5000); // delay1
-              console.log('배팅정보를 초기화합니다.');
+            case 'dealing':              
               break;
             case 'dealing:::chain':
 
@@ -592,6 +592,8 @@ export default {
         case "worker::cards_out":
           this.game.animateCards.reset();
           this.$set(this.game_status,'winner','')
+          this.init_betting_info();
+          console.log('배팅정보를 초기화합니다.');
         break;
 
         case "worker::expose_winner":
@@ -602,12 +604,8 @@ export default {
     ...mapMutations([
       'SET_WINDOW_RESOLUTION' // [width,height]
     ]),
-    async init_betting_info(delay1){
-      await new Promise(resolve => {
-        setTimeout(resolve, delay1)        
-      })
-
-      this.bet_info = [];      
+    init_betting_info(){      
+      this.bet_info = [];
     },
     async proc_insert_coin(to_account, token_contract, token_value, token_symbol) {
       // 토큰 전송은 게임서버와 연결되었을 때만 하자. 

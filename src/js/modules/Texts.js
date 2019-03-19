@@ -68,19 +68,23 @@ export default function(game, table_group){
     let envMap = fonts[2];
 
     
-    let text_material = new THREE.MeshStandardMaterial({
-      //metalness:1,
-      color: 'orange'
-      //envMapIntensity: 0.0,
-      //envMap: envMap,
-      
+    let text_material = new THREE.MeshStandardMaterial({      
+      color: '#FF0000'     
+    })
+
+    let text_material2 = new THREE.MeshStandardMaterial({      
+      color: '#0000ff'     
+    })
+
+    let text_material3 = new THREE.MeshStandardMaterial({      
+      color: '#00ff00'     
     })
 
     // p_group
     ;(function(){
       let group = new THREE.Group();
-      let mesh = new THREE.Mesh( makeTextGeo('Player',font1,4), text_material )
-      let mesh2 = new THREE.Mesh( makeTextGeo('Win',font1,4), text_material )
+      let mesh = new THREE.Mesh( makeTextGeo('Player',font1,4), text_material2 )
+      let mesh2 = new THREE.Mesh( makeTextGeo('Win',font1,4), text_material2 )
       mesh.position.y = 2.2
       mesh2.position.y = -2.2
       group.add(mesh);
@@ -117,7 +121,7 @@ export default function(game, table_group){
 
     ;(function(){
       let group = new THREE.Group();
-      let mesh = new THREE.Mesh( makeTextGeo('Tie',font1,4), text_material)            
+      let mesh = new THREE.Mesh( makeTextGeo('Tie',font1,4), text_material3)            
       
       group.add(mesh);      
       //group.lookAt(camera.position.x,camera.position.y,camera.position.z)
