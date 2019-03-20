@@ -1,112 +1,113 @@
 <template>
-  
-  <div style="background:#000000;width: 100%;position: relative;margin: 0px 9.1%;">
-    <div>
-      <div style="text-align: left;">
-      <!-- <img src="@/assets/bg.png" style="position: absolute;top: 0px;left: 0px;width:100%;height:100%;"/> -->
-        <img src="@/assets/model.png" style="margin-left: -75px;
-        z-index: 2;
-      position: relative;"/>
+  <div style="background:#000000;width: 100%;">
+    <div style="position: relative;margin: 0px 9.1%;">
+      <div>
+        <div style="text-align: left;">
+        <!-- <img src="@/assets/bg.png" style="position: absolute;top: 0px;left: 0px;width:100%;height:100%;"/> -->
+          <img src="@/assets/model.png" style="margin-left: -75px;
+          z-index: 2;
+        position: relative;"/>
+        </div>
+        <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
+        font-size: 103.5px;
+        font-weight: bold;
+        font-style: normal;
+        font-stretch: normal;
+        line-height: 1.2;
+        letter-spacing: normal;
+        text-align: left;
+        color: #dfdfe4;
+        position: absolute;
+        margin-top: 564px;
+        margin-left: 22px;
+        top: 0px;
+        z-index: 1;
+        ">
+          BACCA
+        </div>
+        <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
+        font-size: 103.5px;
+        font-weight: bold;
+        font-style: normal;
+        font-stretch: normal;
+        line-height: 1.2;
+        letter-spacing: normal;
+        text-align: left;
+        color: #dfdfe4;
+        position: absolute;
+        top: 0px;
+        margin-top: 655px;
+        margin-left: 191px;
+        z-index: 1;
+        ">
+          RAT
+        </div>
       </div>
-      <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
-      font-size: 103.5px;
+      <div style="position: absolute;
+      top: 0;
+      width: 100%;
+      z-index: 3;
+      ">
+        <div style="font-size: 60px;
       font-weight: bold;
       font-style: normal;
       font-stretch: normal;
       line-height: 1.2;
       letter-spacing: normal;
       text-align: left;
-      color: #dfdfe4;
+      color: #ffffff;
       position: absolute;
-      margin-top: 564px;
-      margin-left: 22px;
-      top: 0px;
-      z-index: 1;
+      top: 266px;
+      right: 436px;
       ">
-        BACCA
-      </div>
-      <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
-      font-size: 103.5px;
+          Baccarat
+        </div>
+        <div style="font-family: OpenSans;
+      font-size: 16px;
+      font-weight: normal;
+      font-style: normal;
+      font-stretch: normal;
+      line-height: 1.88;
+      letter-spacing: normal;
+      text-align: left;
+      color: #c1c1c1;
+      width: 684px;
+      position: absolute;
+      top: 344px;
+      right: 27px;
+      ">
+          Baccarat is the ultimate card casino game. It attracts more high rollers than any other game, and once you play Baccarat you’ll know why. You are one click away from the world’s most majestic casino card game.
+        </div>
+        <div style="width: 214px;
+      height: 56px;
+      border-radius: 27.5px;
+      background-color: #ffd324;
+      font-size: 20px;
       font-weight: bold;
       font-style: normal;
       font-stretch: normal;
-      line-height: 1.2;
+      line-height: 56px;
       letter-spacing: normal;
-      text-align: left;
-      color: #dfdfe4;
+      text-align: center;
+      color: #000000;
       position: absolute;
-      top: 0px;
-      margin-top: 655px;
-      margin-left: 191px;
-      z-index: 1;
+      top: 477px;
+      right: 496px;
+      cursor: pointer;
+      z-index: 2;
       ">
-        RAT
+      <router-link to="/baccarat/12" tag="div">
+      Play Now
+    </router-link>
       </div>
+        </div>
+        <img src="@/assets/group-1.png" style="width: 100%;
+      z-index: 2;
+      position: absolute;
+      left: 0px;
+      top: 746px;
+      "/>
     </div>
-    <div style="position: absolute;
-    top: 0;
-    width: 100%;
-    z-index: 3;
-    ">
-      <div style="font-size: 60px;
-    font-weight: bold;
-    font-style: normal;
-    font-stretch: normal;
-    line-height: 1.2;
-    letter-spacing: normal;
-    text-align: left;
-    color: #ffffff;
-    position: absolute;
-    top: 266px;
-    right: 436px;
-    ">
-        Baccarat
-      </div>
-      <div style="font-family: OpenSans;
-    font-size: 16px;
-    font-weight: normal;
-    font-style: normal;
-    font-stretch: normal;
-    line-height: 1.88;
-    letter-spacing: normal;
-    text-align: left;
-    color: #c1c1c1;
-    width: 684px;
-    position: absolute;
-    top: 344px;
-    right: 27px;
-    ">
-        Baccarat is the ultimate card casino game. It attracts more high rollers than any other game, and once you play Baccarat you’ll know why. You are one click away from the world’s most majestic casino card game.
-      </div>
-      <div style="width: 214px;
-    height: 56px;
-    border-radius: 27.5px;
-    background-color: #ffd324;
-    font-size: 20px;
-    font-weight: bold;
-    font-style: normal;
-    font-stretch: normal;
-    line-height: 56px;
-    letter-spacing: normal;
-    text-align: center;
-    color: #000000;
-    position: absolute;
-    top: 477px;
-    right: 496px;
-    cursor: pointer;
-    z-index: 2;
-    ">
-    <router-link to="/baccarat/12" tag="div">
-    Play Now
-	</router-link>
-    </div>
-      </div>
-      <img src="@/assets/group-1.png" style="width: 100%;
-    z-index: 2;
-    position: absolute;
-    left: 0px;
-    top: 746px;
-    "/>
   </div>
 </template>
 

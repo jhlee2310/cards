@@ -7,12 +7,14 @@ import _ from 'lodash';
 import VueDragscroll from 'vue-dragscroll'
 import Fragment from 'vue-fragment'
 import '@/assets/global.css'
+import moment from 'moment'
 
 Object.defineProperty(Vue.prototype, '$_', { value: _ });
+Object.defineProperty(Vue.prototype, '$moment', { value: moment });
 
 Vue.config.productionTip = false
 
-const chatSocket = new WebSocket('ws://192.168.0.57:7070');
+const chatSocket = new WebSocket('ws://192.168.0.29:7070');
 //chatSocket.onmessage = mes => console.log(mes)
 Object.defineProperty(Vue.prototype, '$chat', {value: chatSocket});
 

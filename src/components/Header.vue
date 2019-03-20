@@ -112,7 +112,7 @@ export default {
 				//eosAccount: null,
 				//scatter: ScatterJS.scatter,
 				eos: null,
-				
+				chatWelcome: false,
 			}
 		},
 		computed: {
@@ -173,17 +173,24 @@ export default {
 				const connectionOptions = {initTimeout:5000};
 				const connected = await this.scatter.connect('game-eosbaccarat3', connectionOptions)
 									
-				if(!connected){          
+				if(!connected){
 					console.log('Could not connect to Scatter.');
 					//alert('Please download Scatter if it is not installed')
 					return;
 				}
 
 				console.log('Scatter Connected!')
-				this.eos = this.scatter.eos(this.network, Eos);          
-				if (this.scatter.identity) {            
+				this.eos = this.scatter.eos(this.network, Eos);    
+				if (this.scatter.identity) {
 					this.setEosAccount(this.scatter.identity.accounts.find(account => account.blockchain === 'eos'));
 					this.tosvr.set_scatter_identity(this.eosAccount.name);
+
+					if(!this.chatWelcome){
+						this.$chat.send(JSON.stringify({
+							type: 'welcome',
+						}))
+						this.chatWelcome = true
+					}
 				}else{
 					this.setEosAccount(null)
 					this.tosvr.set_scatter_identity('');
