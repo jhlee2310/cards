@@ -2,8 +2,10 @@
   <div id="credit_wrap" @click.self="onClick">
     <div id="credit_cont">
       <div class="credit_main">
-        <div class="credit_header">Credit</div>
-        <div class="credit_body">
+        <div class="credit_header">
+          <span :class="{selected:selected(0)}" @click="changeTab(0, $event)">Credit</span>
+          <span :class="{selected:selected(1)}" @click="changeTab(1, $event)">Withdraw</span></div>
+        <div class="credit_body" :class="{selected:selected(0)}">
           <div class="credit_body_section">
             <div class="section_title">Tokens <span>({{balance}} available)</span></div>
             <div><input v-model="tokens" ref="input_token" @input="inputTest"/></div>
@@ -12,6 +14,9 @@
             <div class="section_title">Credit</div>
             <div>{{credit}}</div>
           </div>
+        </div>      
+        <div class="credit_body" :class="{selected:selected(1)}">        
+          <div>Withraw all Credit - <span>{{credit}}</span></div>          
         </div>
       </div>
       <div class="footer">
@@ -29,6 +34,7 @@ export default {
     return{
       balance: 0,
       tokens: '',
+      tab: 0,
     }
   },
   computed:{    
@@ -53,26 +59,41 @@ export default {
     document.body.style.overflowY = 'auto'
   },
   methods:{
+    changeTab(num,event){
+      this.tab = num;
+    },
+    selected(index){
+      return index == this.tab;
+    },
     inputTest(e){
       this.tokens = this.tokens.replace(/[^0-9.]/,'');
       this.tokens = this.tokens.replace(/(\..+)([.])/,'$1');
       this.tokens = this.tokens.replace(/([.]\d{4})(.)/,'$1');
     },
     async onSubmit(e){
-      if( +this.tokens > this.balance.split(' ')[0]){
-        alert('too much request');
-        this.tokens = '';
-        this.$refs.input_token.focus();
-        return;
-      }
+      if(this.tab == 0){
+        if( +this.tokens > this.balance.split(' ')[0]){
+          alert('too much request');
+          this.tokens = '';
+          this.$refs.input_token.focus();
+          return;
+        }
 
-      if(!this.tokens){
-        alert('please input');
-        this.$refs.input_token.focus();
-      }      
-      this.onClick();
-      let value = (+this.tokens).toFixed(4);
-      await this.proc_insert_coin('baccaratdev1', 'eosio.token', value, 'EOS');
+        if(!this.tokens){
+          alert('please input');
+          this.$refs.input_token.focus();
+          return;
+        }      
+        this.onClick();
+        let value = (+this.tokens).toFixed(4);
+        this.proc_insert_coin('baccaratdev1', 'eosio.token', value, 'EOS');
+        this.onClick();
+
+      }else if(this.tab == 1){
+        this.tosvr_req_coin_out();
+        this.onClick();
+        
+      }
     },
     onClick(e){      
       this.$parent.deposit_open = false;
@@ -98,20 +119,36 @@ export default {
       }).catch(err => { console.error(err) })
     },
     tosvr_notify_insert_coin(block_num, trx_id, token_sender, token_value, token_symbol) {
-          if (!this.$socket || !this.game_connected) return; 
-          console.log(token_sender); 
-          var req_json = {
-              type        : "req_notify_insert_coin",
-              block_num   : block_num,
-              trx_id      : trx_id, 
-              from        : token_sender,
-              value       : token_value,
-              symbol      : token_symbol
-          };
-          console.log(req_json)
-          this.$socket.send(JSON.stringify(req_json)); 
-        }
-  }
+      if (!this.$socket || !this.game_connected) return; 
+      console.log(token_sender); 
+      var req_json = {
+          type        : "req_notify_insert_coin",
+          block_num   : block_num,
+          trx_id      : trx_id, 
+          from        : token_sender,
+          value       : token_value,
+          symbol      : token_symbol
+      };
+      console.log(req_json)
+      this.$socket.send(JSON.stringify(req_json)); 
+    },
+    tosvr_req_coin_out(){
+      if (!this.$socket || !this.game_connected) return; 
+      if (!this.scatter || !this.scatter.identity) return; 
+
+      console.log('코인 돌려받기 요청')
+
+      const eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+      var req_json = {
+          type    : "req_coin_out",
+          account : eosAccount.name,
+          symbol  : "EOS"
+      };
+
+      this.$socket.send(JSON.stringify(req_json)); 
+    },
+  },  
+  
 }
 </script>
 
@@ -146,8 +183,23 @@ export default {
         font-weight:700;
         font-size:24px;
         border-bottom:1px solid #cccccc;
+        span{
+          cursor:pointer;
+          color: #ccc;
+          margin-right:30px;
+          &.selected{
+            color:black;
+          }
+        }
       }
       .credit_body{
+        &.selected{
+          display:block;
+        }
+        &.withdraw{
+          padding-left:16px;
+        }
+        display:none;
         margin-top:16px;
         .credit_body_section{
           padding-bottom:10px;
