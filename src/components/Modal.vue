@@ -2,7 +2,9 @@
   <fragment>
     <div v-if="modal1_on" class="game-modal" :style="normal_modal">Start Betting</div>
     <div v-if="modal2_on" class="game-modal" :style="normal_modal">Time</div>
-    <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>    
+    <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>
+    <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>
+    <div v-if="!!my_bet_info && start_betting" class="cancel-modal" :style="cancel_modal" @click="tosvr_req_cancel_betting">Cancel</div>
   </fragment>
 </template>
 
@@ -11,7 +13,7 @@
   import { mapMutations } from 'vuex'
 
   export default {
-    props: ['start_betting','status','message'],
+    props: ['start_betting','my_bet_info','room_id'],
     data() {
       return {
         modal1_on: false,
@@ -20,10 +22,30 @@
       }
     },
     computed: {
-      ...mapState(['resolution','modal1_msg']),
+      ...mapState(['resolution','modal1_msg', 'game_connected','scatter','eosAcount']),
+      cancel_modal(){
+        let scaleFactor = this.resolution.width/1320
+        return {
+          fontWeight:700,
+          fontSize:'16px',
+          position:'absolute',
+          top:'83%',
+          justifyContent: 'center',
+          alignItems: 'center',
+          left:'50%',
+          display:'flex',
+          width:`140px`,
+          height:'40px',
+          backgroundColor:'rgba(255,0,0,.75)',
+          cursor:'pointer',
+          color:'white',
+          zIndex:7,
+          transform: `translate(-50%,-50%) scale(${scaleFactor})`,
+        }
+      },
       normal_modal(){
         let scaleFactor = this.resolution.width/1320
-        console.log(scaleFactor)
+        
         return {
           fontWeight:700,
           fontSize:'20px',
@@ -44,13 +66,34 @@
     },
     methods: {
       ...mapMutations(['SET_MODAL1_MSG']),
+        proc_cancel_bet(){
+          //bet_info에서 자기자신 빼기
+          this.$parent.bet_info.filter(t=>{
+            console.log();
+          })
+        },
+        tosvr_req_cancel_betting() {
+          if (!this.$socket || !this.game_connected) return; 
+          if (!this.scatter || !this.scatter.identity) return; 
+          
+          const eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+
+          var req_json = {
+              type    : "req_cancel_betting",
+              account : eosAccount.name,
+              room_id : this.room_id
+          };
+
+          console.log(req_json);
+          this.$socket.send(JSON.stringify(req_json));
+          this.proc_cancel_bet();
+      }
     },
     mounted(){
-      //this.SET_MODAL1_MSG('ffff')
+      console.log(this.eosAcount)
     },
     watch: {
-      start_betting(newVal, oldVal){
-        console.log(newVal);
+      start_betting(newVal, oldVal){        
         if(newVal == true){
           this.modal1_on = true;
           setTimeout(()=>{

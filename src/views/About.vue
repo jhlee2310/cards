@@ -9,8 +9,8 @@
       <div ref="hiddenDiv" style="width:256px;height:256px;">   
         <div v-for="item, index in hiddenData" :style="hiddenStyle.div(index == 2 ? 1 : 0)" :key="`hidden_${index}`">
           <div style="font-size:26px;position:relative">
-            <span style="margin-right:16px">{{item[0]}}</span>
-            <span style="position:absolute;left:60px;top:-6px"><img src="@/images/human.png" style="width:30px;height:30px;position:relative;top:3px">{{item[1]}}</span>
+            <!--span style="margin-right:16px">{{item[0]}}</span-->
+            <span style="position:absolute;left:0px;top:-6px"><img src="@/images/human.png" style="width:30px;height:30px;position:relative;top:3px">{{item[1]}}</span>
             <span :style="hiddenStyle.percent">{{item[2]}}%<span style="font-size:0.8em"></span></span>
           </div>
         </div>
@@ -74,7 +74,7 @@
       </div>
 
       <!--modal-->
-      <Modal :start_betting="game_status.betting"/>
+      <Modal :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id"/>
 
       <!--modal-->
       <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN"/>
