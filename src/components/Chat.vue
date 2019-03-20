@@ -79,12 +79,13 @@ export default {
 				data.time = this.$moment(data.time).format('HH:mm')
 			})
 			this.messageList = message
-
-			this.$nextTick(() => {
-				var container = this.$el.querySelector("#chat-messages-container");
-				console.log("container.scrollHeight",container.scrollHeight)
-				container.scrollTop = container.scrollHeight;
-			});
+			if(this.show){
+				this.$nextTick(() => {
+					var container = this.$el.querySelector("#chat-messages-container");
+					console.log("container.scrollHeight",container.scrollHeight)
+					container.scrollTop = container.scrollHeight;
+				});
+			}
 		}
 		
 		

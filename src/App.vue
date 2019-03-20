@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <div id="wrap">
-      <AppHeader></AppHeader>
+      <AppHeader :url="url"></AppHeader>
       <main style="display:flex;font-family:Montserrat;">
         <router-view/>
       </main>
@@ -21,7 +21,12 @@
       'AppFooter': AppFooter,
       'AppChat': AppChat,
     },
-    mounted(){
+    data(){
+      return {
+        url: window.location.pathname,
+      }
+    },
+    mounted(){      
       document.onload = () => {
         window.dispatchEvent(new Event('resize'))
       }
@@ -58,9 +63,9 @@
     opacity: 0;
   }
 }
-#wrap::after {
+#wrap:before  {
   content: '';
-  // display: none;
+  //display: none;
   position: absolute;
   width: 100%;
   height: 100%;

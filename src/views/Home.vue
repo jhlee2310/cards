@@ -1,5 +1,5 @@
 <template>
-  <div style="background:#000000;width: 100%;">
+  <div style="width: 100%;">
     <div style="position: relative;margin: 0px 9.1%;">
       <div>
         <div style="text-align: left;">

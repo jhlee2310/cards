@@ -173,20 +173,7 @@ export default {
 
           that.$socket.send(JSON.stringify(req_json));
           console.log(req_json)
-        },
-        notify_insert_coin(block_num, trx_id, token_sender, token_value, token_symbol) {
-          if (!this.$socket || !this. game_connected) return; 
-          console.log(token_sender); 
-          var req_json = {
-              type        : "req_notify_insert_coin",
-              block_num   : block_num,
-              trx_id      : trx_id, 
-              from        : token_sender,
-              value       : token_value,
-              symbol      : token_symbol
-          };
-          this.$socket.send(JSON.stringify(req_json)); 
-        }
+        },        
       },
       BACCARAT_ACCOUNT: 'baccaratdev1',
       hiddenStyle:{
@@ -274,6 +261,7 @@ export default {
     this.worker = new Worker('/worker.js');
 	},
   mounted(){
+    
     //setInterval(()=>{this.$chat.send(JSON.stringify({type:'chat',txt:'abcdefg'}))},1000)
     let cont3d = document.getElementById('cont_3d')
     this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
@@ -298,6 +286,7 @@ export default {
       TWEEN 
     })
     window.vv = this
+    this.bet_info = [];
     this.$socket.onmessage = (mes)=>{      
     const message = JSON.parse(mes.data)
     this.worker.postMessage(message)
@@ -342,9 +331,7 @@ export default {
               break;
             case 'prepare_dealing::chain':
               break;
-            case 'dealing':
-              this.init_betting_info(5000); // delay1
-              console.log('배팅정보를 초기화합니다.');
+            case 'dealing':              
               break;
             case 'dealing:::chain':
 
@@ -592,6 +579,8 @@ export default {
         case "worker::cards_out":
           this.game.animateCards.reset();
           this.$set(this.game_status,'winner','')
+          this.init_betting_info();
+          console.log('배팅정보를 초기화합니다.');
         break;
 
         case "worker::expose_winner":
@@ -602,34 +591,10 @@ export default {
     ...mapMutations([
       'SET_WINDOW_RESOLUTION' // [width,height]
     ]),
-    async init_betting_info(delay1){
-      await new Promise(resolve => {
-        setTimeout(resolve, delay1)        
-      })
-
-      this.bet_info = [];      
+    init_betting_info(){      
+      this.bet_info = [];
     },
-    async proc_insert_coin(to_account, token_contract, token_value, token_symbol) {
-      // 토큰 전송은 게임서버와 연결되었을 때만 하자. 
-      if (!this.game_connected || !this.scatter.identity) {
-          return; 
-      }
-
-      const account = this.scatter.identity.accounts.find(x => x.blockchain === 'eos');
-      const opts = { authorization:[`${account.name}@${account.authority}`], requiredFields:{} };
-      console.log(to_account, token_contract, token_value);
-      return;
-      this.eos.contract(token_contract)
-      .then( contract => {
-        contract.transfer(account.name, to_account, token_value + ' ' + token_symbol, '', opts)        
-        .then( trx => {
-            console.log("transfer succ:\n" + JSON.stringify(trx, null, '\t'));
-            console.log('succ', trx.transaction_id, trx.processed.block_num);
-            // 게임서버에 돈 입금을 알린다.
-            tosvr_notify_insert_coin(trx.processed.block_num, trx.transaction_id, account.name, token_value, token_symbol)
-        }).catch(err => {console.error(err) });
-      }).catch(err => { console.error(err) })
-    },
+    
     bet_others(message){
       this.game.bet_others(message)
     },

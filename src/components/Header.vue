@@ -1,5 +1,6 @@
 <template>
-	<header style="padding:0 9.1%;position:relative;z-index:2;">
+	<header style="padding:0 9.1%;position:relative;">
+		<Credit v-if="deposit_open"/>
 		<nav id="nav">
 			<div style="-webkit-flex: 4;flex: 4;text-align: left;">
 			<router-link to="/" style="cursor: pointer;">
@@ -40,7 +41,7 @@
 	cursor: pointer;">
 				Fairness
 				</router-link>
-				<div v-if="eosAccount" style="border-radius: 15px;background-color: #ffa025;
+				<div v-if="eosAccount" @click="()=>{this.deposit_open = true}" style="border-radius: 15px;background-color: #ffa025;
 				font-size: 16px;
 				width: 114px;
   font-weight: 600;
@@ -49,6 +50,7 @@
   line-height: 1.88;
   letter-spacing: normal;
   text-align: center;
+	cursor:pointer;
   color: #000000;
 				">
 					Deposit
@@ -75,15 +77,21 @@
 import { mapGetters, mapActions } from 'vuex'
 // import ScatterJS from 'scatterjs-core'
 // import ScatterEOS from 'scatterjs-plugin-eosjs'
+//import Eos from 'eosjs'
 // ScatterJS.plugins( new ScatterEOS() );
-import Eos from 'eosjs';
-
+import Credit from '@/components/Credit.vue'
 
 export default {
 		name: 'appheader',
+		components:{
+			Credit
+		},
 		data(){
 			const that = this;
+			this.ee = null;
 			return {
+				eos: [],
+				deposit_open: false,
 				tosvr:{
 					set_scatter_identity (scatter_identity = undefined ) {
 						console.log("set_scatter_identity")
@@ -111,7 +119,6 @@ export default {
 				},
 				//eosAccount: null,
 				//scatter: ScatterJS.scatter,
-				eos: null,
 				chatWelcome: false,
 			}
 		},
@@ -121,10 +128,12 @@ export default {
 				scatter: 'getScatter',
 				network: 'getNetwork',
 				game_connected: 'getGameConnected',
+				Eos: 'getEos',
 			}),
 		},
 		mounted() {
 			this.connectScatter()
+			window.hh = this;
     	//this.$connect()
 		},
 		methods: {
@@ -153,6 +162,7 @@ export default {
 				});
 				await this.scatter.getIdentity({accounts:[this.network]})
 				.then(identity => {
+					console.log(identity)
 					console.log("getIdentity: 성공");
 					this.setEosAccount(identity.accounts.find(account => account.blockchain === 'eos'));
 					let eosAccount = this.eosAccount
@@ -180,8 +190,11 @@ export default {
 				}
 
 				console.log('Scatter Connected!')
-				this.eos = this.scatter.eos(this.network, Eos);    
+				console.log(connected)				
+				
+				//console.log(eosNet)
 				if (this.scatter.identity) {
+					//console.log(Eos)
 					this.setEosAccount(this.scatter.identity.accounts.find(account => account.blockchain === 'eos'));
 					this.tosvr.set_scatter_identity(this.eosAccount.name);
 
@@ -195,7 +208,7 @@ export default {
 					this.setEosAccount(null)
 					this.tosvr.set_scatter_identity('');
 				}      
-			},
+			},			
 		}
 }
 </script>
