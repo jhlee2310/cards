@@ -173,20 +173,7 @@ export default {
 
           that.$socket.send(JSON.stringify(req_json));
           console.log(req_json)
-        },
-        notify_insert_coin(block_num, trx_id, token_sender, token_value, token_symbol) {
-          if (!this.$socket || !this. game_connected) return; 
-          console.log(token_sender); 
-          var req_json = {
-              type        : "req_notify_insert_coin",
-              block_num   : block_num,
-              trx_id      : trx_id, 
-              from        : token_sender,
-              value       : token_value,
-              symbol      : token_symbol
-          };
-          this.$socket.send(JSON.stringify(req_json)); 
-        }
+        },        
       },
       BACCARAT_ACCOUNT: 'baccaratdev1',
       hiddenStyle:{
@@ -607,27 +594,7 @@ export default {
     init_betting_info(){      
       this.bet_info = [];
     },
-    async proc_insert_coin(to_account, token_contract, token_value, token_symbol) {
-      // 토큰 전송은 게임서버와 연결되었을 때만 하자. 
-      if (!this.game_connected || !this.scatter.identity) {
-          return; 
-      }
-
-      const account = this.scatter.identity.accounts.find(x => x.blockchain === 'eos');
-      const opts = { authorization:[`${account.name}@${account.authority}`], requiredFields:{} };
-      console.log(to_account, token_contract, token_value);
-      return;
-      this.eos.contract(token_contract)
-      .then( contract => {
-        contract.transfer(account.name, to_account, token_value + ' ' + token_symbol, '', opts)        
-        .then( trx => {
-            console.log("transfer succ:\n" + JSON.stringify(trx, null, '\t'));
-            console.log('succ', trx.transaction_id, trx.processed.block_num);
-            // 게임서버에 돈 입금을 알린다.
-            tosvr_notify_insert_coin(trx.processed.block_num, trx.transaction_id, account.name, token_value, token_symbol)
-        }).catch(err => {console.error(err) });
-      }).catch(err => { console.error(err) })
-    },
+    
     bet_others(message){
       this.game.bet_others(message)
     },
