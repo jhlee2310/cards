@@ -1,20 +1,25 @@
 <template>
 	<div>
-        <div style="width: 67px;height: 213px;box-shadow: -3.5px 2px 10px 0 rgba(0, 0, 0, 0.46);background-color: #ff343d;border-radius: 15px 0 0 15px;
-    font-weight: 600;
-    font-style: normal;
-    font-stretch: normal;
-    line-height: normal;
-    letter-spacing: normal;
-    text-align: center;
-    color: #ffffff;
-    position: absolute;
-    top: 651px;
-    right: 0;
-    z-index: 3;
-    cursor: pointer;
-    font-size:20px;
-      "
+        <div :style="{
+					width: '67px',
+					height: '213px',
+					'box-shadow': '-3.5px 2px 10px 0 rgba(0, 0, 0, 0.46)',
+					'background-color': '#ff343d',
+					'border-radius': '15px 0 0 15px',
+					'font-weight': '600',
+    			'font-style': 'normal',
+    			'font-stretch': 'normal',
+    'line-height': 'normal',
+    'letter-spacing': 'normal',
+    'text-align': 'center',
+    'color': '#ffffff',
+    'position': 'absolute',
+    'top': '651px',
+    'right': show?'12%':'0',
+    'z-index': '3',
+    'cursor': 'pointer',
+    'font-size':'20px',
+      }"
       @click="clickShow">
       <img src="@/assets/user.png" style="margin-top: 30px;"/>
       <span style="writing-mode: tb-rl;transform: rotate(180deg);
@@ -28,11 +33,15 @@
     top: 0;
     right: 0;
     width: 12%;
-		z-index: 2;
+		z-index: 3;
 		">
         <div v-if="show" class="chatbox">
 					<div class="chat-header"><i class="icon-bet-chat"></i><div class="users-online"></div><a class="close"><span></span></a></div>
-					<div class="chats" id="chat-messages-container">
+					<div class="chats" id="chat-messages-container"
+					@scroll="checkScroll"
+					@mouseenter="scrollCheck"
+					@mouseleave="scrollCheck"
+					>
 						<!---->
 						<div class="chat" v-for="(data, i) in messageList" :key="i">
 							<span class="username">{{data.name}}</span>
@@ -82,13 +91,22 @@ export default {
 			if(this.show){
 				this.$nextTick(() => {
 					var container = this.$el.querySelector("#chat-messages-container");
-					console.log("container.scrollHeight",container.scrollHeight)
+					//console.log("container.scrollHeight",container.scrollHeight)
 					container.scrollTop = container.scrollHeight;
 				});
 			}
 		}
-		
-		
+	},
+	watch: {
+		show: function(){
+			if(this.show){
+				this.$nextTick(() => {
+					var container = this.$el.querySelector("#chat-messages-container");
+					//console.log("container.scrollHeight",container.scrollHeight)
+					container.scrollTop = container.scrollHeight;
+				});
+			}
+		}
 	},
 	methods: {
 		msgSend(){
@@ -103,6 +121,29 @@ export default {
 			this.show = !this.show
 			this.$parent.show = this.show
 		},
+		checkScroll(e){
+			// e.stopPropagation();
+			// console.log("eee",e)
+
+			// const top = Math.round(e.srcElement.scrollTop)
+			// const height = e.srcElement.scrollHeight-e.srcElement.clientHeight
+			// if(e.srcElement.scrollTop < 1){
+			// 	e.srcElement.scrollTop = 1
+			// }else if(e.srcElement.scrollHeight-e.srcElement.scrollTop-e.srcElement.clientHeight < 1){
+			// 	e.srcElement.scrollTop = e.srcElement.scrollTop - 1
+			// }
+			// console.log(Math.round(e.srcElement.scrollTop),)
+			// // if(top>=height){
+			// // }
+		},
+		scrollCheck(e){
+			//console.log("scrollCheck",e)
+			if(e.type=="mouseleave"){
+				document.body.style.overflowY = 'auto'
+			}else if(e.type=="mouseenter"){
+				document.body.style.overflowY = 'hidden'
+			}
+		}
 	}
 }
 </script>

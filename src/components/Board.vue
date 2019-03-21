@@ -90,7 +90,7 @@
             <div v-if="count.winner=='P'" :class="count.prdt?'is-p-player blinking':'is-p-player'">
               <div v-if="count.bPair" class="b-pair"></div>
               <div v-if="count.pPair" class="p-pair"></div>
-              <div v-if="count.isTie > 0" class="is-tie">
+              <div v-if="count.isTie > 1" class="is-tie">
                 {{count.isTie}}
               </div>
               <div v-if="count.isTie > 0" class="is-tie-line"></div>
@@ -98,7 +98,7 @@
             <div v-else-if="count.winner=='B'" :class="count.prdt?'is-b-player blinking':'is-b-player'">
               <div v-if="count.bPair" class="b-pair"></div>
               <div v-if="count.pPair" class="p-pair"></div>
-              <div v-if="count.isTie > 0" class="is-tie">
+              <div v-if="count.isTie > 1" class="is-tie">
                 {{count.isTie}}
               </div>
               <div v-if="count.isTie > 0" class="is-tie-line"></div>
