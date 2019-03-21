@@ -1,13 +1,13 @@
 <template>
   <div id="app">
     <div id="wrap">
-      <AppHeader :url="url"></AppHeader>
+      <AppHeader :url="location.pathname"></AppHeader>
       <main style="display:flex;font-family:Montserrat;">
         <router-view/>
       </main>
       <AppFooter></AppFooter>
     </div>
-		<AppChat></AppChat>
+		<AppChat v-if="location.pathname == '/'"></AppChat>
   </div>
 </template>
 
@@ -21,9 +21,9 @@
       'AppFooter': AppFooter,
       'AppChat': AppChat,
     },
-    data(){
+    data(){      
       return {
-        url: window.location.pathname,
+        location: window.location,        
       }
     },
     mounted(){      

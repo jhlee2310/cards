@@ -13,15 +13,11 @@
 import { mapState } from 'vuex'
 
 export default {
-  props:['default_size','pos_y','betting'],
+  props:['default_size','pos_y','betting','selected'],
   data() {    
     return {      
       files: [4, 5, 6, 7, 8, 9, 10, 11, 12],
-      values: [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000],
-      selectedCoin: {
-        index: null,
-        value: null,
-      },
+      values: [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000],      
     }
   },
   methods: {
@@ -43,6 +39,9 @@ export default {
         this.$set($parent.selectedCoin,'value',null)
       }
     }
+  },
+  mounted(){
+    
   },
   computed:{
     ...mapState([
@@ -95,7 +94,7 @@ export default {
       &.active:hover{
         box-shadow: 0px 0px 20px orange
       }
-      &.active.selected{
+      &.selected{
         transform: translateY(-20px);
         box-shadow: 0px 0px 20px orange
       }

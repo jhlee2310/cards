@@ -13,7 +13,7 @@
   import { mapMutations } from 'vuex'
 
   export default {
-    props: ['start_betting','my_bet_info','room_id'],
+    props: ['game','start_betting','my_bet_info','room_id'],
     data() {
       return {
         modal1_on: false,
@@ -22,7 +22,7 @@
       }
     },
     computed: {
-      ...mapState(['resolution','modal1_msg', 'game_connected','scatter','eosAcount']),
+      ...mapState(['resolution','modal1_msg', 'game_connected','scatter','eosAccount']),
       cancel_modal(){
         let scaleFactor = this.resolution.width/1320
         return {
@@ -66,11 +66,18 @@
     },
     methods: {
       ...mapMutations(['SET_MODAL1_MSG']),
+        clearBetCoin(name){
+          this.game.clear_bet_coins(name);
+        },
         proc_cancel_bet(){
-          //bet_info에서 자기자신 빼기
-          this.$parent.bet_info.filter(t=>{
-            console.log();
+          //bet_info에서 자기자신 빼기          
+          this.$parent.bet_info = this.$parent.bet_info.filter(t=>{
+            return t.acc_name !== this.eosAccount.name
           })
+
+          //배팅 코인 그래픽 빼기
+          this.clearBetCoin(this.eosAccount.name);
+
         },
         tosvr_req_cancel_betting() {
           if (!this.$socket || !this.game_connected) return; 

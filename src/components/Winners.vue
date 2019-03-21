@@ -21,16 +21,16 @@
   
 
   export default {
-    props: ['winner','game', 'TWEEN'],
+    props: ['winner','pair','game', 'TWEEN'],
     data() {
       return {
         common_style:{
 
-        }
+        },        
       }
     },
     computed: {
-      ...mapState(['resolution','modal1_msg']),
+      ...mapState(['resolution','modal1_msg']),      
       player_win(){
         let width = 160;
         let height = 72;
@@ -106,11 +106,7 @@
         const {player, banker, tie} = this.game.winners
           let target;
           let old_target;
-        if(newVal){
-          
-
-          console.log(newVal, oldVal)
-        
+        if(newVal){     
           switch(newVal){
             case 'P':
               target = player;
@@ -130,14 +126,14 @@
           .to({
             z: 0,
             rotZ : 0,
-          }, 500)
-          .easing(TWEEN.Easing.Bounce.Out)
+          }, 700)
+          .easing(TWEEN.Easing.Cubic.In)
           .onUpdate(a => {
             target.position.z = a.z
-            target.rotation.z = a.rotZ
-            //card.rotation.set(a.rotX, a.rotY, a.rotZ)
+            target.rotation.z = a.rotZ            
           })
           .start()
+          this.game.changeColor(this.winner,this.pair)          
           
         }else{
             switch(oldVal){
@@ -152,6 +148,7 @@
               break;
             }
             old_target.visible = false;
+            this.game.restoreColor()
           }
       }
     }

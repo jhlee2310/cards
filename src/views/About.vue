@@ -1,5 +1,5 @@
 <template>
-  <div class="about">
+  <div class="about">    
     <!-- <div>
       <span v-if="!eosAccount" @click="proc_getIdentity">login</span>
       <span v-else="!!eosAccount" @click="proc_forgetIdentity">logOut(<span>{{eosAccount.name}}</span>)</span>
@@ -74,14 +74,14 @@
       </div>
 
       <!--modal-->
-      <Modal :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id"/>
+      <Modal :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id" :game="game"/>
 
       <!--modal-->
-      <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN"/>
+      <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN" :pair="game_status.pair"/>
     </div>    
     <!-- bet_info_total -->
     <CreditInfo :bet="my_bet_info">
-      <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting"/>
+      <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting" :selected="selectedCoin"/>
       <board ref="board" :roomId="game_status.table"></board>
     </CreditInfo>
   </div>
@@ -90,7 +90,9 @@
 </template>
 
 <script>
+import Vue from 'vue';
 import TWEEN from '@tweenjs/tween.js'
+import * as THREE from 'three-full'
 import threejs from '@/js/3dabout.js'
 import rasterizeHTML from 'rasterizehtml'
 import CoinsForBet from '@/components/CoinsForBet.vue'
@@ -112,7 +114,11 @@ export default {
     Winners
   },
   data(){
+    //non watching
     const that = this;
+    this.TWEEN = TWEEN;
+    this.game = null;
+
     return {
       bet_info_test:[
        {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
@@ -125,8 +131,7 @@ export default {
        {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
        {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
        {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
-      ],
-      TWEEN,
+      ],      
       nowAnimate: null,
       worker: null,
       //game_token_info: '',
@@ -223,6 +228,7 @@ export default {
         table:0,
         round:0,
         winner: '',
+        pair: '',
       },
       game_status_betting: false,
       deal_info: {},
@@ -282,9 +288,11 @@ export default {
 
     this.game = new threejs({
       vue: this,
+      Vue,
       el: '#cont_3d',
-      TWEEN 
-    })
+      TWEEN , THREE
+    })   
+
     window.vv = this
     this.bet_info = [];
     this.$socket.onmessage = (mes)=>{      
@@ -485,7 +493,7 @@ export default {
       return obj;
     }
   },
-  methods: {
+  methods: {    
     classBtoA(index){
       switch(index){
         case 0:
@@ -540,7 +548,8 @@ export default {
             break;
             case "betting::chain":
             this.game_status.betting = false;
-            'betting::chain'
+            this.game_status.bet_start = false;
+            this.game.restoreColor();            
             break;
           }          
         break;
@@ -579,12 +588,14 @@ export default {
         case "worker::cards_out":
           this.game.animateCards.reset();
           this.$set(this.game_status,'winner','')
+          this.$set(this.game_status,'pair','')
           this.init_betting_info();
           console.log('배팅정보를 초기화합니다.');
         break;
 
         case "worker::expose_winner":
           this.$set(this.game_status,'winner', this.room_bead.bead.split(',')[0]);
+          this.$set(this.game_status,'pair', this.room_bead.bead.split(',')[1]);
         break;
       }
     },

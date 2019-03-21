@@ -1,4 +1,3 @@
-import * as THREE from 'three-full'
 import init_cards from './modules/init_cards' // 카드 세팅
 import init_betting_zone from './modules/init_betting_zone' // 배팅존 세팅
 import pos_coins_for_bet from './modules/pos_coins_for_bet' // 배팅UI
@@ -9,6 +8,9 @@ import Texts from './modules/Texts.js' // 3dTexts
 
 
 const e = function (opt) {
+  
+  const { vue, el, TWEEN, THREE } = opt
+
   this.THREE = THREE
   this.betted_coins = [];
 
@@ -23,11 +25,6 @@ const e = function (opt) {
   this.resizeUpdate = {
 
   }
-  const {
-    vue,
-    el,
-    TWEEN
-  } = opt
 
   this.vue = vue;
   this.TWEEN = TWEEN;
@@ -64,12 +61,7 @@ const e = function (opt) {
     if (selectedObject.type == "Mesh") {      
       //vue.proc_insert_coin(vue.BACCARAT_ACCOUNT, 'eosio.token', parseFloat(vue.selectedCoin.value).toFixed(4), 'EOS');      
       let reverse_index = [3,1,0,2,4]
-      vue.tosvr.req_betting("EOS", parseFloat(vue.selectedCoin.value).toFixed(2), reverse_index[selectedObject.userData.index])
-
-      window.postMessage({
-        type : 'testC',
-        data : { type: "room_betting", acc_name: "eosblackkiko", slot: reverse_index[selectedObject.userData.index], symbol: "EOS", value: parseFloat(vue.selectedCoin.value).toFixed(4) }
-      })      
+      vue.tosvr.req_betting("EOS", parseFloat(vue.selectedCoin.value).toFixed(2), reverse_index[selectedObject.userData.index])      
     }
   }
 
@@ -121,6 +113,8 @@ const e = function (opt) {
     //alpha:true,
     antialias: true,
   });
+  
+  let css_scene = this.css_scene = new THREE.Scene();
 
   let o = [];
   const textureLoader = new THREE.TextureLoader();
@@ -134,7 +128,8 @@ const e = function (opt) {
   window.renderer = renderer;
 
   renderer.setSize(cont.clientWidth, cont.clientHeight);
-  cont.appendChild(renderer.domElement);
+    
+  cont.appendChild(renderer.domElement);  
   //renderer.autoClear = false;
   //renderer.shadowMap.enabled = true;
   //renderer.shadowMap.type = THREE.PCFSoftShadowMap
@@ -286,18 +281,7 @@ const e = function (opt) {
 
 
   // betting target 정의
-  const saveZone = [null, null, null, null, null]
 
-  function bet(sprite, target) {
-    let zone;
-    let index = target.userData.index
-    if (!saveZone[index]) {
-      saveZone[index] = Math.floor(Math.random() * 9)
-    }
-    zone = saveZone[index];
-
-    do_bet(target, sprite, zone)
-  }
 
 
 
@@ -337,7 +321,9 @@ const e = function (opt) {
     renderer.render(scene, camera)
     renderer.autoClear = false;
     renderer.clearDepth();
+    
     renderer.render(scene2, camera)
+    
     
     //composer.render()
     //console.log('윈도우 active 상태')
@@ -492,21 +478,64 @@ const e = function (opt) {
   }
 
   // trigger => cards_animations.js
-  this.clear_bet_coins = ()=>{
-    this.betZones.forEach((zone,i)=>{
-      let parent = zone.parent
-      delete(parent.userData.zones)
-      let whole_coins = parent.children.filter( child => {
-        return child.userData.type == 'coins'
-      })
-      whole_coins.forEach(coins => {
-        parent.remove(coins)
-      })
+  this.changeColor = (winner, pair) => {
+    //winner color
+    const reverse = {
+      P: {
+        slot: 1,
+        color: '#0000FF'
+      },
+      B: {
+        slot: 3,
+        color: '#FF0000'
+      },
+      T: {
+        slot: 2,
+        color: '#00FF00'
+      },
+      P1: {
+        slot: 0,
+        color: '#FFFF00'
+      },
+      P2: {
+        slot: 4,
+        color: '#FFFF00'
+      }
+    }
+    const group = this.betZones[reverse[winner].slot].parent;    
+    group.userData.changeRGB(reverse[winner].color);
+
+    if(pair > 0){
+      const p_group = this.betZones[reverse[`P${pair}`].slot].parent;
+      p_group.userData.changeRGB(reverse[`P${pair}`].color);
+    }
+  }
+
+  this.restoreColor = () => {
+    this.betZones.forEach(t=>{
+      t.parent.userData.restoreRGB();
     })
   }
 
-  Texts(this,table_group);
+  this.clear_bet_coins = (name) => {
+    // 전체 철수
+      this.betZones.forEach( (zone,i)=>{
+        let parent = zone.parent
+        delete(parent.userData.zones)
+        let whole_coins = parent.children.filter( child => {
+          return child.userData.type == 'coins'
+        })
+        whole_coins.forEach(coins => {
+          if(typeof name == 'undefined'){
+            parent.remove(coins)
+          }else if(coins.name == name){
+            parent.remove(coins)
+          }
+        })
+      })
+  }
 
+  Texts(this,table_group);
 }
 
 export default e
