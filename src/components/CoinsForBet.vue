@@ -1,7 +1,7 @@
 <template>
   <div id="coins_for_bet" :style="styleObj" :class="{disabled: !betting}">    
     <div class="inner_wrap">
-      <div v-for="i,j of 9" :key="`coins${j}`" class="coin_wrap" :class="{active:betting}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
+      <div v-for="i,j of 9" :key="`betcoins_${j}`" class="coin_wrap" :class="{active:betting,selected:isSelected(j)}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
         <img class="coin" :src="require(`@/images/chips/bet${files[j]}__.png`)"/>
         <span class="coin_value">{{ values[j].toString().replace(/000$/,'K') }}</span>
       </div>
@@ -21,23 +21,24 @@ export default {
     }
   },
   methods: {
-    onClickCoin(e){      
+    onClickCoin(e){
+      if(!this.betting) return;
       const coin = e.target.parentElement
-      const $parent = this.$parent.$parent;
-      this.$set($parent.game_status,'bet_start',true)
-      if( !coin.classList.contains('selected')){
-        coin.parentElement.querySelectorAll('.coin_wrap').forEach( a => {          
-          a.classList.remove('selected')
-        })
-        coin.classList.add('selected')
-        this.$set($parent.selectedCoin,'index',coin.dataset.index)
+      const $parent = this.$parent.$parent;      
+      if( coin.dataset.index != this.selected.index ){
+        this.$set($parent.game_status,'bet_start',true)
+        this.$set($parent.selectedCoin,'index', coin.dataset.index)
         this.$set($parent.selectedCoin,'value',coin.dataset.value)
-      }else{
-        coin.classList.remove('selected')
+      }else{        
         this.$set($parent.game_status,'bet_start',false)
         this.$set($parent.selectedCoin,'index',null)
-        this.$set($parent.selectedCoin,'value',null)
+        this.$set($parent.selectedCoin,'value',null)        
       }
+    },
+    
+    isSelected(j){
+      console.log(this.selected.index == j)
+      return this.selected.index == j
     }
   },
   mounted(){

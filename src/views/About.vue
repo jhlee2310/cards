@@ -528,7 +528,7 @@ export default {
     },    
     procssWorker(message){
       let data = message.data;
-      console.log(data);
+      //console.log(data);
       switch(data.type){
         case "welcome":
         break;
@@ -548,8 +548,13 @@ export default {
             break;
             case "betting::chain":
             this.game_status.betting = false;
-            this.game_status.bet_start = false;
-            this.game.restoreColor();            
+            //this.game_status.bet_start = false;
+            
+            //색상 복원
+            this.game.restoreColor();
+            //커서 복원
+            document.body.style.cursor = "default";
+            
             break;
           }          
         break;

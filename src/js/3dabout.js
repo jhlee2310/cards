@@ -66,7 +66,7 @@ const e = function (opt) {
   }
 
   this.onMouseMove = function (e) {
-    if (!vue.game_status.bet_start) return
+    if (!vue.game_status.bet_start || !vue.game_status.betting) return
     e.preventDefault();
 
     let x = (e.layerX / width) * 2 - 1;
