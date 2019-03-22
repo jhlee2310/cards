@@ -54,6 +54,9 @@ const e = function (opt) {
   let betZones = this.betZones;
 
   let selectedObject = null
+  this.clearSelectedObject = ()=>{
+    selectedObject = null;
+  }
   this.onMouseClick = function (e) {
     
     if (!vue.game_status.bet_start) return;

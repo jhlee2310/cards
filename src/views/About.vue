@@ -552,9 +552,10 @@ export default {
             
             //색상 복원
             this.game.restoreColor();
+            this.game.clearSelectedObject();
             //커서 복원
             document.body.style.cursor = "default";
-            
+
             break;
           }          
         break;
