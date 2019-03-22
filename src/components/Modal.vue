@@ -2,9 +2,15 @@
   <fragment>
     <div v-if="modal1_on" class="game-modal" :style="normal_modal">Start Betting</div>
     <div v-if="modal2_on" class="game-modal" :style="normal_modal">Time</div>
-    <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>
-    <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>
+    <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>    
     <div v-if="!!my_bet_info && start_betting" class="cancel-modal" :style="cancel_modal" @click="tosvr_req_cancel_betting">Cancel</div>
+    <div v-if="open_scatter_error" class="msg-modal" :style="msg_modal">
+      <div class="msg-close" @click="close_msg()">X</div>
+        <div>
+          <div>Please download Scatter if it is not installed</div>
+          <div class="msg-download" @click="goto_download()">Download</div>
+        </div>
+    </div>
   </fragment>
 </template>
 
@@ -13,16 +19,36 @@
   import { mapMutations } from 'vuex'
 
   export default {
-    props: ['game','start_betting','my_bet_info','room_id'],
+    props: ['game','start_betting','my_bet_info','room_id','msg'],
     data() {
       return {
         modal1_on: false,
         modal2_on: false,
         modal3_on: false,
+        msg_modal_on : false,
       }
     },
     computed: {
-      ...mapState(['resolution','modal1_msg', 'game_connected','scatter','eosAccount']),
+      ...mapState(['resolution','open_scatter_error', 'game_connected','scatter','eosAccount']),
+      msg_modal(){
+        return {
+          position:'absolute',
+          top:'50%',
+          left:'50%',
+          width:'460px',
+          height:'220px',
+          transform: `translate(-50%,-50%)`,
+          zIndex:'10',
+          backgroundColor:'rgba(30,30,30,.85)',
+          color:'#fff',
+          boxSizing:'border-box',
+          border:'1px solid #888',
+          boxShadow:'5px 5px 20px rgba(0,0,0,.7)',
+          display:'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }
+      },
       cancel_modal(){
         let scaleFactor = this.resolution.width/1320
         return {
@@ -65,7 +91,13 @@
       },
     },
     methods: {
-      ...mapMutations(['SET_MODAL1_MSG']),
+      ...mapMutations(['SET_OPEN_SCATTER_ERROR']),
+        close_msg(){
+          this.SET_OPEN_SCATTER_ERROR(false)
+        },
+        goto_download(){
+          window.open('https://get-scatter.com/');
+        },
         clearBetCoin(name){
           this.game.clear_bet_coins(name);
         },
@@ -89,15 +121,13 @@
               type    : "req_cancel_betting",
               account : eosAccount.name,
               room_id : this.room_id
-          };
-
-          console.log(req_json);
+          };          
           this.$socket.send(JSON.stringify(req_json));
           this.proc_cancel_bet();
       }
     },
     mounted(){
-      console.log(this.eosAcount)
+      
     },
     watch: {
       start_betting(newVal, oldVal){        
@@ -120,5 +150,26 @@
 </script>
 
 <style lang="scss">
- 
+ .msg-modal{
+   .msg-close{
+     font-weight:500;
+     font-size:18px;
+     position:absolute;
+     top:4px;right:4px;
+     color:#ccc;
+     cursor:pointer;
+     &:hover{
+       color:rgb(255, 255, 255);
+     }
+   }
+   .msg-download{
+     margin-top: 60px;
+     padding:5px 8px;
+     box-sizing:border-box;
+     background-color:rgb(26, 102, 189);
+     width:125px;margin-left:auto;margin-right:auto;
+     border-radius:99px;
+     cursor:pointer;
+   }
+ }
 </style>

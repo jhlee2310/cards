@@ -74,7 +74,7 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from 'vuex'
 // import ScatterJS from 'scatterjs-core'
 // import ScatterEOS from 'scatterjs-plugin-eosjs'
 //import Eos from 'eosjs'
@@ -123,6 +123,9 @@ export default {
 			}
 		},
 		computed: {
+			...mapState([
+				'open_scatter_error'
+			]),
 			...mapGetters({
 				eosAccount: 'getEosAccount',
 				scatter: 'getScatter',
@@ -133,13 +136,13 @@ export default {
 		},
 		mounted() {
 			this.connectScatter()
-			window.hh = this;
-    	//this.$connect()
+			window.hh = this;    	
 		},
 		methods: {
 			...mapActions({
 				setEosAccount: 'setEosAccount',
 				setCredit: 'setCredit',
+				setOpenScatterError: 'setOpenScatterError',
 			}),
 			async proc_forgetIdentity() {
 				if (!this.scatter.identity) return; 
@@ -150,9 +153,14 @@ export default {
 				
 				this.tosvr.set_scatter_identity('');
 			},
-			async proc_getIdentity(){     
-				await this.connectScatter()
-				if(!this.scatter.suggestNetwork) { console.log(!!this.scatter.suggestNetwork); return;}
+			async proc_getIdentity(e){
+				console.log(e, typeof e);
+				const result = await this.connectScatter()
+				if(!result){					
+					return
+				}
+
+				if(!this.scatter.suggestNetwork) { return }
 				await this.scatter.suggestNetwork(this.network).then( () => {
 					console.log("sugggestNetwork: Succ2!");
 				}).catch(function (error) {
@@ -160,6 +168,7 @@ export default {
 					console.log(error)    
 					return; 
 				});
+				
 				await this.scatter.getIdentity({accounts:[this.network]})
 				.then(identity => {
 					console.log(identity)
@@ -180,21 +189,19 @@ export default {
 				//console.log(this.scatter.identity);
 			},
 			async connectScatter(){
-				const connectionOptions = {initTimeout:5000};
+				const connectionOptions = {initTimeout:1300};
 				const connected = await this.scatter.connect('game-eosbaccarat3', connectionOptions)
 									
 				if(!connected){
 					console.log('Could not connect to Scatter.');
-					//alert('Please download Scatter if it is not installed')
-					return;
+					this.setOpenScatterError(true);
+					return false;
 				}
 
-				console.log('Scatter Connected!')
-				console.log(connected)				
+				console.log('Scatter Connected!')							
 				
-				//console.log(eosNet)
-				if (this.scatter.identity) {
-					//console.log(Eos)
+				
+				if (this.scatter.identity) {				
 					this.setEosAccount(this.scatter.identity.accounts.find(account => account.blockchain === 'eos'));
 					this.tosvr.set_scatter_identity(this.eosAccount.name);
 
@@ -207,8 +214,10 @@ export default {
 				}else{
 					this.setEosAccount(null)
 					this.tosvr.set_scatter_identity('');
-				}      
-			},			
+				}
+
+				return true;
+			},
 		}
 }
 </script>

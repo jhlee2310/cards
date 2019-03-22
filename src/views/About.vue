@@ -519,7 +519,8 @@ export default {
     },
 		...mapActions({
 			setCredit: 'setCredit',
-			setGameConnected: 'setGameConnected',
+      setGameConnected: 'setGameConnected',
+      setOpenScatterError: 'setOpenScatterError',
 		}),
     pause(time){
       return new Promise(resolve=>{
@@ -631,7 +632,13 @@ export default {
     },
     onMouseClick(e){
       if( e.target.tagName != 'CANVAS') return;
-      this.game.onMouseClick(e);
+      else{
+        if(!this.eosAccount) {
+          this.setOpenScatterError(true)
+          return;
+        }
+        this.game.onMouseClick(e);
+      }
     },
     onWindowResize(e){
       this.game.onResize(e);     

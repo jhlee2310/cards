@@ -20,7 +20,7 @@ Object.defineProperty(Vue.prototype, '$chat', {value: chatSocket});
 
 //Vue.use(VueNativeSock, 'ws://192.168.0.14:3100')
 Vue.use(Fragment.Plugin)
-Vue.use(VueNativeSock, 'ws://eostics.io:3100', {
+Vue.use(VueNativeSock, 'ws://192.168.0.14:3100', {
   connectManually: true,
 })
 

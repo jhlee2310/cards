@@ -31,7 +31,7 @@ export default new Vuex.Store({
     network, 
     credit: 0,
     game_connected: false,
-    Eos
+    open_scatter_error: false,    
   },
   getters: {
     'getEosAccount': state => state.eosAccount,
@@ -43,6 +43,9 @@ export default new Vuex.Store({
     'getEos': state => state.Eos,
   },
   mutations: {
+    SET_OPEN_SCATTER_ERROR(state, payload){
+      state.open_scatter_error = payload;
+    },
     SET_WINDOW_RESOLUTION(state, payload){
       state.resolution.width = payload[0];
       state.resolution.height = payload[1];
@@ -82,5 +85,8 @@ export default new Vuex.Store({
     setGameConnected: ({commit},data) => {
       commit('setGameConnected',data)
     },
+    setOpenScatterError: ({commit}, data ) => {
+      commit('SET_OPEN_SCATTER_ERROR', data)
+    }
   }
 })
