@@ -245,9 +245,11 @@ const e = function (opt) {
       }
     }
 
+    //새로운 그룹 생성
     if (!coins) {
       coins = new THREE.Group()
-      coins.name = groupName
+      coins.name = groupName     
+
       coins.userData.type = "coins"
       let shadow = this.betted_coins[this.betted_coins.length - 1].clone()
       //shadow.position.z = 0.1;
@@ -266,6 +268,15 @@ const e = function (opt) {
       coin.position.z = 0.2
       coins.add(coin)
       target.parent.add(coins)
+
+       //Vue에 그룹 생성을 알림. (너무 빨리 하면 안됨)
+      setTimeout( ()=> {
+        vue.coin_groups.push({
+          name : groupName,
+          slot : target.userData.index,
+          position : coins.localToWorld(new THREE.Vector3()),
+        })
+      },10)
     } else {
       coin = coin.clone()
       coin.position.x = (Math.random() - 0.5) * 0.3

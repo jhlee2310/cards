@@ -67,17 +67,16 @@
       <div class="table-number" :style="tableNumStyle">
         <span>TABLE</span><span style="margin-left:20px;">{{game_status.table}}</span>
       </div>
-
       <!--Room Number -->
       <div class="round-number" :style="roundNumStyle">
         <span>ROUND</span><span style="margin-left:20px;">{{game_status.round}}</span>
       </div>
-
       <!--modal-->
       <Modal :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id" :game="game"/>
-
       <!--modal-->
       <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN" :pair="game_status.pair"/>
+      <!--NameTags-->
+      <NameTags :coin_groups="coin_groups" :game="game"/>
     </div>    
     <!-- bet_info_total -->
     <CreditInfo :bet="my_bet_info">
@@ -101,6 +100,7 @@ import CreditInfo from '@/components/CreditInfo.vue'
 import { mapState, mapGetters, mapActions, mapMutations} from 'vuex'
 import Modal from '@/components/Modal.vue'
 import Winners from '@/components/Winners.vue'
+import NameTags from '@/components/NameTags.vue'
 
 export default {
 	props: [
@@ -111,7 +111,8 @@ export default {
     CoinsForBet,
     CreditInfo,
     Modal,
-    Winners
+    Winners,
+    NameTags
   },
   data(){
     //non watching
@@ -235,6 +236,7 @@ export default {
       game: null,
       round: 1,
       room_bead: '',
+      coin_groups: [],
     }
   },
   watch:{
