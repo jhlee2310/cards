@@ -1,11 +1,19 @@
 <template>
-  <div id="coins_for_bet" :style="styleObj" :class="{disabled: !betting}">    
-    <div class="inner_wrap">
-      <div v-for="i,j of 9" :key="`betcoins_${j}`" class="coin_wrap" :class="{active:betting,selected:isSelected(j)}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
-        <img class="coin" :src="require(`@/images/chips/bet${files[j]}__.png`)"/>
-        <span class="coin_value">{{ values[j].toString().replace(/000$/,'K') }}</span>
-      </div>
+  <div style="position:absolute;width:800px;height:130px;" :style="styleObj">
+    <div id="coins_for_bet" :class="{disabled: !betting}"> 
+      <div class="inner_wrap" :class="{toggle_slide: toggle_slide}">
+        <div v-for="i,j of 9" :key="`betcoins_${j}`" class="coin_wrap" :class="{active:betting,selected:isSelected(j)}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
+          <img class="coin" :src="require(`@/images/chips/bet${files[j]}__.png`)"/>
+          <span class="coin_value">{{ values[j].toString().replace(/000$/,'K') }}</span>
+        </div>
+      </div>      
     </div>
+    <div v-if="toggle_slide" 
+    @click="toggle_slide = !toggle_slide"
+    class="slide_control toggle_left" style="position:absolute;top:60px;left:70px;font-size:40px;cursor:pointer"><i class="fas fa-caret-left"></i></div>
+    <div v-if="!toggle_slide"
+    @click="toggle_slide = !toggle_slide"
+    class="slide_control toggle_right" style="position:absolute;top:60px;right:70px;font-size:40px;cursor:pointer"><i class="fas fa-caret-right"></i></div>
   </div>
 </template>
 
@@ -17,7 +25,8 @@ export default {
   data() {    
     return {      
       files: [4, 5, 6, 7, 8, 9, 10, 11, 12],
-      values: [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000],      
+      values: [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000],
+      toggle_slide: false,
     }
   },
   methods: {
@@ -36,8 +45,7 @@ export default {
       }
     },
     
-    isSelected(j){
-      console.log(this.selected.index == j)
+    isSelected(j){      
       return this.selected.index == j
     }
   },
@@ -52,9 +60,8 @@ export default {
       return{
         position: 'absolute',
         left: '50%',
-        top: '-45%',
-        width: '600px',        
-        transform: `translate(-50%,0) scale(0.9)`   
+        top: '-45%',        
+        transform: `translate(-50%,0) scale(0.9)`
       }
     }
   },
@@ -68,18 +75,24 @@ export default {
 </script>
 
 <style lang="scss">
-  #coins_for_bet{
-    z-index:2;
+  #coins_for_bet{    
     &.disabled{
       filter: grayscale(100%);
     }
     position:absolute;
     transition: filter 0.5s;
+    width:600px;
     overflow-x: hidden;
+    left:100px;
+
     .inner_wrap{
       width:1200px;
       padding:10px;
       overflow:hidden;
+      transition: 0.2s transform;
+      &.toggle_slide{
+        transform: translateX(-300px);
+      }
     }
     .coin_wrap{
       position:relative;
@@ -114,4 +127,12 @@ export default {
       z-index:1;
     }
   }
+
+   .slide_control{
+     transition: 0.1s all;
+      &:hover{
+        color:yellow;
+        transform: scale(1.1)
+      }
+    }
 </style>

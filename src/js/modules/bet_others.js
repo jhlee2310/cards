@@ -10,8 +10,7 @@ export default function(message, betZones){
 
 */
     const reverseTable = [2, 1, 3, 0, 4]
-    const reverseCoin = [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000]
-    console.log(message)
+    const reverseCoin = [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000]    
 
     let target_index = message.slot    
     let target = betZones[ reverseTable[target_index] ]

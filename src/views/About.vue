@@ -76,7 +76,7 @@
       <!--modal-->
       <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN" :pair="game_status.pair"/>
       <!--NameTags-->
-      <NameTags :coin_groups="coin_groups" :game="game"/>
+      <NameTags :coin_groups="coin_groups" :game="game" :resolution="resolution"/>
     </div>    
     <!-- bet_info_total -->
     <CreditInfo :bet="my_bet_info">
@@ -613,6 +613,7 @@ export default {
     ]),
     init_betting_info(){      
       this.bet_info = [];
+      this.coin_groups = [];
     },
     
     bet_others(message){
@@ -633,7 +634,7 @@ export default {
       this.game.onMouseMove(e);      
     },
     onMouseClick(e){
-      if( e.target.tagName != 'CANVAS') return;
+      if( e.target.tagName != 'CANVAS' && e.target.getAttribute('class') != "name_tag") return;
       else{
         if(!this.eosAccount) {
           this.setOpenScatterError(true)

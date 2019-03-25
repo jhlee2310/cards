@@ -107,8 +107,8 @@
             return t.acc_name !== this.eosAccount.name
           })
 
-          //배팅 코인 그래픽 빼기
-          this.clearBetCoin(this.eosAccount.name);
+          //배팅 코인 그래픽 빼기 //배팅 네임태그 빼기
+          this.clearBetCoin(this.eosAccount.name);    
 
         },
         tosvr_req_cancel_betting() {

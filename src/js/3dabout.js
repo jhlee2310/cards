@@ -57,7 +57,7 @@ const e = function (opt) {
   this.clearSelectedObject = ()=>{
     selectedObject = null;
   }
-  this.onMouseClick = function (e) {
+  this.onMouseClick = function (e) {   
     
     if (!vue.game_status.bet_start) return;
     if (!selectedObject) return;
@@ -71,9 +71,18 @@ const e = function (opt) {
   this.onMouseMove = function (e) {
     if (!vue.game_status.bet_start || !vue.game_status.betting) return
     e.preventDefault();
+    let x, y;    
+    if( e.target.tagName == "CANVAS" ){
+      x = (e.layerX / width) * 2 - 1;
+      y = -(e.layerY / height) * 2 + 1;
+    }else{
+      //const rect = e.target.getBoundingClientRect()      
+      x = ( parseFloat(e.target.style.left) + e.layerX) / width * 2 - 1;
+      y = ( parseFloat(e.target.style.top) + e.layerY) / height  * -2 + 1;      
+    }
 
-    let x = (e.layerX / width) * 2 - 1;
-    let y = -(e.layerY / height) * 2 + 1;
+    //console.log(+e.target.style.left + e.layerX)
+
     mouseVector.set(x, y, 10);
     let targets = forIntersect.betting_zone
 
@@ -274,9 +283,9 @@ const e = function (opt) {
         vue.coin_groups.push({
           name : groupName,
           slot : target.userData.index,
-          position : coins.localToWorld(new THREE.Vector3()),
+          position : coins.localToWorld( new THREE.Vector3()).project(camera),
         })
-      },10)
+      },20)
     } else {
       coin = coin.clone()
       coin.position.x = (Math.random() - 0.5) * 0.3
@@ -539,11 +548,16 @@ const e = function (opt) {
         let whole_coins = parent.children.filter( child => {
           return child.userData.type == 'coins'
         })
+
         whole_coins.forEach(coins => {
           if(typeof name == 'undefined'){
             parent.remove(coins)
           }else if(coins.name == name){
             parent.remove(coins)
+            //라벨에서 해당네임 빼기
+            vue.coin_groups = vue.coin_groups.filter(t=>{              
+              return t.name != name
+            })
           }
         })
       })
