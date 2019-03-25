@@ -77,12 +77,14 @@
       <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN" :pair="game_status.pair"/>
       <!--NameTags-->
       <NameTags :coin_groups="coin_groups" :game="game" :resolution="resolution"/>
-    </div>    
+      <!--CoinsForBet-->
+      <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting" :selected="selectedCoin"/>
+    </div>
     <!-- bet_info_total -->
     <CreditInfo :bet="my_bet_info">
-      <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting" :selected="selectedCoin"/>
       <board ref="board" :roomId="game_status.table"></board>
     </CreditInfo>
+    
   </div>
 
   
@@ -655,7 +657,7 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
 .fade-enter-active, .fade-leave-active {
   transition: opacity .3s;
 }
@@ -669,6 +671,9 @@ export default {
    user-select: none;
    z-index: 3;
    position: relative;
+   span{
+     //font-family: 'Germania One', 'Roboto';
+   }
 
 }
 .timer{  
@@ -733,43 +738,9 @@ body{margin:0;padding:0;overflow-x:hidden}
   height:500px;  
   color:yellow;
   overflow:hidden;  
-  -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
-}
+  -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
 
-.bet_info_wrap{  
-  width:100%;
-  position:absolute;
-  top:500px;
-  white-space: nowrap;
-}
-
-.bet_info_total{
-  color:yellow;
-  position:absolute;
-  top:10px;
-  right:0;
-  width:200px;
-  &>div>span{
-    display:inline-block;
-    text-align:right;
-    width:40%;
-    margin-right:10px;
-    &:nth-child(1){
-      width:50%;
-    }
-  }
-}
-
-.bet_info_item{
-  margin-bottom:5px;
-  margin-left:5px;
-  text-align:left;
-  &>span{
-    margin-right:8px;
-  }
-}
-
-@mixin bet-info{
+  @mixin bet-info{
   width: 17px;
   height: 17px;
   border-radius: 50%;
@@ -845,5 +816,41 @@ body{margin:0;padding:0;overflow-x:hidden}
   //margin: 1px;
   //font-size:10px;
 }
+}
+
+.bet_info_wrap{  
+  width:100%;
+  position:absolute;
+  top:500px;
+  white-space: nowrap;
+}
+
+.bet_info_total{
+  color:yellow;
+  position:absolute;
+  top:10px;
+  right:0;
+  width:200px;
+  &>div>span{
+    display:inline-block;
+    text-align:right;
+    width:40%;
+    margin-right:10px;
+    &:nth-child(1){
+      width:50%;
+    }
+  }
+}
+
+.bet_info_item{
+  margin-bottom:5px;
+  margin-left:5px;
+  text-align:left;
+  &>span{
+    margin-right:8px;
+  }
+}
+
+
 </style>
 

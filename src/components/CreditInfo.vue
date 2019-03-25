@@ -4,8 +4,7 @@
       <div class="credit_box">
         <div class="credit_box_bet"><span>BET</span><span>{{bet}}</span></div>
         <div class="credit_box_credit"><span>CREDIT</span><span>{{credit}}</span></div>      
-      </div>
-      <div class="credit_buttons"></div>
+      </div>      
       <slot/>
     </div>
   </div>
