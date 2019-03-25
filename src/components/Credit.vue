@@ -1,10 +1,11 @@
 <template>
-  <div id="credit_wrap" @click.self="onClick">
+  <div id="credit_wrap" @click.self="onClick">    
     <div id="credit_cont">
-      <div class="credit_main">
+      <div class="credit_main">        
         <div class="credit_header">
           <span :class="{selected:selected(0)}" @click="changeTab(0, $event)">Credit</span>
-          <span :class="{selected:selected(1)}" @click="changeTab(1, $event)">Withdraw</span></div>
+          <span :class="{selected:selected(1)}" @click="changeTab(1, $event)">Withdraw</span>
+          <span :class="{selected:selected(2)}" @click="changeTab(2, $event)">Test</span></div>
         <div class="credit_body" :class="{selected:selected(0)}">
           <div class="credit_body_section">
             <div class="section_title">Tokens <span>({{balance}} available)</span></div>
@@ -18,10 +19,14 @@
         <div class="credit_body" :class="{selected:selected(1)}">        
           <div>Withraw all Credit - <span>{{credit}}</span></div>          
         </div>
+         <div class="credit_body" :class="{selected:selected(2)}" v-if="selected(2)">
+           <WaveDisplay :value="36"/>
+        </div>        
       </div>
-      <div class="footer">
+      <div class="footer">        
         <div @click="onClick">Cancel</div>
         <div @click="onSubmit">OK</div>
+        
       </div>
     </div>
   </div>
@@ -29,7 +34,12 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import WaveDisplay from '@/components/WaveDisplay.vue'
+
 export default {
+  components: {
+    WaveDisplay,
+  },
   data(){
     return{
       balance: 0,
