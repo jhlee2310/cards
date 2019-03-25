@@ -32,11 +32,11 @@ export default {
       'resolution'
     ]),
     scaleFactor(){      
-      return this.resolution.width / 1320
+      return this.resolution.width / 1292
     },    
     wrapperStyle(){      
       return {
-        height: 200 * this.scaleFactor  + 'px',
+        height: 168 * this.scaleFactor  + 'px',
       }
     },    
     styleObj(){
@@ -57,7 +57,7 @@ export default {
 
 <style lang="scss">
 #credit_info{
-  width:1320px;
+  width:1292px;
   background-color: #343434;  
   color: white;
   position:absolute;
