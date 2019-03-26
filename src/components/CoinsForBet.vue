@@ -1,5 +1,5 @@
 <template>
-  <div style="position:absolute;width:800px;height:130px;" :style="styleObj">
+  <div style="position:absolute;width:800px;height:130px;bottom:-50px;left:50%;color:#fff;z-index:1" :style="styleObj">
     <div id="coins_for_bet" :class="{disabled: !betting}"> 
       <div class="inner_wrap" :class="{toggle_slide: toggle_slide}">
         <div v-for="i,j of 9" :key="`betcoins_${j}`" class="coin_wrap" :class="{active:betting,selected:isSelected(j)}" @click="onClickCoin" :data-index="j" :data-value="values[j]">        
@@ -33,7 +33,7 @@ export default {
     onClickCoin(e){
       if(!this.betting) return;
       const coin = e.target.parentElement
-      const $parent = this.$parent.$parent;      
+      const $parent = this.$parent;      
       if( coin.dataset.index != this.selected.index ){
         this.$set($parent.game_status,'bet_start',true)
         this.$set($parent.selectedCoin,'index', coin.dataset.index)
@@ -57,11 +57,9 @@ export default {
       'resolution'
     ]),
     styleObj(){
-      return{
-        position: 'absolute',
-        left: '50%',
-        top: '-45%',        
-        transform: `translate(-50%,0) scale(0.9)`
+      let scaleFactor = this.resolution.width / 1320
+      return{           
+        transform: `translate(-50%,0) scale(${scaleFactor})`
       }
     }
   },
@@ -129,7 +127,7 @@ export default {
   }
 
    .slide_control{
-     transition: 0.1s all;
+     //transition: 0.1s all;
       &:hover{
         color:yellow;
         transform: scale(1.1)

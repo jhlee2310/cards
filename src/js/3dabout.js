@@ -337,13 +337,17 @@ const e = function (opt) {
   function animate(time) {
     timeStamp = time
     TWEEN.update(time)
-    renderer.autoClear = true;
+    //renderer.autoClear = true;
     
+    camera.layers.enable(1)
+    camera.layers.set(0)
     renderer.render(scene, camera)
     renderer.autoClear = false;
     renderer.clearDepth();
+    camera.layers.set(1)
+    renderer.render(scene, camera)
     
-    renderer.render(scene2, camera)
+    //renderer.render(scene2, camera)
     
     
     //composer.render()
