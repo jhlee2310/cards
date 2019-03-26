@@ -2,14 +2,14 @@
   <div class="ui_wrap" style="border-top:1px solid #777; width:100%;position:relative" :style="wrapperStyle" ref="ui_wrap">
     <div id="credit_info" :style="styleObj" ref="ui">
       <div class="credit_box">
-        <div class="credit_box_bet"><span>BET</span><span>{{bet}}</span></div>
+        <div class="credit_box_bet"><span>BET</span><span>{{bet.sum}}</span></div>
         <div class="credit_box_credit"><span>CREDIT</span><span>{{credit}}</span></div>      
       </div>
       <div class="credit_buttons"></div>
       <div class="bet_funcs" style="overflow:hidden;position:absolute;top:-34px;right:8px;">
-        <div class="func_btn" style="float:left">Re Bet</div>
-        <div class="func_btn" style="float:left">Double</div>
-        <div class="func_btn" style="float:left">MAX</div>
+        <div class="func_btn" style="float:left" @click="do_bet_func('rebet')">Re Bet</div>
+        <div class="func_btn" style="float:left" @click="do_bet_func('double')">Double</div>
+        <div class="func_btn" style="float:left" @click="do_bet_func('max')">MAX</div>
       </div>
       <slot/>
     </div>
@@ -20,7 +20,7 @@
 import { mapState,mapGetters } from 'vuex'
 
 export default {
-  props: ['bet'],  
+  props: ['bet','saved'],  
   data() {
     return {
       el : '',
@@ -29,7 +29,70 @@ export default {
   mounted(){
     
   },
-  computed: {
+  methods:{
+    do_bet_func(type){
+      if( !this.saved.sum || !this.saved.array ) return;
+      let bases = [10000,5000,1000,500,100,50,10,1,0.1]
+      const slots = [0,0,0,0,0]; // tie, p, b, pp, bp
+      // 슬롯당 sum을 구함.
+      let factor = 1;
+      if(type == "double") factor = 2;
+
+      for(let slot of this.saved.array){
+        slots[slot.slot] += +slot.value * factor
+        slots[slot.slot] = parseInt(slots[slot.slot] * 10) / 10
+      }
+
+      let total = 0;
+      for(let slot of slots){        
+        total += slot
+      }
+
+      //유효한 슬롯 객체
+      const final_slots = [];      
+      slots.forEach((t,i)=>{
+        if(t>0){
+          final_slots.push({
+            slot:i,
+            value:t
+          })
+        }
+      })
+        
+
+      if (type != 'max' && this.credit < total){
+        alert('잔액이 부족합니다.'); return;
+      }
+      
+      if(type == 'max'){ // 맥스 버튼일 경우
+        // 단일 배팅일경우
+        if(final_slots.length == 1){
+          final_slots[0].value = parseInt(this.credit * 10) / 10;
+        }else{ // 복수 배팅일경우
+          let temp_sum = 0;
+          for(let i =0; i < final_slots.length; i++){            
+            if(i < final_slots.length-1){
+              final_slots[i].value = parseInt( final_slots[i].value / total * this.credit * 10 ) / 10
+              temp_sum += final_slots[i].value
+              console.log(temp_sum)
+            }else{
+              final_slots[i].value = parseInt( (this.credit - temp_sum) * 10) / 10
+            }
+          }
+        }
+      }
+      
+      ;(async()=>{        
+        for(let slot of final_slots){          
+          this.$parent.tosvr.req_betting("EOS", slot.value, slot.slot);
+          await new Promise(resolve => {
+            setTimeout(resolve, 50)
+          })          
+        }
+      })()      
+    }
+  },
+  computed: {    
     ...mapGetters({
       credit: 'getCredit',
     }),
@@ -37,7 +100,7 @@ export default {
       'resolution'
     ]),
     scaleFactor(){      
-      return this.resolution.width / 1292
+      return this.resolution.width / 1276
     },    
     wrapperStyle(){      
       return {
@@ -62,7 +125,7 @@ export default {
 
 <style lang="scss">
 #credit_info{
-  width:1292px;
+  width:1276px;
   background-color: #343434;  
   color: white;
   position:absolute;

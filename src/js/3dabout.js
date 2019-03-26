@@ -64,7 +64,7 @@ const e = function (opt) {
     if (selectedObject.type == "Mesh") {      
       //vue.proc_insert_coin(vue.BACCARAT_ACCOUNT, 'eosio.token', parseFloat(vue.selectedCoin.value).toFixed(4), 'EOS');      
       let reverse_index = [3,1,0,2,4]
-      vue.tosvr.req_betting("EOS", parseFloat(vue.selectedCoin.value).toFixed(2), reverse_index[selectedObject.userData.index])      
+      vue.tosvr.req_betting("EOS", parseFloat(vue.selectedCoin.value).toFixed(2), reverse_index[selectedObject.userData.index])
     }
   }
 
@@ -231,6 +231,89 @@ const e = function (opt) {
       v.multiplyScalar(3.8)
       definedZones.push(v)
     }
+  }
+
+  this.do_bet_once = (target, value, who) => {    
+    let groupName = who;
+    let coins = target.parent.getObjectByName( groupName );    
+    const randomNumber = (target) => {
+      while(1){
+        let used = [];
+        target.parent.userData.zones.map(t => {
+          used.push(t.zone)
+        })
+        let rnd =  Math.floor(Math.random() * 9)
+        if(used.indexOf(rnd) == -1) {return rnd}
+        else continue;
+      }
+    }
+
+    //넣을 코인 파악하기
+    const cal_insert_coins = (value)=>{
+      let result = [];
+      let sample = [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000].reverse()
+      let i = sample.length-1;
+      for( let v of sample ){
+        let div = Math.floor( +(value/v).toFixed(5) ) // 신뢰도??
+        if(div > 0){
+          result.push({
+            index: i,
+            qt: div,
+          })          
+          value = +(value % v).toFixed(4)
+        }
+        i--;
+      }
+      return result
+    }
+
+    const to_insert = cal_insert_coins(value)
+
+     //새로운 그룹 생성
+     if (!coins) {
+      coins = new THREE.Group()
+      coins.name = groupName     
+
+      coins.userData.type = "coins"
+      let shadow = this.betted_coins[this.betted_coins.length - 1].clone()
+      //shadow.position.z = 0.1;
+      //shadow.renderOrder = 0.5
+      coins.add(shadow)
+      
+      if(typeof target.parent.userData.zones == 'undefined') target.parent.userData.zones = [];
+      let zz = randomNumber(target)
+      target.parent.userData.zones.push({
+        who: groupName,
+        zone: zz,
+      })
+      coins.position.copy(definedZones[zz])
+      //coin = coin.clone()
+      //coin.position.z = 0.2
+      //coins.add(coin)
+      target.parent.add(coins)
+
+      //Vue에 그룹 생성을 알림. (너무 빨리 하면 안됨)
+      setTimeout( ()=> {
+        vue.coin_groups.push({
+          name : groupName,
+          slot : target.userData.index,
+          position : coins.localToWorld( new THREE.Vector3()).project(camera),
+        })
+      },20)
+    }
+
+    //코인 넣기
+    for(let info of to_insert){        
+      for(let i=0;i<info.qt;i++){
+        let coin = this.betted_coins[info.index].clone();
+        coin.position.x = (Math.random() - 0.5) * 0.3
+        coin.position.y = (Math.random() - 0.5) * 0.3
+        coin.position.z = coins.children.length * 0.5
+        coins.add(coin)
+      }
+    }
+    
+
   }
   
   const do_bet = (target, sprite, zone, who) => {
@@ -497,9 +580,9 @@ const e = function (opt) {
     })
   }.bind(this))(this.betZones)
 
-  this.bet_others = (message)=>{
+  this.bet_others = (message) => {
     vue.bet_info = vue.bet_info.concat(message)
-    bet_others.bind(this)(message,this.betZones)
+    bet_others.bind(this)(message, this.betZones)
   }
 
   // trigger => cards_animations.js

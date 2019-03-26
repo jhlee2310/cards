@@ -77,14 +77,12 @@
       <Winners :winner="game_status.winner" :game="game" :TWEEN="TWEEN" :pair="game_status.pair"/>
       <!--NameTags-->
       <NameTags :coin_groups="coin_groups" :game="game" :resolution="resolution"/>
-      <!--CoinsForBet-->
       <CoinsForBet ref="coins_for_bet" default_size="600,140" pos_y="-18" :betting="game_status.betting" :selected="selectedCoin"/>
-    </div>
+    </div>    
     <!-- bet_info_total -->
-    <CreditInfo :bet="my_bet_info">
+    <CreditInfo :bet="my_bet_info" :saved="saved_my_bet">
       <board ref="board" :roomId="game_status.table"></board>
     </CreditInfo>
-    
   </div>
 
   
@@ -123,6 +121,7 @@ export default {
     this.game = null;
 
     return {
+      saved_my_bet:[],
       bet_info_test:[
        {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
        {slot:0,acc_name:"oranke",value:12.48, symbol: "EOS"},
@@ -422,16 +421,21 @@ export default {
     }),
     my_bet_info(){
       let sum = 0;
+      let array = [];
       if(this.eosAccount){
         for(let bet of this.bet_info){
           if(bet.acc_name == this.eosAccount.name){
             sum = +sum + +bet.value
             sum = parseFloat(sum).toFixed(4);
+            array.push(bet)
           }
         }
       }
-      return sum
-      
+
+      return {
+        array,
+        sum
+      }
     },
     ...mapState([
       'resolution'
@@ -503,13 +507,14 @@ export default {
   methods: {    
     save_my_bet(){
       if(this.eosAccount && this.eosAccount.name){
-        if(!this.my_bet_info){
+        if(!this.my_bet_info.sum){
           console.log('배팅금액이 없으므로 저장안함')
           return;
+        }          
+        this.saved_my_bet = {
+          array: this.my_bet_info.array.slice(),
+          sum: this.my_bet_info.sum,
         }
-        this.bet_info.forEach( (t,i)=>{      
-          
-        })
       }
     },
     classBtoA(index){
@@ -633,6 +638,11 @@ export default {
     init_betting_info(){      
       this.bet_info = [];
       this.coin_groups = [];
+
+      //배팅존에 내재된 used 배열 리셋
+      for(let z of this.game.betZone){
+        z.parent.userData.zones = [];
+      }
     },
     
     bet_others(message){
@@ -680,7 +690,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .fade-enter-active, .fade-leave-active {
   transition: opacity .3s;
 }
@@ -694,9 +704,6 @@ export default {
    user-select: none;
    z-index: 3;
    position: relative;
-   span{
-     //font-family: 'Germania One', 'Roboto';
-   }
 
 }
 .timer{  
@@ -761,9 +768,43 @@ body{margin:0;padding:0;overflow-x:hidden}
   height:500px;  
   color:yellow;
   overflow:hidden;  
-  -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+  -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
+}
 
-  @mixin bet-info{
+.bet_info_wrap{  
+  width:100%;
+  position:absolute;
+  top:500px;
+  white-space: nowrap;
+}
+
+.bet_info_total{
+  color:yellow;
+  position:absolute;
+  top:10px;
+  right:0;
+  width:200px;
+  &>div>span{
+    display:inline-block;
+    text-align:right;
+    width:40%;
+    margin-right:10px;
+    &:nth-child(1){
+      width:50%;
+    }
+  }
+}
+
+.bet_info_item{
+  margin-bottom:5px;
+  margin-left:5px;
+  text-align:left;
+  &>span{
+    margin-right:8px;
+  }
+}
+
+@mixin bet-info{
   width: 17px;
   height: 17px;
   border-radius: 50%;
@@ -839,41 +880,5 @@ body{margin:0;padding:0;overflow-x:hidden}
   //margin: 1px;
   //font-size:10px;
 }
-}
-
-.bet_info_wrap{  
-  width:100%;
-  position:absolute;
-  top:500px;
-  white-space: nowrap;
-}
-
-.bet_info_total{
-  color:yellow;
-  position:absolute;
-  top:10px;
-  right:0;
-  width:200px;
-  &>div>span{
-    display:inline-block;
-    text-align:right;
-    width:40%;
-    margin-right:10px;
-    &:nth-child(1){
-      width:50%;
-    }
-  }
-}
-
-.bet_info_item{
-  margin-bottom:5px;
-  margin-left:5px;
-  text-align:left;
-  &>span{
-    margin-right:8px;
-  }
-}
-
-
 </style>
 

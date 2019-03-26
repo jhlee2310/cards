@@ -3,7 +3,7 @@
     <div v-if="modal1_on" class="game-modal" :style="normal_modal">Start Betting</div>
     <div v-if="modal2_on" class="game-modal" :style="normal_modal">Time</div>
     <div v-if="modal3_on" class="game-modal" :style="normal_modal">Stop Betting</div>    
-    <div v-if="!!my_bet_info && start_betting" class="cancel-modal" :style="cancel_modal" @click="tosvr_req_cancel_betting">Cancel</div>
+    <div v-if="!!my_bet_info.sum && start_betting" class="cancel-modal" :style="cancel_modal" @click="tosvr_req_cancel_betting">Cancel</div>
     <div v-if="open_scatter_error" class="msg-modal" :style="msg_modal">
       <div class="msg-close" @click="close_msg()">X</div>
         <div>

@@ -57,7 +57,7 @@ export default {
       'resolution'
     ]),
     styleObj(){
-      let scaleFactor = this.resolution.width / 1320
+      let scaleFactor = this.resolution.width / 1600
       return{           
         transform: `translate(-50%,0) scale(${scaleFactor})`
       }

@@ -153,8 +153,8 @@ export default {
       }
 
       return {
-        transform: `scale(${scale})`,
-        transformOrign: "0 0",
+        //transform: `scale(${scale})`,
+        //transformOrigin: "0% 0%",
       }
     },
 

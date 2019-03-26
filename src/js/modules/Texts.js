@@ -18,10 +18,10 @@ export default function(game, table_group){
       size: size,
       height: 0.1,
       curveSegments: 6,
-      bevelEnabled: true,
-      bevelThickness: 0.4,
-		  bevelSize: 0.16,
-      bevelSegments: 2
+      bevelEnabled: false,
+      //bevelThickness: 0.4,
+		  //bevelSize: 0.16,
+      //bevelSegments: 2
     });
 
     geometry.computeBoundingBox();

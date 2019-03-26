@@ -41,7 +41,8 @@ export default {
     top:0;left:0;
   }
   .name_tag{
-    position:absolute;    
+    position:absolute;
+    text-shadow: 1px 1px 6px rgba(0,0,0,.5);
     color:#07ff05;
   }
 </style>
