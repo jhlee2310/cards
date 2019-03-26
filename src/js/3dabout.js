@@ -238,9 +238,7 @@ const e = function (opt) {
     let groupName = (typeof who == 'undefined') ? 'mycoins' : who
     let coins = target.parent.getObjectByName( groupName );
     let index = sprite.index;
-    let coin = this.betted_coins[index]
-
-    
+    let coin = this.betted_coins[index]    
 
     const randomNumber = (target) => {      
       while(1){

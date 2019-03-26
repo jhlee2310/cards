@@ -6,6 +6,11 @@
         <div class="credit_box_credit"><span>CREDIT</span><span>{{credit}}</span></div>      
       </div>
       <div class="credit_buttons"></div>
+      <div class="bet_funcs" style="overflow:hidden;position:absolute;top:-34px;right:8px;">
+        <div class="func_btn" style="float:left">Re Bet</div>
+        <div class="func_btn" style="float:left">Double</div>
+        <div class="func_btn" style="float:left">MAX</div>
+      </div>
       <slot/>
     </div>
   </div>
@@ -72,9 +77,9 @@ export default {
 .credit_box{  
   position:absolute;
   overflow:hidden;  
-  font-size:20px;
-  top: -70px;
-  right: 20px;
+  font-size:16px;
+  top: -96px;
+  right: 10px;
   width: 242px;
   color:yellow;
   &>div{
@@ -90,6 +95,25 @@ export default {
   }
   span:last-child{
     float:right;
+  }
+}
+
+.func_btn{
+  width:92px;
+  padding:5px;
+  height:30px;
+  background:rgba(255,255,255,.85);
+  color: black;
+  border-radius:8px;
+  margin-left:14px;
+  font-weight:500;
+  border: 1px solid #999;
+  box-sizing:border-box;
+  cursor: pointer;
+  &:hover{
+    border-color:yellow;
+    color:yellow;
+    background-color:cadetblue;
   }
 }
 </style>

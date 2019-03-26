@@ -496,6 +496,17 @@ export default {
     }
   },
   methods: {    
+    save_my_bet(){
+      if(this.eosAccount && this.eosAccount.name){
+        if(!this.my_bet_info){
+          console.log('배팅금액이 없으므로 저장안함')
+          return;
+        }
+        this.bet_info.forEach( (t,i)=>{      
+          
+        })
+      }
+    },
     classBtoA(index){
       switch(index){
         case 0:
@@ -559,6 +570,8 @@ export default {
             //커서 복원
             document.body.style.cursor = "default";
 
+            //나의 배팅정보를 기록함
+            this.save_my_bet();
             break;
           }          
         break;
