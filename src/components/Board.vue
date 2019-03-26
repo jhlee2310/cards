@@ -18,7 +18,7 @@
               <div class="small_blue"></div>
             </div>
             <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
-            <div style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
+            <div v-if="!lobby" style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
               <div style="display: inline-flex;" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">
               P
               <div v-if="prdtPResult.result1" class="bead-border-b"></div>
@@ -40,7 +40,7 @@
             </div>
           </div>
           <div class="rect_wrap" style="overflow:hidden;box-sizing:border-box;padding-left:8px;">
-            <div class="rectanges" style="margin-right:8px;float:left;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
+            <div v-if="!lobby" class="rectanges" style="margin-right:8px;float:left;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
               <div class="col" v-for="(count, i) in winners" :style="{
                   position:'absolute',
                   height:'100%',
@@ -79,7 +79,18 @@
                   }" :key="`col${i}`"/>
               </svg>
             </div>          
-            <div v-dragscroll.x='true' class="rectanges" style="margin-right:8px;float:left;cursor: grab;position: relative;width:420px;height:120px;bottom:0;background:rgba(255,255,255,0.9);overflow: hidden;display:inline;float:left;">
+            <div v-dragscroll.x='true' class="rectanges" :style="{
+								'margin-right':'8px',
+								'float':'left',
+								'cursor': 'grab',
+								'position': 'relative',
+								'width':lobby?'600px':'420px',
+								'height':'120px',
+								'bottom':0,
+								'background':'rgba(255,255,255,0.9)',
+								'overflow': 'hidden',
+								'display':'inline',
+							}">
               <div class="col" v-for="(count, i) in bigRoad" :style="{
                   position:'absolute',
                   height:'100%',
@@ -217,7 +228,12 @@
 export default {
   name: 'Board',
   props: {
-    roomId: Number
+		roomId: Number,
+		lobby: {
+			type: Boolean,
+			default: false
+		},
+		
   },
   data() {
     return {
@@ -949,7 +965,7 @@ export default {
       if(message.state=='dealing::chain'){
         minus=0
       }
-      console.log("minus",minus)
+      //console.log("minus",minus)
       message.bead_load.some((data,i) => {
         if(i==message.round+minus){
           return true

@@ -31,7 +31,8 @@ export default new Vuex.Store({
     network, 
     credit: 0,
     game_connected: false,
-    open_scatter_error: false,    
+    open_scatter_error: false,
+    room_id: null,
   },
   getters: {
     'getEosAccount': state => state.eosAccount,
@@ -40,7 +41,7 @@ export default new Vuex.Store({
     'getCredit': state => state.credit,
     'getEos': state => state.eos,
     'getGameConnected': state => state.game_connected,
-    'getEos': state => state.Eos,
+    'getRoomId': state => state.room_id,
   },
   mutations: {
     SET_OPEN_SCATTER_ERROR(state, payload){
@@ -68,6 +69,9 @@ export default new Vuex.Store({
     setGameConnected: (state, data) => {
       state.game_connected = data
     },
+    setRoomId: (state, data) => {
+      state.room_id = data
+    },
   },
   actions: {
     setScatter: ({commit},data) => {
@@ -87,6 +91,9 @@ export default new Vuex.Store({
     },
     setOpenScatterError: ({commit}, data ) => {
       commit('SET_OPEN_SCATTER_ERROR', data)
-    }
+    },
+    setRoomId: ({commit}, data ) => {
+      commit('setRoomId', data)
+    },
   }
 })

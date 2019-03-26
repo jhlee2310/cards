@@ -8,39 +8,42 @@
           z-index: 2;
         position: relative;"/>
         </div>
-        <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
-        font-size: 103.5px;
-        font-weight: bold;
-        font-style: normal;
-        font-stretch: normal;
-        line-height: 1.2;
-        letter-spacing: normal;
-        text-align: left;
-        color: #dfdfe4;
-        position: absolute;
-        margin-top: 564px;
-        margin-left: 22px;
-        top: 0px;
-        z-index: 1;
-        ">
-          BACCA
-        </div>
-        <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
-        font-size: 103.5px;
-        font-weight: bold;
-        font-style: normal;
-        font-stretch: normal;
-        line-height: 1.2;
-        letter-spacing: normal;
-        text-align: left;
-        color: #dfdfe4;
-        position: absolute;
-        top: 0px;
-        margin-top: 655px;
-        margin-left: 191px;
-        z-index: 1;
-        ">
-          RAT
+        <div id="textContent">
+          <div 
+          style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
+          font-size: 103.5px;
+          font-weight: bold;
+          font-style: normal;
+          font-stretch: normal;
+          line-height: 1.2;
+          letter-spacing: normal;
+          text-align: left;
+          color: #dfdfe4;
+          position: absolute;
+          margin-top: 564px;
+          margin-left: 22px;
+          top: 0px;
+          z-index: 1;
+          ">
+            BACCA
+          </div>
+          <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
+          font-size: 103.5px;
+          font-weight: bold;
+          font-style: normal;
+          font-stretch: normal;
+          line-height: 1.2;
+          letter-spacing: normal;
+          text-align: left;
+          color: #dfdfe4;
+          position: absolute;
+          top: 0px;
+          margin-top: 655px;
+          margin-left: 191px;
+          z-index: 1;
+          ">
+            RAT
+          </div>
         </div>
       </div>
       <div style="position: absolute;
@@ -48,7 +51,9 @@
       width: 100%;
       z-index: 3;
       ">
-        <div style="font-size: 60px;
+        <div
+        class="txtAni"
+      style="font-size: 60px;
       font-weight: bold;
       font-style: normal;
       font-stretch: normal;
@@ -59,7 +64,8 @@
       position: absolute;
       top: 266px;
       right: 436px;
-      ">
+      "
+      >
           Baccarat
         </div>
         <div style="font-family: OpenSans;
@@ -96,7 +102,7 @@
       cursor: pointer;
       z-index: 2;
       ">
-      <router-link to="/baccarat/12" tag="div">
+      <router-link to="/baccarat/12" tag="div" class="button">
       Play Now
     </router-link>
       </div>
@@ -171,5 +177,170 @@ export default {
   // img {
   //   position: absolute;
   // }
+  /*
+ * Animation module with all animation code
+ */
+.anim-text-flow,
+.anim-text-flow-hover:hover {
+  /*
+   * Animation variables
+   */
+  $animationSteps: 20;
+  $animationDuration: 50;
+  $animationElement: span;
+  $animationElementsCount: 100;
+  $delayBetweenLetters: 0.2;
+
+  /*
+   * Elements settings
+   */
+  #{$animationElement} {
+    animation-name: anim-text-flow-keys;
+    animation-duration: #{$animationDuration}s;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+    animation-fill-mode: forwards;
+  }
+
+  /*
+   * Keyframe loop
+   */
+  @keyframes anim-text-flow-keys {
+    @for $i from 0 through $animationSteps {
+      #{percentage($i * (1 / $animationSteps))} {
+        color: hsla(random(365), 60, 60, 1);
+      }
+    }
+  }
+
+  /*
+   * Element animation delay loop
+   */
+  $totalDelayTime: $animationElementsCount * $delayBetweenLetters;
+
+  @for $i from 1 through $animationElementsCount {
+    #{$animationElement}:nth-of-type(#{$i}) {
+      animation-delay: #{($i * $delayBetweenLetters) - $totalDelayTime}s;
+    }
+  }
+}
+
+$secondary-color: #ffe221;
+
+#textContent {
+  div {
+    animation-delay: 4.1s;
+    -webkit-animation-fill-mode: forwards;
+    opacity: 0;
+    animation-name: titleAnimation;
+    animation-timing-function:ease;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+    &:first-child{
+      animation-delay: 4.2s;
+
+    }
+
+    &:last-child{
+      color: $secondary-color;
+      animation-delay: 4s;
+    }
+  }
+}
+
+.animation {
+  animation-name: titleAnimation;
+  animation-timing-function:ease;
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+}
+
+.txtAni {
+  //animation: blur 1s ease-out infinite;
+  //position: relative;
+  //font-family: sans-serif;
+  //text-transform: uppercase;
+  font-size: 2em;
+  letter-spacing: 4px;
+  overflow: hidden;
+  background: linear-gradient(90deg, #000, #fff, #000);
+  background-repeat: no-repeat;
+  background-size: 80%;
+  animation: animate 5s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0);
+}
+
+@keyframes slidein { 
+  from { margin-left: 100%; width: 300% }
+  to { margin-left: 0%; width: 100%; }
+}
+
+@keyframes titleAnimation {
+    0% {
+      transform: translateY(-50px);
+      opacity: 0;
+      -webkit-clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 80%);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 80%);
+  }
+  20% {
+      transform: translateY(0);
+      opacity: 1;
+      -webkit-clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 15%);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 15%);
+  }
+  80% {
+       transform: translateY(0);
+       opacity: 1;
+      -webkit-clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 15%);
+      clip-path: polygon(100% 0, 100% 100%, 0 100%, 0 15%);
+  }
+  100% {
+       transform: translateY(50px);
+       opacity: 0;
+      -webkit-clip-path: polygon(100% 0, 100% -0%, 0 100%, 0 100%);
+      clip-path: polygon(100% 0, 100% -0%, 0 100%, 0 100%);
+    
+  }
+}
+
+@keyframes animate {
+  0% {
+    background-position: -500%;
+  }
+  100% {
+    background-position: 500%;
+  }
+}
+
+@keyframes blur {
+  from {
+    text-shadow:0px 0px 10px #fff,
+      0px 0px 10px #fff, 
+      0px 0px 25px #fff,
+      0px 0px 25px #fff,
+      0px 0px 25px #fff,
+      0px 0px 25px #fff,
+      0px 0px 25px #fff,
+      0px 0px 25px #fff,
+      0px 0px 50px #fff,
+      0px 0px 50px #fff,
+      0px 0px 50px #7B96B8,
+      0px 0px 150px #7B96B8,
+      0px 10px 100px #7B96B8,
+      0px 10px 100px #7B96B8,
+      0px 10px 100px #7B96B8,
+      0px 10px 100px #7B96B8,
+      0px -10px 100px #7B96B8,
+      0px -10px 100px #7B96B8;
+  }
+}
+
+
+div.button:hover {
+	color: rgba(255, 255, 255, 0.85);
+	box-shadow: rgba(30, 22, 54, 0.7) 0 0px 0px 40px inset;
+	border-radius: 27.5px;
+}
 </style>
 
