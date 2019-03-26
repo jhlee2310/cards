@@ -275,8 +275,14 @@ export default {
     //setInterval(()=>{this.$chat.send(JSON.stringify({type:'chat',txt:'abcdefg'}))},1000)
     let cont3d = document.getElementById('cont_3d')
     this.SET_WINDOW_RESOLUTION([cont3d.clientWidth,cont3d.clientHeight])
-    // this.connectScatter();
-		this.$connect()
+    // this.connectScatter();\
+    console.log("this.$socket",this.$socket)
+    if(!this.$socket){
+      console.log("socket 연결")
+		  this.$connect()
+    }else{
+      this.enterRoom()
+    }
 		// 게임서버에 identity 알림. 
 		//this.tosvr.set_scatter_identity(eosAccount.name);
 		
@@ -302,22 +308,19 @@ export default {
     this.$socket.onmessage = (mes)=>{      
     const message = JSON.parse(mes.data)
     this.worker.postMessage(message)
-
+    console.log("message",message)
       switch(message.type){
 				case 'welcome':
 					this.setGameConnected(true)
           //this.game_connected = true;
           console.log('game_connected');
 
-          this.$socket.send(JSON.stringify({
-             type    :"req_enter_room",
-            room_id : this.room_id
-					}))
-										
-					this.$socket.send(JSON.stringify({
-						type      :"req_set_scatter_identity",
-						identity  : this.eosAccount.name
-					}));
+         
+					this.enterRoom()
+					// this.$socket.send(JSON.stringify({
+					// 	type      :"req_set_scatter_identity",
+					// 	identity  : this.eosAccount.name
+					// }));
           break;
 
         case 'deal_info':
@@ -536,6 +539,7 @@ export default {
 			setCredit: 'setCredit',
       setGameConnected: 'setGameConnected',
       setOpenScatterError: 'setOpenScatterError',
+      setRoomId: 'setRoomId',
 		}),
     pause(time){
       return new Promise(resolve=>{
@@ -665,7 +669,13 @@ export default {
       this.game_status.round = 1
       this.$refs.board.setInit()
     },
-
+    enterRoom(){
+       this.$socket.send(JSON.stringify({
+            type    :"req_enter_room",
+          room_id : this.room_id
+        }))
+        this.setRoomId(this.room_id)
+    },
   }
 }
 </script>

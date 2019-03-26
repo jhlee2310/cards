@@ -1,273 +1,288 @@
 <template>
-	<header style="padding:0 9.1%;position:relative;">
-		<Credit v-if="deposit_open"/>
-		<nav id="nav">
-			<div style="-webkit-flex: 4;flex: 4;text-align: left;">
-			<router-link to="/" style="cursor: pointer;">
-				<img src="@/assets/logo.png"/>
-			</router-link>
-			</div>
-			<div style="display:flex;justify-content: space-between;-webkit-flex: 7;flex: 7;align-items: baseline;">
-	<router-link to="#lobby" tag="div" style="font-size: 18px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: normal;
-  letter-spacing: normal;
-	cursor: pointer;">
-	Baccarat Lobby
-	</router-link>
-			<router-link to="#bouns" tag="div" style="font-size: 18px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: normal;
-  letter-spacing: normal;
-	cursor: pointer;">
-	Bonus
-	</router-link>
-			<router-link to="#freecpu" tag="div" style="font-size: 18px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: normal;
-  letter-spacing: normal;
-	cursor: pointer;">
-	Free CPU
-	</router-link>
-			<!-- <div style="line-height:0;"><img src="@/assets/speaker.png"/></div> -->
-			<router-link to="#fairness" tag="div" style="font-size: 18px;
-  font-weight: normal;
-  font-style: normal;
-  font-stretch: normal;
-  letter-spacing: normal;
-	cursor: pointer;">
-				Fairness
-				</router-link>
-				<div v-if="eosAccount" @click="()=>{this.deposit_open = true}" style="border-radius: 15px;background-color: #ffa025;
-				font-size: 16px;
-				width: 114px;
-  font-weight: 600;
-  font-style: normal;
-  font-stretch: normal;
-  line-height: 1.88;
-  letter-spacing: normal;
-  text-align: center;
-	cursor:pointer;
-  color: #000000;
-				">
-					Deposit
-				</div>
-			<div :style="{
-				width: '199px',
-				height: '30px',
-				'border-radius': '15px',
+  <header id="header_wrap">
+    <Credit v-if="deposit_open"/>
+    <Bonus v-if="bonus_open"/>
+    <nav id="nav">
+      <div class="logo">
+        <router-link to="/">
+          <img src="@/assets/logo.png">
+        </router-link>
+      </div>
+      <div class="menu">
+        <router-link to="/lobby">Baccarat Lobby</router-link>
+        <!-- <router-link to="#bouns">Bonus</router-link> -->
+				<a @click="()=>{this.bonus_open = true}">Bonus</a>
+        <router-link to="#freecpu">Free CPU</router-link>
+        <!-- <div style="line-height:0;"><img src="@/assets/speaker.png"/></div> -->
+        <router-link to="#fairness">Fairness</router-link>
+        <div class="deposit" v-if="eosAccount" @click="()=>{this.deposit_open = true}">Deposit</div>
+        <div class="login"
+          :style="{
 				'background-color': eosAccount==null?'#00a8ff':'unset',
-				'border': eosAccount==null?'none':'solid 1px #00a8ff',
-				'font-size': '16px',
-				'line-height': '1.88',
-				cursor: 'pointer',
-			}">
-				<span v-if="!eosAccount" @click="proc_getIdentity">Log in with <span style="font-weight: bold;">Scatter</span></span>
-				<span v-else @click="proc_forgetIdentity"><span>{{eosAccount.name}}</span></span>
-			</div>
-			</div>
-		</nav>
-	</header>
+				'border': eosAccount==null?'none':'solid 1px #00a8ff'
+			}"
+        >
+          <span v-if="!eosAccount" @click="proc_getIdentity">
+            Log in with
+            <span style="font-weight: bold;">Scatter</span>
+          </span>
+          <span v-else @click="proc_forgetIdentity">
+            <span>{{eosAccount.name}}</span>
+          </span>
+        </div>
+      </div>
+    </nav>
+  </header>
 </template>
 
 <script>
-import { mapState, mapGetters, mapActions } from 'vuex'
+import { mapState, mapGetters, mapActions } from "vuex";
 // import ScatterJS from 'scatterjs-core'
 // import ScatterEOS from 'scatterjs-plugin-eosjs'
 //import Eos from 'eosjs'
 // ScatterJS.plugins( new ScatterEOS() );
-import Credit from '@/components/Credit.vue'
+import Credit from "@/components/Credit.vue";
+import Bonus from "@/components/Bonus.vue";
 
 export default {
-		name: 'appheader',
-		components:{
-			Credit
-		},
-		data(){
-			const that = this;
-			this.ee = null;
-			return {
-				eos: [],
-				deposit_open: false,
-				tosvr:{
-					set_scatter_identity (scatter_identity = undefined ) {
-						console.log("set_scatter_identity")
-						if (!that.$socket || !that.game_connected) return;
-						const scatter = that.scatter
+  name: "appheader",
+  components: {
+    Credit,
+    Bonus,
+  },
+  data() {
+    const that = this;
+    this.ee = null;
+    return {
+			eos: [],
+			menu_open:'',
+      deposit_open: false,
+      bonus_open: false,
+      tosvr: {
+        set_scatter_identity(scatter_identity = undefined) {
+          console.log("set_scatter_identity");
+          if (!that.$socket || !that.game_connected) return;
+          const scatter = that.scatter;
 
-						if (scatter_identity === undefined) {          
-							if ( scatter && scatter.identity ) {
-								const eosAccount = that.scatter.identity.accounts.find(account => account.blockchain === 'eos');
-								scatter_identity = eosAccount.name; 
-								console.log('스캐터 아이디', scatter_identity);
-							}
-						}
-						
-						if (scatter_identity === undefined) return;
+          if (scatter_identity === undefined) {
+            if (scatter && scatter.identity) {
+              const eosAccount = that.scatter.identity.accounts.find(
+                account => account.blockchain === "eos"
+              );
+              scatter_identity = eosAccount.name;
+              console.log("스캐터 아이디", scatter_identity);
+            }
+          }
 
-						let req_json = {
-							type      :"req_set_scatter_identity",
-							identity  : scatter_identity
-						};
+          if (scatter_identity === undefined) return;
 
-						console.log("req_json",req_json)
-						that.$socket.send(JSON.stringify(req_json));
-					},
-				},
-				//eosAccount: null,
-				//scatter: ScatterJS.scatter,
-				chatWelcome: false,
-			}
-		},
-		computed: {
-			...mapState([
-				'open_scatter_error'
-			]),
-			...mapGetters({
-				eosAccount: 'getEosAccount',
-				scatter: 'getScatter',
-				network: 'getNetwork',
-				game_connected: 'getGameConnected',
-				Eos: 'getEos',
-			}),
-		},
-		mounted() {
-			this.connectScatter()
-			window.hh = this;    	
-		},
-		methods: {
-			...mapActions({
-				setEosAccount: 'setEosAccount',
-				setCredit: 'setCredit',
-				setOpenScatterError: 'setOpenScatterError',
-			}),
-			async proc_forgetIdentity() {
-				if (!this.scatter.identity) return; 
+          let req_json = {
+            type: "req_set_scatter_identity",
+            identity: scatter_identity
+          };
 
-				await this.scatter.forgetIdentity();
-				this.setEosAccount(null)
-				this.setCredit(0)
-				
-				this.tosvr.set_scatter_identity('');
-			},
-			async proc_getIdentity(e){
-				console.log(e, typeof e);
-				const result = await this.connectScatter()
-				if(!result){					
-					return
-				}
+          console.log("req_json", req_json);
+          that.$socket.send(JSON.stringify(req_json));
+        }
+      },
+      //eosAccount: null,
+      //scatter: ScatterJS.scatter,
+      chatWelcome: false
+    };
+  },
+  computed: {
+    ...mapState(["open_scatter_error"]),
+    ...mapGetters({
+      eosAccount: "getEosAccount",
+      scatter: "getScatter",
+      network: "getNetwork",
+      game_connected: "getGameConnected",
+      Eos: "getEos"
+    })
+  },
+  mounted() {
+    this.connectScatter();
+    window.hh = this;
+  },
+  methods: {
+    ...mapActions({
+      setEosAccount: "setEosAccount",
+      setCredit: "setCredit",
+      setOpenScatterError: "setOpenScatterError"
+    }),
+    async proc_forgetIdentity() {
+      if (!this.scatter.identity) return;
 
-				if(!this.scatter.suggestNetwork) { return }
-				await this.scatter.suggestNetwork(this.network).then( () => {
-					console.log("sugggestNetwork: Succ2!");
-				}).catch(function (error) {
-					console.log("sugggestNetwork: 에러");
-					console.log(error)    
-					return; 
-				});
-				
-				await this.scatter.getIdentity({accounts:[this.network]})
-				.then(identity => {
-					console.log(identity)
-					console.log("getIdentity: 성공");
-					this.setEosAccount(identity.accounts.find(account => account.blockchain === 'eos'));
-					let eosAccount = this.eosAccount
-					console.log("eosAccount",eosAccount);
+      await this.scatter.forgetIdentity();
+      this.setEosAccount(null);
+      this.setCredit(0);
 
-					// 게임서버에 identity 알림. 
-					this.tosvr.set_scatter_identity(eosAccount.name);
+      this.tosvr.set_scatter_identity("");
+    },
+    async proc_getIdentity(e) {
+      console.log(e, typeof e);
+      const result = await this.connectScatter();
+      if (!result) {
+        return;
+      }
 
-				})
-				.catch(function (error) {
-					console.log("에러");
-					console.log(error); 
-				});
-		
-				//console.log(this.scatter.identity);
-			},
-			async connectScatter(){
-				const connectionOptions = {initTimeout:1300};
-				const connected = await this.scatter.connect('game-eosbaccarat3', connectionOptions)
-									
-				if(!connected){
-					console.log('Could not connect to Scatter.');
-					this.setOpenScatterError(true);
-					return false;
-				}
+      if (!this.scatter.suggestNetwork) {
+        return;
+      }
+      await this.scatter
+        .suggestNetwork(this.network)
+        .then(() => {
+          console.log("sugggestNetwork: Succ2!");
+        })
+        .catch(function(error) {
+          console.log("sugggestNetwork: 에러");
+          console.log(error);
+          return;
+        });
 
-				console.log('Scatter Connected!')							
-				
-				
-				if (this.scatter.identity) {				
-					this.setEosAccount(this.scatter.identity.accounts.find(account => account.blockchain === 'eos'));
-					this.tosvr.set_scatter_identity(this.eosAccount.name);
+      await this.scatter
+        .getIdentity({ accounts: [this.network] })
+        .then(identity => {
+          console.log(identity);
+          console.log("getIdentity: 성공");
+          this.setEosAccount(
+            identity.accounts.find(account => account.blockchain === "eos")
+          );
+          let eosAccount = this.eosAccount;
+          console.log("eosAccount", eosAccount);
 
-					if(!this.chatWelcome){
-						this.$chat.send(JSON.stringify({
-							type: 'welcome',
-						}))
-						this.chatWelcome = true
-					}
-				}else{
-					this.setEosAccount(null)
-					this.tosvr.set_scatter_identity('');
-				}
+          // 게임서버에 identity 알림.
+          this.tosvr.set_scatter_identity(eosAccount.name);
+        })
+        .catch(function(error) {
+          console.log("에러");
+          console.log(error);
+        });
 
-				return true;
-			},
-		}
-}
+      //console.log(this.scatter.identity);
+    },
+    async connectScatter() {
+      const connectionOptions = { initTimeout: 1300 };
+      const connected = await this.scatter.connect(
+        "game-eosbaccarat3",
+        connectionOptions
+      );
+
+      if (!connected) {
+        console.log("Could not connect to Scatter.");
+        this.setOpenScatterError(true);
+        return false;
+      }
+
+      console.log("Scatter Connected!");
+
+      if (this.scatter.identity) {
+        this.setEosAccount(
+          this.scatter.identity.accounts.find(
+            account => account.blockchain === "eos"
+          )
+        );
+        this.tosvr.set_scatter_identity(this.eosAccount.name);
+
+        if (!this.chatWelcome) {
+          this.$chat.send(
+            JSON.stringify({
+              type: "welcome"
+            })
+          );
+          this.chatWelcome = true;
+        }
+      } else {
+        this.setEosAccount(null);
+        this.tosvr.set_scatter_identity("");
+      }
+
+      return true;
+    }
+  }
+};
 </script>
 
 <style lang="scss">
 * {
-	font-family: Montserrat;
+  font-family: Montserrat;
 }
-#nav {
-	background-color: #000000;
-  display: flex;
-	justify-content: space-between;
-	padding: 48px 0 44px;
-	align-items: flex-end;
-	div {
-		color: #ffffff;
-		&.router-link-exact-active {
-			color: #ffd324;
-		}
-	}
+#header_wrap {
+  padding: 0 9.1%;
+  position: relative;
+  #nav {
+    background-color: #000000;
+    display: flex;
+    justify-content: space-between;
+    padding: 48px 0 44px;
+    align-items: flex-end;
+    .logo {
+      -webkit-flex: 4;
+      flex: 4;
+      text-align: left;
+      a {
+        cursor: pointer;
+      }
+      img {
+        animation: move 5s infinite;
+      }
+    }
+    .menu {
+      display: flex;
+      justify-content: space-between;
+      -webkit-flex: 7;
+      flex: 7;
+      align-items: baseline;
+			a {
+				font-size: 18px;
+				font-weight: normal;
+				font-style: normal;
+				font-stretch: normal;
+				letter-spacing: normal;
+				cursor: pointer;
+				color: #ffffff;
+				text-decoration-line: blink;
+				&.router-link-exact-active {
+					color: #ffd324;
+				}
+			}
+			span {
+				color: #ffffff;
+			}
+			.deposit {
+				border-radius: 15px;background-color: #ffa025;
+				font-size: 16px;
+				width: 114px;
+				font-weight: 600;
+				font-style: normal;
+				font-stretch: normal;
+				line-height: 1.88;
+				letter-spacing: normal;
+				text-align: center;
+				cursor:pointer;
+				color: #000000;
+			}
+			.login {
+				width: 199px;
+				height: 30px;
+				border-radius: 15px;
+				font-size: 16px;
+				line-height: 1.88;
+				cursor: pointer;
+			}
+    }
+  }
+
+  @keyframes move {
+    0% {
+      transform: rotateY(0);
+    }
+    80% {
+      transform: rotateY(-360deg);
+    }
+    100% {
+      transform: rotateY(-360deg);
+    }
+  }
 }
-// #nav {
-//   padding: 30px;
-//   background-color: #000000;
-// 	font-family: Montserrat;
-//   a {
-//     font-size: 18px;
-//     font-weight: normal;
-//     font-style: normal;
-//     font-stretch: normal;
-//     line-height: 4.01;
-//     letter-spacing: normal;
-//     color: #ffffff;
-// 		text-decoration: none;
-// 		text-align: left;
-//     &.router-link-exact-active {
-//       color: #42b983;
-//     }
-//   }
-//   .baccarat {
-//     width: 78px;
-//     height: 14px;
-//     font-family: Montserrat;
-//     font-weight: normal;
-//     font-style: normal;
-//     font-stretch: normal;
-//     line-height: 4.01;
-//     letter-spacing: normal;
-//     text-align: left;
-//     color: #ffffff;
-//   }
-// }
 </style>
