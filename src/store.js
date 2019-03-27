@@ -75,7 +75,7 @@ export default new Vuex.Store({
     setGameConnected: (state, data) => {
       state.game_connected = data
     },
-    setRoomId: (state, data) => {
+    SET_ROOM_ID: (state, data) => {
       state.room_id = data
     },
   },

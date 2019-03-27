@@ -229,7 +229,8 @@ export default {
 		lobby: {
 			type: Boolean,
 			default: false
-		},
+    },
+    room_detail: Object,
 		
   },
   data() {
@@ -992,6 +993,16 @@ export default {
     },
     getWinner(){
       return _.last(this.winners).winner
+    }
+  },
+  watch: {
+    room_detail:{
+      handler(nv){
+        if(nv==null) return;
+        //setInit()
+        this.setRound(nv)
+      },
+      immediate: true,
     }
   }
 }

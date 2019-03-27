@@ -1,6 +1,6 @@
 <template>
   <div ref="room_root">
-    <div>{{room_id}} {{game_loaded}} {{resolution}}</div>
+    <div>{{room_detail}}{{game_loaded}} {{resolution}}</div>
     <div id="cont_3d" ref="cont_3d" :style="{
       width: resolution.width + 'px',
       height: resolution.height + 'px',
@@ -16,12 +16,14 @@
       </div>
       <!--modal-->
       <Modal :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id" :game="$game"/>
+      <!--timer-->
+      <div class="timer" v-show="game_status.betting" ref="timer" :style="timerStyle">{{timer}}</div>
       
       
     </div>
     <!-- bet_info_total -->
       <CreditInfo :bet="my_bet_info" :saved="saved_my_bet">
-        <board ref="board" :roomId="parseInt(room_id)"></board>
+        <board :roomId="parseInt(room_id)" :room_detail="room_detail" ref="board"></board>
       </CreditInfo>
   </div>
 </template>
@@ -43,13 +45,35 @@ export default {
         winner: '',
         pair: '',
       },
-      saved_my_bet:[],      
+      saved_my_bet:[],
+      room_detail: null,
+      timer: '',
     }
   },
   methods: {
     ...mapMutations([
-      'SET_WINDOW_RESOLUTION'
+      'SET_WINDOW_RESOLUTION',
+      'SET_ROOM_ID',
     ]),
+    proc_room_detail(data, oldData){
+      console.log(data)
+      this.game_status.round = data.round
+      switch(data.state){
+        case "betting":
+          let extra = data.stateTick % 1000
+          this.timer = (data.stateTick - extra) / 1000
+          setInterval(()=>{
+            this.game_status.betting = true;
+          },extra)          
+        break;
+      }
+    },
+    enterRoom(number){      
+      this.$socket.sendOBJ({
+        type: "req_enter_room",
+        room_id : number || this.room_id
+      })
+    },
     onResize(e){
       const _width = this.$refs.room_root.clientWidth;
       const _height = _width * 0.36
@@ -61,6 +85,12 @@ export default {
     ...mapState([
       'game_loaded', 'resolution'
     ]),
+    timerStyle(){
+      let scaleFactor = this.resolution.width / 1320
+      return {
+        transform: `translate(-50%, -50%) scale(${scaleFactor})`
+      }
+    },
     my_bet_info(){
       let sum = 0;
       let array = [];
@@ -89,27 +119,55 @@ export default {
       }
     },
   },
-  mounted(){    
+  mounted(){
+    if (this.$route.meta.req_enter) this.enterRoom();
+    this.eBus.$on('socket', data => {      
+      switch(data.type){
+        case "welcome":
+          console.log('방에입장')
+          this.enterRoom();
+        break;
+        case "room_detail":        
+          this.room_detail = data
+        break;
+      }
+    })
+  
     this.$refs.cont_3d.appendChild( this.$game.renderer.domElement )
     window.addEventListener('resize', this.onResize );
-    window.dispatchEvent(new Event('resize'))    
+    window.dispatchEvent(new Event('resize'))
   },
   beforeDestroy(){
     window.removeEventListener('resize', this.onResize );
+    this.eBus.$off('socket');
   },
   beforeRouteEnter( to, from, next){
     //deep link
-    console.log('enter')
+    if( from.name == 'lobby' ){
+      to.meta.req_enter = true
+    }
     next();
   },
   beforeRouteUpdate (to, from, next) {
     //router link
-    console.log('update')
+    const number = to.params.room_id
+    this.$refs.board.setInit();
+    this.enterRoom(number);
+    
+    //console.log(to, from)
     next()
   },
   watch: {
-    game_loaded(){
-      
+    game_loaded(){},    
+    room_id : {
+      handler(newVal){
+        if(newVal === null) return;
+        this.SET_ROOM_ID(newVal)
+      },
+      immediate: true
+    },
+    room_detail(data, oldData){
+      this.proc_room_detail(data, oldData)
     }
   }
 }
@@ -131,6 +189,21 @@ export default {
       position: absolute;
       top: 5%;
       left: 75%;
+    }
+    .timer{
+      color:#fff;
+      display:flex;
+      justify-content:center;
+      align-items: center;
+      font-size: 36px;
+      position:absolute;
+      left:50%;
+      top:37%;      
+      width:76px;
+      height:76px;
+      border:3px solid #fff;
+      box-sizing:border-box;
+      border-radius:50%;
     }
   }
 </style>

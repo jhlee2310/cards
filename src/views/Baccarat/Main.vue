@@ -18,27 +18,28 @@ Vue.component('Board', () => import('@/components/Board.vue'));
 
 export default {
   created(){
-    Vue.prototype.$socket = new WebSocket('ws://192.168.0.14:3100')
-    WebSocket.prototype.sendOBJ = (mes)=>{
-      WebSocket.prototype.send(JSON.stringify(mes))
-    }
-
-    Vue.prototype.$socket.onmessage = mes => {
-      console.log(mes)
-    }
-    Vue.prototype.$game = new Game({TWEEN, THREE, vue: this });    
+    Vue.prototype.$game = new Game({TWEEN, THREE, vue: this });
+    Vue.prototype.eBus = new Vue();
   },
   methods:{
      ...mapMutations([
       'SET_GAME_LOADED'
     ]),
   },
-  mounted(){    
-    
+  mounted(){        
+    const $socket = Vue.prototype.$socket = new WebSocket('ws://www.jh84.kr:3100')
+    $socket.sendOBJ = function(mes){
+      this.send(JSON.stringify(mes))
+    }
+
+    $socket.onmessage = (mes) => {
+      const data = JSON.parse(mes.data)
+      this.eBus.$emit('socket', data);
+    }    
   },
   computed: {
     ...mapState([
-      'game_loaded','resolution'
+      'game_loaded','resolution','room_id'
     ])
   }
 }
