@@ -19,7 +19,7 @@
   import { mapMutations } from 'vuex'
 
   export default {
-    props: ['game','start_betting','my_bet_info','room_id','msg'],
+    props: ['game','start_betting','my_bet_info','room_id'],
     data() {
       return {
         modal1_on: false,

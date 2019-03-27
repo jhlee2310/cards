@@ -32,11 +32,14 @@ export default {
 <style lang="scss">
 #footer_wrap {
   background-color: #000000;
-  height: 302px;
-  padding: 0px 9.1%;
-  margin-top: auto;
+  //height: 302px;
+  //padding: 0px 9.1%;
+  padding:0 10px;
+  max-width:1920px;
+  margin: 0 auto;
   position: relative;
-  z-index: 2;
+  box-sizing:border-box;
+  //z-index: 2;
   .cont_top {
     text-align: left;
     padding-top: 68px;

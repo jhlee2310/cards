@@ -2,7 +2,7 @@
   <div id="app">
     <div id="wrap">
       <AppHeader :url="location.pathname"></AppHeader>
-      <main style="display:flex;font-family:Montserrat;">
+      <main>
         <router-view/>
       </main>
       <AppFooter></AppFooter>
@@ -27,9 +27,7 @@
       }
     },
     mounted(){      
-      document.onload = () => {
-        window.dispatchEvent(new Event('resize'))
-      }
+
     }
   }
 </script>
@@ -49,7 +47,7 @@
 #wrap {
   max-width: 1920px;
   /*min-width: 1920px;*/
-  margin: auto;
+  margin: 0 auto;
   position: relative;
   .slide-fade-enter-active {
     transition: all .3s ease;
@@ -65,7 +63,7 @@
 }
 #wrap:before  {
   content: '';
-  //display: none;
+  display: none;
   position: absolute;
   width: 100%;
   height: 100%;

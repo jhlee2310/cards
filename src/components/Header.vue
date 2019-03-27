@@ -9,7 +9,7 @@
         </router-link>
       </div>
       <div class="menu">
-        <router-link to="/lobby">Baccarat Lobby</router-link>
+        <router-link to="/baccarat/">Baccarat Lobby</router-link>
         <!-- <router-link to="#bouns">Bonus</router-link> -->
 				<a @click="()=>{this.bonus_open = true}">Bonus</a>
         <router-link to="#freecpu">Free CPU</router-link>
@@ -41,6 +41,7 @@ import { mapState, mapGetters, mapActions } from "vuex";
 // import ScatterEOS from 'scatterjs-plugin-eosjs'
 //import Eos from 'eosjs'
 // ScatterJS.plugins( new ScatterEOS() );
+import Vue from 'vue';
 import Credit from "@/components/Credit.vue";
 import Bonus from "@/components/Bonus.vue";
 
@@ -94,14 +95,23 @@ export default {
     ...mapState(["open_scatter_error"]),
     ...mapGetters({
       eosAccount: "getEosAccount",
-      scatter: "getScatter",
+      //scatter: "getScatter",
       network: "getNetwork",
       game_connected: "getGameConnected",
       Eos: "getEos"
     })
   },
   mounted() {
+    
+    document.addEventListener('scatterLoaded', () => {
+      console.log(window.scatter)
+      //this.scatter = window.scatter;
+      //window.scatter = null;
+      //this.connectScatter();
+    });
+
     this.connectScatter();
+    
     window.hh = this;
   },
   methods: {
@@ -120,16 +130,18 @@ export default {
       this.tosvr.set_scatter_identity("");
     },
     async proc_getIdentity(e) {
-      console.log(e, typeof e);
+      let scatter = this.scatter;
+      if(window.scatter){
+        scatter = window.scatter;
+      }
       const result = await this.connectScatter();
-      if (!result) {
-        return;
-      }
+      if (!result) return;      
 
-      if (!this.scatter.suggestNetwork) {
+      if (!scatter.suggestNetwork) {
         return;
       }
-      await this.scatter
+      
+      await scatter
         .suggestNetwork(this.network)
         .then(() => {
           console.log("sugggestNetwork: Succ2!");
@@ -140,7 +152,7 @@ export default {
           return;
         });
 
-      await this.scatter
+      await scatter
         .getIdentity({ accounts: [this.network] })
         .then(identity => {
           console.log(identity);
@@ -162,11 +174,16 @@ export default {
       //console.log(this.scatter.identity);
     },
     async connectScatter() {
-      const connectionOptions = { initTimeout: 1300 };
-      const connected = await this.scatter.connect(
-        "game-eosbaccarat3",
-        connectionOptions
-      );
+      let connected = false;
+      try{
+        const connectionOptions = { initTimeout: 1300 };
+        connected = await this.scatter.connect(
+          "game-eosbaccarat3",
+          connectionOptions
+        );
+      }catch(e){
+        console.log(e);
+      }
 
       if (!connected) {
         console.log("Could not connect to Scatter.");
@@ -208,8 +225,9 @@ export default {
   font-family: Montserrat;
 }
 #header_wrap {
-  padding: 0 9.1%;
+  padding: 0 10px;
   position: relative;
+  max-width:1920px;
   #nav {
     background-color: #000000;
     display: flex;

@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import ScatterJS from 'scatterjs-core'
+
 import ScatterEOS from 'scatterjs-plugin-eosjs'
 import Eos from 'eosjs';
 
@@ -17,6 +18,7 @@ const network = ScatterJS.Network.fromJson({
 });
 
 Object.defineProperty(Vue.prototype, '$eos', { value: ScatterJS.scatter.eos(network, Eos) });
+Vue.prototype.scatter = ScatterJS.scatter
 
 Vue.use(Vuex)
 
@@ -33,6 +35,7 @@ export default new Vuex.Store({
     game_connected: false,
     open_scatter_error: false,
     room_id: null,
+    game_loaded: false,
   },
   getters: {
     'getEosAccount': state => state.eosAccount,
@@ -41,9 +44,12 @@ export default new Vuex.Store({
     'getCredit': state => state.credit,
     'getEos': state => state.eos,
     'getGameConnected': state => state.game_connected,
-    'getRoomId': state => state.room_id,
+    'getRoomId': state => state.room_id,    
   },
   mutations: {
+    SET_GAME_LOADED(state, payload){
+      state.game_loaded = payload
+    },
     SET_OPEN_SCATTER_ERROR(state, payload){
       state.open_scatter_error = payload;
     },
