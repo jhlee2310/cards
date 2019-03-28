@@ -47,7 +47,8 @@ export default {
       },
       saved_my_bet:[],
       room_detail: null,
-      timer: '',
+			timer: '',
+			room_bead: '',
     }
   },
   methods: {
@@ -56,7 +57,7 @@ export default {
       'SET_ROOM_ID',
     ]),
     proc_room_detail(data, oldData){
-      console.log(data)
+      //console.log(data)
       this.game_status.round = data.round
       switch(data.state){
         case "betting":
@@ -79,6 +80,10 @@ export default {
       const _height = _width * 0.36
       this.SET_WINDOW_RESOLUTION([_width,_height])
       this.$game.onResize(e)
+    },
+    roundInit(){
+      this.game_status.round = 1
+      this.$refs.board.setInit()
     },
   },
   computed: {
@@ -121,15 +126,47 @@ export default {
   },
   mounted(){
     if (this.$route.meta.req_enter) this.enterRoom();
-    this.eBus.$on('socket', data => {      
+    this.eBus.$on('socket', data => {
+			//console.log("data",data)
       switch(data.type){
         case "welcome":
           console.log('방에입장')
           this.enterRoom();
-        break;
+          break;
         case "room_detail":        
           this.room_detail = data
-        break;
+					break;
+				case 'room_bead':
+          if(this.room_id==data.room_id){
+            this.room_bead = data
+          }
+
+          break;
+        case 'room_state':
+          /**
+           * http://192.168.0.7:8081/issues/1126 참조
+           * prepare_game	게임 준비중. 카드슈를 준비하는 상태
+              prepare_game::chain	게임 정보를 체인에 동기화. 클라입장에서는 prepare_game와 같다.
+              prepare_round	라운드를 준비하는 상태
+              prepare_round::chain	라운드 정보를 체인에 동기화. 클라입장에서는 prepare_round와 같다.
+              betting	배팅 가능 상태
+              betting::chain	배팅정보를 체인에 동기화.
+              dealing	카드 오픈
+              dealing::chain	카드 오픈 및 돈분배를 체인에 동기화
+          */
+          switch(data.state){
+						case 'betting':
+              this.$set(this.game_status,'round', data.round)
+              break;
+            case 'prepare_round':
+              if(data.round != 0)
+                this.$refs.board.nextRound(this.room_bead)
+              break;
+            case 'prepare_game':
+              this.roundInit()
+              break;
+          }
+         break;
       }
     })
   
