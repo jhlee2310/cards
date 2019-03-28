@@ -42,7 +42,7 @@
           <div v-if="!lobby" class="rectanges" style="margin-right:4px;float:left;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
             <div class="col" v-for="(count, i) in winners" :style="{
                 position:'absolute',
-                height:'100%',
+                height:'20px',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -78,7 +78,7 @@
                 }" :key="`col${i}`"/>
             </svg>
           </div>          
-          <div v-dragscroll.x='true' class="rectanges" :style="{
+          <div ref="bigRoadDiv" id="bigRoadDiv" v-dragscroll.x='true' class="rectanges" :style="{
               'margin-right':'4px',
               'float':'left',
               'cursor': 'grab',
@@ -91,7 +91,7 @@
             }">
             <div class="col" v-for="(count, i) in bigRoad" :style="{
                 position:'absolute',
-                height:'100%',
+                height:'20px',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -134,7 +134,7 @@
           <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:600px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;display:inline;float:left;">
             <div class="col" v-for="(count, i) in bigEyeRoad" :style="{
                 position:'absolute',
-                height:'100%',
+                height:'20px',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -162,7 +162,7 @@
           <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;float:left;">
             <div class="col" v-for="(count, i) in smallRoad" :style="{
                 position:'absolute',
-                height:'100%',
+                height:'20px',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -190,7 +190,7 @@
           <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;">
             <div class="col" v-for="(count, i) in cockroahRoad" :style="{
                 position:'absolute',
-                height:'100%',
+                height:'20px',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -431,8 +431,22 @@ export default {
           )
         }
         this.tempBigRoad = road
-      })
-      return road
+			})
+
+			const lastRoad = _.last(road)
+			if(lastRoad && !this.lobby){
+				//console.log("lastRoad",lastRoad.left)
+				if(lastRoad.left > 200){
+					this.$nextTick(()=> {
+						var bigroad = this.$el.querySelector("#bigRoadDiv");
+						bigroad.scrollLeft = lastRoad.left-200
+					})
+				}
+			}
+			console.log(this.$refs)
+			//console.log(this.$refs.bigRoadDiv)
+			
+			return road
     },
     //중국점1
     bigEyeRoad: function () {
@@ -443,7 +457,7 @@ export default {
           _.last(bigEyeRoad).prdt =true
         }
       }
-
+			
       return bigEyeRoad
     },
     //중국점2
