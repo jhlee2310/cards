@@ -436,85 +436,7 @@ export default {
     },
     //중국점1
     bigEyeRoad: function () {
-      const bigEyeRoad = []
-
-      let left = 0
-      let top = 0
-      let winning = 1
-      let last = null
-      
-      let road = this.roads
-
-      if(this.mouseOverValue=='P'){
-        road = this.pPrdtRoad
-      }else if(this.mouseOverValue=='B'){
-        road = this.bPrdtRoad
-      }
-
-      road.forEach((data,idx) => {
-        road[idx].forEach((row,j)=>{
-
-          const res = {
-            top: 0,
-            left: 0,
-            result: false,
-            prdt: false
-          }
-
-          if(idx==1){
-            if(data.length >= 2){
-              if(j >= 1){
-                const cols =road[idx-1]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-              }
-            }
-          }else if(idx>1){
-            if(j==0){
-              if(road[idx-1].length==road[idx-2].length)
-                res.result = true
-            }else{
-              const cols =road[idx-1]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-            }
-          }
-          if(idx>1|| (idx==1&&j>=1)){
-            if(last== null){
-            }else if(last==res.result){
-              if(winning >= 6){
-                left = left+10
-              }else{
-                top = top+10
-              }
-              winning++
-            }else{
-              if(winning>6){
-                let cnt = 0
-                cnt = (winning - 6)*10
-                if(cnt != 0){
-                  left = left-cnt+10
-                }else{
-                  left = left+10                  
-                }
-              }else{
-                left = left+10
-              }
-              top = 0
-              //this.eyeLeft = this.eyeLeft+10
-              winning =1
-            }
-            res.top = top
-            res.left = left
-
-            last = res.result
-            
-            bigEyeRoad.push(res)
-          }
-        })
-      })
+      const bigEyeRoad = this.calcBoard(1)
 
       if(this.mouseOverValue!=''){
         if(bigEyeRoad.length > 0){
@@ -526,85 +448,7 @@ export default {
     },
     //중국점2
     smallRoad: function () {
-      const smallRoad = []
-
-      let left = 0
-      let top = 0
-      let winning = 1
-      let last = null
-
-      let road = this.roads
-
-      if(this.mouseOverValue=='P'){
-        road = this.pPrdtRoad
-      }else if(this.mouseOverValue=='B'){
-        road = this.bPrdtRoad
-      }
-
-      road.forEach((data,idx) => {
-        road[idx].forEach((row,j)=>{
-
-          const res = {
-            top: 0,
-            left: 0,
-            result: false,
-            prdt: false
-          }
-
-          if(idx==2){
-            if(data.length >= 2){
-              if(j >= 1){
-                const cols =road[idx-2]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-              }
-            } 
-          }else if(idx>2){
-            if(j==0){
-              if(road[idx-1].length==road[idx-3].length)
-                res.result = true
-            }else{
-              const cols =road[idx-2]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-            }
-          }
-          if(idx>2|| (idx==2&&j>=1)){
-            if(last== null){
-            }else if(last==res.result){
-              if(winning >= 6){
-                left = left+10
-              }else{
-                top = top+10
-              }
-              winning++
-            }else{
-              if(winning>6){
-                let cnt = 0
-                cnt = (winning - 6)*10
-                if(cnt != 0){
-                  left = left-cnt+10
-                }else{
-                  left = left+10                  
-                }
-              }else{
-                left = left+10
-              }
-              top = 0
-              //this.eyeLeft = this.eyeLeft+10
-              winning =1
-            }
-            res.top = top
-            res.left = left
-
-            last = res.result
-            
-            smallRoad.push(res)
-          }
-        })
-      })
+			const smallRoad = this.calcBoard(2)
 
       if(this.mouseOverValue!=''){
         if(smallRoad.length > 0) {
@@ -616,84 +460,7 @@ export default {
     },
     //중국점3
     cockroahRoad: function () {
-      const cockroahRoad = []
-
-      let left = 0
-      let top = 0
-      let winning = 1
-      let last = null
-
-      let road = this.roads
-
-      if(this.mouseOverValue=='P'){
-        road = this.pPrdtRoad
-      }else if(this.mouseOverValue=='B'){
-        road = this.bPrdtRoad
-      }
-
-      road.forEach((data,idx) => {
-        road[idx].forEach((row,j)=>{
-
-          const res = {
-            top: 0,
-            left: 0,
-            result: false,
-            prdt: false,
-          }
-
-          if(idx==3){
-            if(data.length >= 2){
-              if(j >= 1){
-                const cols =road[idx-3]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-              }
-            } 
-          }else if(idx>3){
-            if(j==0){
-              if(road[idx-1].length==road[idx-4].length)
-                res.result = true
-            }else{
-              const cols =road[idx-3]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-            }
-          }
-          if(idx>3|| (idx==3&&j>=1)){
-            if(last== null){
-            }else if(last==res.result){
-              if(winning >= 6){
-                left = left+10
-              }else{
-                top = top+10
-              }
-              winning++
-            }else{
-              if(winning>6){
-                let cnt = 0
-                cnt = (winning - 6)*10
-                if(cnt != 0){
-                  left = left-cnt+10
-                }else{
-                  left = left+10                  
-                }
-              }else{
-                left = left+10
-              }
-              top = 0
-              winning =1
-            }
-            res.top = top
-            res.left = left
-
-            last = res.result
-            
-            cockroahRoad.push(res)
-          }
-        })
-      })
+      const cockroahRoad = this.calcBoard(3)
 
       if(this.mouseOverValue!=''){
         if(cockroahRoad.length > 0) {
@@ -809,7 +576,8 @@ export default {
           road.push(result)
         }else{
           lastCol.push(winner)
-        }
+				}
+				
   
         let idx =road.length -1
         const data = _.last(road)
@@ -886,6 +654,88 @@ export default {
     }
   },
   methods: {
+		calcBoard(gun){
+			const arrayRoad = []
+
+			let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+      
+      let road = this.roads
+
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+			}
+			
+			road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false,
+            prdt: false
+          }
+
+          if(idx==gun){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-gun]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            }
+          }else if(idx>gun){
+            if(j==0){
+              if(road[idx-1].length==road[idx-(gun+1)].length)
+                res.result = true
+            }else{
+              const cols =road[idx-gun]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>gun|| (idx==gun&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            arrayRoad.push(res)
+          }
+        })
+			})
+			
+			return arrayRoad
+		},
     viewScore(data){
       const rn = this.$_.split(data,',')
         //console.log(rn)
