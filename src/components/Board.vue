@@ -4,19 +4,19 @@
       <div v-if="show"  style="display:inline;">
         <div style="padding:10px 10px;display:flex;">
           <div class="bead-p">P</div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pWinCnt}}</div>
+          <div class="bead_cnt">{{pWinCnt}}</div>
           <div class="bead-b">B</div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bWinCnt}}</div>
+          <div class="bead_cnt">{{bWinCnt}}</div>
           <div class="bead-t">T</div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{tWinCnt}}</div>
+          <div class="bead_cnt">{{tWinCnt}}</div>
           <div class="bead-other">
             <div class="small_red"></div>
           </div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bPairCnt}}</div>
+          <div class="bead_cnt">{{bPairCnt}}</div>
           <div class="bead-other">
             <div class="small_blue"></div>
           </div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
+          <div class="bead_cnt">{{pPairCnt}}</div>
           <div v-if="!lobby" style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
             <div style="display: inline-flex;" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">
             P
@@ -1083,6 +1083,7 @@ export default {
   height: 28px;
   border-radius: 50%;
   border: 1px solid blue;
+	margin: 0 4px;
 }
 
 .bead-border-b {
@@ -1090,6 +1091,7 @@ export default {
   height: 28px;
   border-radius: 50%;
   border: 1px solid red;
+	margin: 0 4px;
 }
 
 .cockroah-true {
@@ -1101,6 +1103,7 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
+	margin-left: 4px;
 }
 
 .cockroah-false {
@@ -1112,6 +1115,7 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
+	margin-left: 4px;
 }
 
 .small_blue {
@@ -1195,6 +1199,15 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg); /* IE 9 */
   -webkit-transform: rotate(-45deg); /* Safari and Chrome */
+}
+
+.bead_cnt {
+	color: white;
+	display:flex;
+	-webkit-box-align: center;
+	-ms-flex-align: center;
+	align-items: center;
+	margin: 0 4px;
 }
 
 .blinking{
