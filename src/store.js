@@ -99,7 +99,7 @@ export default new Vuex.Store({
       commit('SET_OPEN_SCATTER_ERROR', data)
     },
     setRoomId: ({commit}, data ) => {
-      commit('setRoomId', data)
+      commit('SET_ROOM_ID', data)
     },
   }
 })
