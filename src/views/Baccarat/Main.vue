@@ -3,7 +3,8 @@
     <div>
       <router-link v-for="i in 12" :key="i" :to="`/baccarat/${i}`" tag="span" style="margin-right:5px;cursor:pointer">{{i}}</router-link>
     </div>
-    <router-view/>
+    <div v-if="!game_loaded || !isReady">NOW LOADING</div>
+    <router-view v-else/>
   </div>
 </template>
 
@@ -17,16 +18,31 @@ import TWEEN from '@tweenjs/tween.js'
 Vue.component('Board', () => import('@/components/Board.vue'));
 
 export default {
-  created(){
-    Vue.prototype.$game = new Game({TWEEN, THREE, vue: this });
+  data(){
+    return {
+      
+    }
+  },
+  created(){    
     Vue.prototype.eBus = new Vue();
+    Vue.prototype.$game = new Game({TWEEN, THREE, vue: this });
+    this.eBus.$on('socket',mes=>{
+      if(mes.type == "welcome"){
+        console.log('socket connected')
+        this.SET_WELCOME(mes.times)
+        this.SET_IS_READY(true)
+      }
+    })
+
   },
   methods:{
      ...mapMutations([
-      'SET_GAME_LOADED'
+      'SET_GAME_LOADED',
+      'SET_IS_READY',
+      'SET_WELCOME',
     ]),
   },
-  mounted(){        
+  mounted(){    
     const $socket = Vue.prototype.$socket = new WebSocket('ws://www.jh84.kr:3100')
     $socket.sendOBJ = function(mes){
       this.send(JSON.stringify(mes))
@@ -39,7 +55,7 @@ export default {
   },
   computed: {
     ...mapState([
-      'game_loaded','resolution','room_id'
+      'game_loaded','resolution','room_id', 'isReady'
     ])
   }
 }

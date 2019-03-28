@@ -130,19 +130,29 @@
       
     },
     watch: {
-      start_betting(newVal, oldVal){        
-        if(newVal == true){
+      start_betting(newVal, oldVal){
+
+        clearTimeout(this.handleTimeout);
+        // 배팅시작        
+        if(newVal === true){          
           this.modal1_on = true;
-          setTimeout(()=>{
+          this.handleTimeout = setTimeout(()=>{
             this.modal1_on = false;
             this.modal2_on = true;
           },2500)
-        }else if(newVal == false){
+
+          //배팅종료 (stop betting)
+        }else if(newVal === false){
           this.modal2_on = false;
           this.modal3_on = true;
-          setTimeout(()=>{
+          this.handleTimeout = setTimeout(()=>{
             this.modal3_on = false;
           },2000)
+
+        }else if(newVal === null){          
+          this.modal1_on = false;
+          this.modal2_on = false;
+          this.modal3_on = false;
         }
       }
     }

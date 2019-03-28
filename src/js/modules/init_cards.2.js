@@ -114,18 +114,25 @@ export default function init_cards(opt){
           //mesh.renderOrder = 999;                
           //mesh.onBeforeRender = function( renderer ) { renderer.clearDepth(); };
         }
-
-
+        
+        mesh.userData.init_position = mesh.position.clone()
+        mesh.userData.init_rotation = mesh.rotation.clone()
+        console.log(mesh.position)
         //mesh.visible = false;
 
         group.add(mesh);
-        whole_cards.push(mesh)
-
-        if (i == -1) {
-          card_groups.player = group
-        } else {
-          card_groups.banker = group
-        }
+        whole_cards.push(mesh)        
+      }
+      if (i == -1) {
+        card_groups.player = group
+        _resources_.cards.player = group.children.filter(t=>{
+          return t.userData.type == 'card'
+        })
+      } else {
+        card_groups.banker = group
+        _resources_.cards.banker = group.children.filter(t=>{
+          return t.userData.type == 'card'
+        })
       }
     }
 
@@ -169,6 +176,5 @@ export default function init_cards(opt){
       clone_mesh.rotation.copy(holder.rotation)
       card.parent.add(clone_mesh)
       card.parent.add(holder)      
-      
     })
   }

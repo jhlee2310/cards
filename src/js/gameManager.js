@@ -1,28 +1,40 @@
 import init_cards from './modules/init_cards.2.js' // 카드 세팅
 import init_betting_zone from './modules/init_betting_zone.2.js' // 배팅존 세팅
-//import pos_coins_for_bet from './modules/pos_coins_for_bet' // 배팅UI
-//import cards_animations from './modules/cards_animations' // 카드애니메이션
-//import init_betted_coin from './modules/init_betted_coin.js' // 배팅된 코인
-//import bet_others from './modules/bet_others' // 다른유저 배팅
-import Texts from './modules/Texts.js' // 3dTexts
+import cards_animations from './modules/cards_animations.2.js' // 카드애니메이션
+import init_betted_coin from './modules/init_betted_coin.js' // 배팅된 코인
+import bet_others from './modules/bet_others' // 다른유저 배팅
+import Texts from './modules/Texts.2.js' // 3dTexts
 const e = function (opt) {
-  const { vue, TWEEN, THREE } = opt  
-  const textureLoader = new THREE.TextureLoader();
+  const { vue, TWEEN, THREE } = opt
+  this.THREE = THREE;
+  this.vue = vue;
+  this.TWEEN = TWEEN;
+
+  const textureLoader = new THREE.TextureLoader();  
   const fontLoader = new THREE.FontLoader();
 
   let camera, scene, renderer;
-  const _resources_ = this._resources_ = {    
+  const _resources_ = this._resources_ = {
+    winners: {
+
+    },
     card_groups: {},
+    cards:{
+      player:[],
+      banker:[],
+    },
     fonts: {},
     textures: {
       betting_zone: null,
       chips: [],
       shadow: null,
       cards: {
+        front: {},
         back: null,
       }
     },    
-    geometry: {},    
+    geometry: {},
+    textureLoader
   };
 
   this.betZones = [];
@@ -36,8 +48,8 @@ const e = function (opt) {
   
   let _s = Date.now()
   init.bind(this)();
-  loadResource(_resources_).then( () => {
-    console.log(`loading Time :: ${Date.now() - _s}`);
+  
+  loadResource(_resources_).then( () => {    
     init_table.bind(this)();
     init_cards.bind(this)({
       THREE, _resources_, scene
@@ -46,9 +58,60 @@ const e = function (opt) {
       scene, vue, _resources_, THREE, resizeUpdate, forIntersect
     });
     init_labels.bind(this)();    
+    init_winner_effect.bind(this)({
+      camera, scene, THREE, _resources_
+    });
+    this.animateCards = new cards_animations(this)
+    init_functions.bind(this)();
 
+    console.log(`loading Time :: ${Date.now() - _s}`);
     vue.SET_GAME_LOADED(true)
+    
+    
   })
+
+  function init_functions(){
+    // 방입장시 빠른 딜 전개 초기화
+    this.init_before_detail = () => {
+      const $R = _resources_
+      const whole_cards = [...$R.cards.player,...$R.cards.banker];
+      whole_cards.forEach( (t, i) => {
+        t.visible = false;
+        t.position.copy(t.userData.init_position);
+        t.rotation.copy(t.userData.init_rotation);
+      })      
+    };
+
+    // 방입장시 빠른 딜 전개
+    this.restoreDeal = (data) => {
+      console.log('게임카드 복구')
+      const $R = _resources_;  
+      [ data.player.cards, data.banker.cards ].forEach( (group, g)=>{
+        group.forEach( (d, i) => {
+          let c = g == 0 ? $R.cards.player[i] : $R.cards.banker[i];
+          //재질
+          let texture = `${d.suit}${d.number}`.toLowerCase()
+          texture = $R.textures.cards.front[texture];        
+          c.material[0].map = texture
+          c.material[0].needsUpdate = true;
+          
+          if(i<2){
+            c.rotation.set(0,0,0)
+            c.position.x = c.position.x - 8
+          }else{
+            c.rotation.x = 0
+            c.position.y = c.position.y - 8
+          }
+          c.visible = true;
+        })
+      })   
+    };
+    this.bet_others = (message) => {      
+      this.vue_room.bet_info = this.vue_room.bet_info.concat(message)
+      bet_others.bind(this)(message, this.betZones)
+    }
+    
+  }
 
   function loadResource(R){    
     return Promise.all([
@@ -110,6 +173,21 @@ const e = function (opt) {
       ).then(()=>{
         console.log('All chip Textures Loaded');
       }),
+      Promise.all( (() => {
+        const array = [];
+        for (let symbol of ['s','d','h','c']){
+          for (let val of [2,3,4,5,6,7,8,9,10,'j','q','k','a']){
+            array.push( new Promise( r => {
+              textureLoader.load( require(`@/images/cards/${symbol}${(val)}.png` ), texture => {
+                texture.minFilter = texture.magFilter = THREE.LinearFilter;
+                R.textures.cards.front[`${symbol}${(val)}`] = texture
+                r();
+              })
+            }))
+          }
+        }
+        return array;
+      })() )
     ])
   }
 
@@ -154,6 +232,10 @@ const e = function (opt) {
     }
   }
 
+  function init_winner_effect(opt){
+    Texts(opt);
+  }
+
   function init_table(){
     let table = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
       color: 0xffffff,
@@ -161,6 +243,8 @@ const e = function (opt) {
     }))    
 
     let table_group = new THREE.Group();
+    this.table_group = table_group;
+
     table_group.position.copy(camera.target)
     table_group.lookAt(camera.position)
     table_group.add(table)
