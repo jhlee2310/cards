@@ -14,8 +14,12 @@ import { mapState, mapGetters, mapActions, mapMutations} from 'vuex'
 import * as THREE from 'three-full'
 import Game from '@/js/gameManager.js'
 import TWEEN from '@tweenjs/tween.js'
-//import w from '../../../public/test.js'
-import xxx from '@/js/qqq.js'
+//const wb = require.resolve('../../../public/test.js')
+import abc from '@/js/qqq.js'
+import load from 'load-script'
+
+load('/test.js')
+
 Vue.component('Board', () => import('@/components/Board.vue'));
 
 export default {
@@ -88,6 +92,7 @@ export default {
     }
   },
   mounted(){    
+    
     const $socket = Vue.prototype.$socket = new WebSocket('ws://www.jh84.kr:3100')
     $socket.sendOBJ = function(mes){
       this.send(JSON.stringify(mes))
