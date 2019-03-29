@@ -14,7 +14,8 @@ import { mapState, mapGetters, mapActions, mapMutations} from 'vuex'
 import * as THREE from 'three-full'
 import Game from '@/js/gameManager.js'
 import TWEEN from '@tweenjs/tween.js'
-import w from '../../../public/test.js'
+//import w from '../../../public/test.js'
+import xxx from '@/js/qqq.js'
 Vue.component('Board', () => import('@/components/Board.vue'));
 
 export default {
@@ -37,10 +38,11 @@ export default {
         this.eBus.$emit('worker', mes.data )
       };
     }else{
-      // worker를 가동하지 않을경우
+      // worker를 가동하지 않을경우      
       this.$worker_self = new (function(){
-        this.postMessage = (mes) => {
-          w(mes, that)
+        this.handleTimeout = {}
+        this.postMessage = function(mes){
+          w.bind(this)(mes, that)
         };
       })();
     }
@@ -63,6 +65,9 @@ export default {
     this.eBus.$on('toWorker', mes=>{
       switch(mes.type){
         case "start_bet_timer":
+          worker.postMessage(mes)
+        break;
+        case "start_cards_animation":
           worker.postMessage(mes)
         break;
       }
@@ -95,7 +100,7 @@ export default {
   },
   computed: {
     ...mapState([
-      'game_loaded','resolution','room_id', 'isReady'
+      'game_loaded','resolution','room_id', 'isReady', 'welcome'
     ])
   }
 }

@@ -236,18 +236,31 @@ export default {
         break;
         case "betting::chain":
         break;
-        case "dealing": case "dealing::chain":
+        case "dealing":
           this.score = {
             player: data.deal.player.score,
             banker: data.deal.banker.score,
             show: true
           }
-          this.$game.restoreDeal(data.deal);
+          this.$game.restoreDeal(data.deal); // 그래픽 복원
           // 배팅관련
           //"bettings": { "eosblackkiko": { "0": { "EOS": "0.1000" }, "1": { "EOS": "0.2000" }, "2": { "EOS": "0.2000" } } } }
           // type: "room_betting", acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"
           //this.bet_info = {acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"}
-          this.restore_bettings(data.betting);
+          this.restore_bettings(data.betting); // 데이터 복원
+        break;
+        case "dealing::chain":
+          this.score = {
+            player: data.deal.player.score,
+            banker: data.deal.banker.score,
+            show: true
+          }
+          this.$game.restoreDeal(data.deal); // 그래픽 복원
+          // 배팅관련
+          //"bettings": { "eosblackkiko": { "0": { "EOS": "0.1000" }, "1": { "EOS": "0.2000" }, "2": { "EOS": "0.2000" } } } }
+          // type: "room_betting", acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"
+          //this.bet_info = {acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"}
+          this.restore_bettings(data.betting); // 데이터 복원
         break;
       }
     },
@@ -387,6 +400,12 @@ export default {
               document.body.style.cursor = "default";
               //나의 배팅정보를 기록함
               this.save_my_bet();
+              break;
+            case 'dealing':
+              //alert('animation start')
+              this.eBus.$emit('toWorker', {
+                type: 'start_cards_animation'
+              })
               break;
             case 'prepare_round':
               if(data.round != 0)
