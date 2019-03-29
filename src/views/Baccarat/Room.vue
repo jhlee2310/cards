@@ -1,11 +1,13 @@
 <template>
   <div ref="room_root">
-    <div>{{room_detail}}{{game_loaded}} {{resolution}}</div>
+    <div>{{game_loaded}} {{resolution}}</div>
     <div id="cont_3d" ref="cont_3d" :style="{
       width: resolution.width + 'px',
       height: resolution.height + 'px',
       position: 'relative',
     }">
+      <!--debug-->
+      <div class="debug_status" style="position:absolute;top:4.5%;left:50%;color:#00FF00" :style="tableNumStyle">{{game_status.status}}</div>
       <!--Room Number -->
       <div class="table-number" :style="tableNumStyle">
         <span>TABLE</span><span style="margin-left:20px;">{{room_id}}</span>
@@ -16,8 +18,9 @@
       </div>
       <!--modal-->
       <Modal :timer="timer" :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id" :game="$game"/>
+      
       <!--timer-->
-      <div :class="timer < 4?'timer active':'timer'" v-show="game_status.betting" ref="timer" :style="timerStyle">{{timer}}</div>
+      <div :class="timer < 4?'timer active':'timer'" v-show="game_status.betting && timer " ref="timer" :style="timerStyle">{{timer}}</div>
 
       <!--NameTags-->
       <NameTags :coin_groups="coin_group_labels" :resolution="resolution"/>
@@ -43,7 +46,17 @@
             <span>{{data.symbol}}</span>
           </div>
         </div>
-      </div>      
+      </div>
+
+      <!-- bet_info_total -->
+      <div class="bet_info_total">        
+        <div><span>PLAYER</span><span>{{bet_info_total[0]}}</span></div>
+        <div><span>BANKER</span><span>{{bet_info_total[1]}}</span></div>
+        <div><span>TIE</span><span>{{bet_info_total[2]}}</span></div>
+        <div><span>P.PAIR</span><span>{{bet_info_total[3]}}</span></div>
+        <div><span>B.PAIR</span><span>{{bet_info_total[4]}}</span></div>
+      </div>
+       
       
     </div>
     <!-- bottom_ui -->
@@ -77,6 +90,7 @@ export default {
         show: false,
       },
       game_status: {
+        status: '',
         betting: null,
         bet_start: null,
         table:0,
@@ -97,6 +111,18 @@ export default {
       'SET_WINDOW_RESOLUTION',
       'SET_ROOM_ID',
     ]),
+    save_my_bet(){
+      if(this.eosAccount && this.eosAccount.name){
+        if(!this.my_bet_info.sum){
+          console.log('배팅금액이 없으므로 저장안함')
+          return;
+        }          
+        this.saved_my_bet = {
+          array: this.my_bet_info.array.slice(),
+          sum: this.my_bet_info.sum,
+        }
+      }
+    },
     classBtoA(index){
       switch(index){
         case 0:
@@ -146,10 +172,10 @@ export default {
        {slot:1,acc_name:"oke555",value:7, symbol: "EOS"},
        {slot:2,acc_name:"oranke2",value:49, symbol: "EOS"},
        {slot:0,acc_name:"oranke",value:0.4, symbol: "EOS"},
-       {slot:0,acc_name:"oranke",value:10, symbol: "EOS"},
-       {slot:0,acc_name:"oranke",value:12, symbol: "EOS"},
-       {slot:0,acc_name:"oranke",value:112.8, symbol: "EOS"},
-       {slot:0,acc_name:"oranke",value:12.4, symbol: "EOS"},
+       {slot:0,acc_name:"oranke888",value:10, symbol: "EOS"},
+       {slot:3,acc_name:"oranke96",value:12, symbol: "EOS"},
+       {slot:0,acc_name:"orank419e",value:112.8, symbol: "EOS"},
+       {slot:4,acc_name:"244oranke",value:12.4, symbol: "EOS"},
       ];      
 
       (async function(){        
@@ -176,20 +202,25 @@ export default {
       this.$game.clear_bet_coins();
       this.bet_info = [];
       this.coin_group_labels = [];
+      this.game_status.status = '';
     },
     proc_room_detail(data, oldData){      
       //console.log(data)
       window.dispatchEvent(new Event('resize'))
       this.init_before_detail()      
       this.game_status.round = data.round
+      this.game_status.status = data.state;
       switch(data.state){
         case "betting":
-
-          let time = this.welcome.betting - data.stateTick;
-          let extra = time % 1000
-          this.timer = ((time - extra) / 1000) + 1
-          
-
+          let time = data.stateTick;
+          this.eBus.$emit('toWorker',{
+            type: 'start_bet_timer',
+            time: time,
+          });
+          this.game_status.betting = -1;
+          //let extra = time % 1000
+          //this.timer = ((time - extra) / 1000) + 1          
+          /*
           this.handleTimeout1 = setTimeout(()=>{
             this.game_status.betting = true;
             const d = () => {
@@ -199,6 +230,7 @@ export default {
             }
             d();            
           },extra)          
+          */
 
           this.restore_bettings(data.betting);
         break;
@@ -240,6 +272,20 @@ export default {
     ...mapState([
       'game_loaded', 'resolution', 'welcome'
     ]),
+    bet_info_total(){
+      const obj = [0,0,0,0,0];
+      const aTob = index => {
+        let slots = [2,0,1,3,4];
+        return slots[index]
+      }
+      this.bet_info.forEach( (t, i)=>{
+        let s = aTob(t.slot);
+        obj[s] = +obj[s] + parseFloat(t.value);
+        obj[s] = parseFloat(obj[s]).toFixed(1);
+      })      
+      return obj;
+    },
+    
     timerStyle(){
       let scaleFactor = this.resolution.width / 1320
       return {
@@ -286,7 +332,7 @@ export default {
   async mounted(){
     this.$game.vue_room = this;
     this.eBus.$on('socket', data => {
-			console.log("data",data)
+			//console.log("data",data)
       switch(data.type){
         case "welcome":          
           break;
@@ -299,6 +345,7 @@ export default {
           }
           break;
         case 'room_state':
+          this.game_status.status = data.state;
           /**
            * http://192.168.0.7:8081/issues/1126 참조
            * prepare_game	게임 준비중. 카드슈를 준비하는 상태
@@ -312,7 +359,34 @@ export default {
           */
           switch(data.state){
 						case 'betting':
-              this.$set(this.game_status,'round', data.round)
+              this.$set(this.game_status,'round', data.round)              
+              this.eBus.$emit('toWorker',{
+                type: 'start_bet_timer',
+                time: 0,
+              })
+              this.game_status.betting = true;
+
+              /*
+              new TWEEN.Tween({ y: 0 })
+              .to({y: -1}, 20000)
+              .onUpdate(a => {
+                this.bet_info_style = {
+                  transform: `translate(0px, ${a.y*1000}px)`
+                }
+              })
+              .onComplete(() => {})
+              .start()*/
+              break;
+            case 'betting::chain':
+              this.game_status.betting = false;
+              //this.game_status.bet_start = false;            
+              //색상 복원
+              this.$game.restoreColor();
+              this.$game.clearSelectedObject();
+              //커서 복원
+              document.body.style.cursor = "default";
+              //나의 배팅정보를 기록함
+              this.save_my_bet();
               break;
             case 'prepare_round':
               if(data.round != 0)
@@ -322,9 +396,13 @@ export default {
               this.roundInit()
               break;
           }
-         break;
+        break;        
       }
     })
+
+    this.eBus.$on('worker', data => {
+      this.timer = data.value
+    });
 
     this.$refs.cont_3d.appendChild( this.$game.renderer.domElement )
     this.enterRoom();
@@ -369,6 +447,21 @@ export default {
 </script>
 
 <style lang="scss">
+  @mixin bet-info{
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    display: inline-flex;  
+    color:white;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+  }
+
   #cont_3d{
     .bet_info{
       font-size:13px;
@@ -379,7 +472,77 @@ export default {
       height:500px;  
       color:yellow;
       overflow:hidden;  
-      -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)))
+      -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
+      .bet_info_item{
+        margin-bottom:5px;
+        margin-left:5px;
+        text-align:left;
+        &>span{
+          margin-right:8px;
+        }
+        .beadRoad-b {
+          @include bet-info;
+          background-color: red;
+          &::after{
+            content:"B";
+          }
+          .is-pair{
+            display:none;
+            position:absolute;
+          }
+          &.pair{
+            background-color:#cccccc;
+            color:#cccccc;    
+            .is-pair{
+              display:block;
+              top:0;
+              left:0;
+              width:6px;
+              height:6px;
+              background-color:red;
+              border-radius:50%;
+            }
+          }
+          
+
+        }
+        .beadRoad-p {
+          @include bet-info;
+          background-color: blue;
+          &::after{
+            content:"P";
+          }
+          &.pair{
+            background-color:#cccccc;
+            color:#cccccc;    
+            .is-pair{
+              display:block;
+              bottom:0;
+              right:0;
+              width:6px;
+              height:6px;
+              background-color:blue;
+              border-radius:50%;
+            }
+          }
+          .is-pair{
+            display:none;
+            position:absolute;
+          }
+        }
+        .beadRoad-t {
+          @include bet-info;
+          background-color: green; 
+          &::after{
+            content:"T";
+          }
+          .is-pair{
+            display:none;
+          }
+          //margin: 1px;
+          //font-size:10px;
+        }
+      }
     }
 
     .bet_info_wrap{  
@@ -435,6 +598,23 @@ export default {
       }
       &.banker{
         left:60.5%;
+      }
+    }
+
+    .bet_info_total{
+      color:yellow;
+      position:absolute;
+      top:10px;
+      right:0;
+      width:200px;
+      &>div>span{
+        display:inline-block;
+        text-align:right;
+        width:40%;
+        margin-right:10px;
+        &:nth-child(1){
+          width:50%;
+        }
       }
     }
   }

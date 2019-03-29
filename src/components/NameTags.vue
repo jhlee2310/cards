@@ -44,5 +44,7 @@ export default {
     position:absolute;
     text-shadow: 1px 1px 6px rgba(0,0,0,.5);
     color:#07ff05;
+    background-color:rgba(0,0,0,.6);
+    padding:2px;
   }
 </style>

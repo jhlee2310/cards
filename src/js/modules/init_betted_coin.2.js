@@ -67,10 +67,14 @@ export default function(){
     let map = _resources_.textures.chips[index]
     let mesh = new THREE.Mesh( geo, [
       new THREE.MeshPhongMaterial({
-        map: map
+        map: map,
+        shininess: 80
+
       }),
       new THREE.MeshPhongMaterial({
-        map: map
+        map: map,
+        shininess: 80
+
       }),
     ]);
     

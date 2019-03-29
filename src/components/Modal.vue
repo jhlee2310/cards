@@ -35,6 +35,7 @@
           position:'absolute',
           top:'50%',
           left:'50%',
+          maxWidth: this.resolution.width + 'px',
           width:'460px',
           height:'220px',
           transform: `translate(-50%,-50%)`,
@@ -131,7 +132,6 @@
     },
     watch: {
       start_betting(newVal, oldVal){
-
         clearTimeout(this.handleTimeout);
         // 배팅시작        
         if(newVal === true){          
@@ -153,6 +153,9 @@
           this.modal1_on = false;
           this.modal2_on = false;
           this.modal3_on = false;
+        }else if(newVal === -1){
+          this.modal1_on = false;
+          this.modal2_on = true;
         }
       }
     }

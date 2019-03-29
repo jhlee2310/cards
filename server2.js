@@ -7,6 +7,6 @@ app = express();
 
 app.use(history())
 app.use(staticFileMiddleware)
-app.listen(7000)
+app.listen(7001)
 
 console.log('server started '+ 7000);

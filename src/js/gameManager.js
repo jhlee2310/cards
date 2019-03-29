@@ -47,6 +47,9 @@ const e = function (opt) {
   const resizeUpdate = {
     matLines: [],
   }
+
+  //raycasting 결과가 담기는 변수
+  let selectedObject = null
   
   let _s = Date.now()
   init.bind(this)();
@@ -159,6 +162,14 @@ const e = function (opt) {
           }
         })
       })
+    };
+    this.restoreColor = () => {
+      this.betZones.forEach(t=>{
+        t.parent.userData.restoreRGB();
+      })
+    };
+    this.clearSelectedObject = ()=>{
+      selectedObject = null;
     }
   }
 

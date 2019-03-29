@@ -67,7 +67,9 @@ export default function init_cards(opt){
     // 카드 재질 정의
     const card_mat = {
       front: new THREE.MeshPhongMaterial({
-        color: 0xffffff
+        color: 0xffffff,
+        polygonOffset: true,
+        polygonOffsetFactor: 0.3,
       }),
       middle: new THREE.MeshBasicMaterial({
         color: 0x777777, side: THREE.BackSide
