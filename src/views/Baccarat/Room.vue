@@ -17,7 +17,7 @@
       <!--modal-->
       <Modal :timer="timer" :start_betting="game_status.betting" :my_bet_info="my_bet_info" :room_id="room_id" :game="$game"/>
       <!--timer-->
-      <div class="timer" v-show="game_status.betting" ref="timer" :style="timerStyle">{{timer}}</div>
+      <div :class="timer < 4?'timer active':'timer'" v-show="game_status.betting" ref="timer" :style="timerStyle">{{timer}}</div>
 
       <!--NameTags-->
       <NameTags :coin_groups="coin_group_labels" :resolution="resolution"/>
@@ -416,6 +416,11 @@ export default {
       border:3px solid #fff;
       box-sizing:border-box;
       border-radius:50%;
+			&.active {
+				animation: ani 1s infinite;
+				color: red;
+				border-color: red;
+			}
     }
     .score{
       position:absolute;
@@ -433,4 +438,17 @@ export default {
       }
     }
   }
+	@keyframes ani {
+		from {
+			font-size: 36px;
+			width:76px;
+      height:76px;
+		}
+		to {
+			font-size: 80px;
+			width:100px;
+      height:100px;
+		}
+	}
+
 </style>
