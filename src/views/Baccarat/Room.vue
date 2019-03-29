@@ -440,14 +440,14 @@ export default {
   }
 	@keyframes ani {
 		from {
+			font-size: 24px;
+			width:45px;
+      height:45px;
+		}
+		to {
 			font-size: 36px;
 			width:76px;
       height:76px;
-		}
-		to {
-			font-size: 80px;
-			width:100px;
-      height:100px;
 		}
 	}
 
