@@ -1,8 +1,8 @@
 import init_cards from './modules/init_cards.2.js' // 카드 세팅
 import init_betting_zone from './modules/init_betting_zone.2.js' // 배팅존 세팅
 import cards_animations from './modules/cards_animations.2.js' // 카드애니메이션
-import init_betted_coin from './modules/init_betted_coin.js' // 배팅된 코인
-import bet_others from './modules/bet_others' // 다른유저 배팅
+import init_betted_coin from './modules/init_betted_coin.2.js' // 배팅된 코인
+//import bet_others from './modules/bet_others' // 다른유저 배팅
 import Texts from './modules/Texts.2.js' // 3dTexts
 const e = function (opt) {
   const { vue, TWEEN, THREE } = opt
@@ -38,6 +38,8 @@ const e = function (opt) {
   };
 
   this.betZones = [];
+  this.betted_coins = [];
+  this.definedZones = [];
 
   const forIntersect = this.forIntersect = {
     betting_zone: [],
@@ -62,14 +64,22 @@ const e = function (opt) {
       camera, scene, THREE, _resources_
     });
     this.animateCards = new cards_animations(this)
+    init_definedZones.bind(this)();
+    init_betted_coin.bind(this)();
     init_functions.bind(this)();
 
     console.log(`loading Time :: ${Date.now() - _s}`);
-    vue.SET_GAME_LOADED(true)
-    
-    
+    vue.SET_GAME_LOADED(true)    
   })
-
+  function init_definedZones(){    
+    for (let y = -1; y <= 1; y++) {
+      for (let x = -1; x <= 1; x++) {
+        const v = new THREE.Vector3(x, y, 0)
+        v.multiplyScalar(3.8)
+        this.definedZones.push(v)
+      }
+    }
+  }
   function init_functions(){
     // 방입장시 빠른 딜 전개 초기화
     this.init_before_detail = () => {
@@ -106,11 +116,194 @@ const e = function (opt) {
         })
       })   
     };
-    this.bet_others = (message) => {      
-      this.vue_room.bet_info = this.vue_room.bet_info.concat(message)
-      bet_others.bind(this)(message, this.betZones)
-    }
+    this.bet_others = (message) => {
+
+      this.vue_room.bet_info = this.vue_room.bet_info.concat(message)      
+      const reverseTable = [2, 1, 3, 0, 4]
+      const reverseCoin = [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000]
+      let target_index = message.slot    
+      let target = this.betZones[ reverseTable[target_index] ]
     
+      if(reverseCoin.indexOf(parseFloat(message.value)) == -1){
+        //한번에
+        do_bet_once.bind(this)(target, parseFloat(message.value), message.acc_name) // visual
+      }else{
+        //일반 코인한개씩
+        let sprite = {
+          index: reverseCoin.indexOf(parseFloat(message.value)),
+          value: parseFloat(message.value)
+        }      
+        do_bet.bind(this)(target, sprite, -1, message.acc_name) // visual
+      }
+      //bet_others.bind(this)(message, this.betZones)
+    };
+
+    this.clear_bet_coins = (name) => {
+    // 전체 철수
+      this.betZones.forEach( (zone,i)=>{
+        let parent = zone.parent
+        delete(parent.userData.zones)
+        let whole_coins = parent.children.filter( child => {
+          return child.userData.type == 'coins'
+        })
+
+        whole_coins.forEach(coins => {
+          if(typeof name == 'undefined'){
+            parent.remove(coins)
+          }else if(coins.name == name){
+            parent.remove(coins)
+            //라벨에서 해당네임 빼기
+            vue.coin_groups = vue.coin_groups.filter(t=>{              
+              return t.name != name
+            })
+          }
+        })
+      })
+    }
+  }
+
+  function do_bet(target, sprite, zone, who){    
+    
+    const { vue_room, definedZones } = this
+    let groupName = (typeof who == 'undefined') ? 'mycoins' : who
+    let coins = target.parent.getObjectByName( groupName );
+    let index = sprite.index;
+    let coin = this.betted_coins[index]     
+
+    const randomNumber = (target) => {      
+      while(1){
+        let used = [];
+        target.parent.userData.zones.map(t => {
+          used.push(t.zone)
+        })
+        let rnd =  Math.floor(Math.random() * 9)
+        if(used.indexOf(rnd) == -1) {return rnd}
+        else continue;
+      }
+    }
+
+    //새로운 그룹 생성
+    if (!coins) {
+      coins = new THREE.Group()
+      coins.name = groupName     
+
+      coins.userData.type = "coins"
+      let shadow = this.betted_coins[this.betted_coins.length - 1].clone()
+      //shadow.position.z = 0.1;
+      //shadow.renderOrder = 0.5
+      coins.add(shadow)
+      
+      if(typeof target.parent.userData.zones == 'undefined') target.parent.userData.zones = [];
+      let zz = randomNumber(target)
+      target.parent.userData.zones.push({
+        who: groupName,
+        zone: zz,
+      })      
+
+      coins.position.copy(definedZones[zz])
+      coin = coin.clone()
+      coin.position.z = 0.2
+      coins.add(coin)
+      target.parent.add(coins)
+
+        //Vue에 그룹 생성을 알림. (너무 빨리 하면 안됨)
+      setTimeout( ()=> {
+        vue_room.coin_group_labels.push({
+          name : groupName,
+          slot : target.userData.index,
+          position : coins.localToWorld( new THREE.Vector3()).project(camera),
+        })
+      },50)
+    } else {
+      coin = coin.clone()
+      coin.position.x = (Math.random() - 0.5) * 0.3
+      coin.position.y = (Math.random() - 0.5) * 0.3
+      coin.position.z = coins.children.length * 0.5
+      coins.add(coin)
+    }  
+  }
+
+  function do_bet_once(target, value, who){
+    const { definedZones, vue_room }  = this
+    let groupName = who;
+    let coins = target.parent.getObjectByName( groupName );    
+    const randomNumber = (target) => {
+      while(1){
+        let used = [];
+        target.parent.userData.zones.map(t => {
+          used.push(t.zone)
+        })
+        let rnd =  Math.floor(Math.random() * 9)
+        if(used.indexOf(rnd) == -1) {return rnd}
+        else continue;
+      }
+    }
+
+    //넣을 코인 파악하기
+    const cal_insert_coins = (value)=>{
+      
+      let result = [];
+      let sample = [0.1, 1, 10, 50, 100, 500, 1000, 5000, 100000].reverse()
+      let i = sample.length-1;
+      for( let v of sample ){
+        let div = Math.floor( +(value/v).toFixed(5) ) // 신뢰도??
+        if(div > 0){
+          result.push({
+            index: i,
+            qt: div,
+          })          
+          value = +(value % v).toFixed(4)
+        }
+        i--;
+      }
+      return result
+    }
+
+    const to_insert = cal_insert_coins(value)
+
+     //새로운 그룹 생성
+     if (!coins) {
+      coins = new THREE.Group()
+      coins.name = groupName     
+
+      coins.userData.type = "coins"
+      let shadow = this.betted_coins[this.betted_coins.length - 1].clone()
+      //shadow.position.z = 0.1;
+      //shadow.renderOrder = 0.5
+      coins.add(shadow)
+      
+      if(typeof target.parent.userData.zones == 'undefined') target.parent.userData.zones = [];
+      let zz = randomNumber(target)
+      target.parent.userData.zones.push({
+        who: groupName,
+        zone: zz,
+      })
+      coins.position.copy(definedZones[zz])
+      //coin = coin.clone()
+      //coin.position.z = 0.2
+      //coins.add(coin)
+      target.parent.add(coins)
+
+      //Vue에 그룹 생성을 알림. (너무 빨리 하면 안됨)
+      setTimeout( ()=> {
+        vue_room.coin_group_labels.push({
+          name : groupName,
+          slot : target.userData.index,
+          position : coins.localToWorld( new THREE.Vector3()).project(camera),
+        })
+      },50)
+    }
+
+    //코인 넣기
+    for(let info of to_insert){        
+      for(let i=0;i<info.qt;i++){
+        let coin = this.betted_coins[info.index].clone();
+        coin.position.x = (Math.random() - 0.5) * 0.3
+        coin.position.y = (Math.random() - 0.5) * 0.3
+        coin.position.z = coins.children.length * 0.5
+        coins.add(coin)
+      }
+    }
   }
 
   function loadResource(R){    
@@ -168,6 +361,13 @@ const e = function (opt) {
             })
           )
         }
+
+        array.push( new Promise( r => {
+          textureLoader.load(require(`@/images/chips/coin_shadow2.jpg`), tex=>{
+            R.textures.shadow = tex;
+            r();    
+          })
+        }))
         return array;
         })()
       ).then(()=>{

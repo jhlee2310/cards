@@ -10,7 +10,7 @@
 
 <script>
 export default {
-  props:['coin_groups','game','resolution'],
+  props:['coin_groups','resolution'],
   data(){
     return{
       names:[[],[],[],[],[]],

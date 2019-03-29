@@ -19,6 +19,9 @@
       <!--timer-->
       <div class="timer" v-show="game_status.betting" ref="timer" :style="timerStyle">{{timer}}</div>
 
+      <!--NameTags-->
+      <NameTags :coin_groups="coin_group_labels" :resolution="resolution"/>
+
       <!--CoinsForBet-->
       <CoinsForBet ref="coins_for_bet" :betting="game_status.betting" :selected="selectedCoin"/>
 
@@ -55,8 +58,9 @@ import { mapState, mapGetters, mapActions, mapMutations} from 'vuex'
 import Modal from '@/components/Modal.vue'
 import CreditInfo from '@/components/CreditInfo.vue'
 import CoinsForBet from '@/components/CoinsForBet.vue'
+import NameTags from '@/components/NameTags.vue'
 export default {
-  components: { Modal, CreditInfo, CoinsForBet},
+  components: { Modal, CreditInfo, CoinsForBet, NameTags},
   props: ['room_id','loaded'],
   data(){
     return {
@@ -84,7 +88,8 @@ export default {
       room_detail: null,
 			timer: '',
       room_bead: '',
-      bet_info: [],      
+      bet_info: [],
+      coin_group_labels: [],
     }
   },
   methods: {
@@ -168,7 +173,9 @@ export default {
       this.game_status.betting = null;      
       this.timer = '';
       this.$game.init_before_detail();
-      this.bet_info = []
+      this.$game.clear_bet_coins();
+      this.bet_info = [];
+      this.coin_group_labels = [];
     },
     proc_room_detail(data, oldData){      
       //console.log(data)
