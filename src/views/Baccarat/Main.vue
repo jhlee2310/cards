@@ -3,8 +3,7 @@
     <div>
       <router-link v-for="i in 12" :key="i" :to="`/baccarat/${i}`" tag="span" style="margin-right:5px;cursor:pointer">{{i}}</router-link>
     </div>
-    <div v-if="!game_loaded || !isReady">NOW LOADING</div>
-    <router-view v-else/>
+    <router-view v-if="game_loaded && isReady"></router-view>    
   </div>
 </template>
 
@@ -14,21 +13,16 @@ import { mapState, mapGetters, mapActions, mapMutations} from 'vuex'
 import * as THREE from 'three-full'
 import Game from '@/js/gameManager.js'
 import TWEEN from '@tweenjs/tween.js'
-//const wb = require.resolve('../../../public/test.js')
-import abc from '@/js/qqq.js'
-import load from 'load-script'
-
-load('/test.js')
-
-Vue.component('Board', () => import('@/components/Board.vue'));
-
+import Board from '@/components/Board.vue'
+Vue.component('Board',Board)
+//require('../../../public/test.js')
 export default {
   data(){
     return {
       
     }
   },
-  created(){
+  created(){        
     const that = this
     Vue.prototype.eBus = new Vue();
     Vue.prototype.$game = new Game({TWEEN, THREE, vue: this });
@@ -42,16 +36,18 @@ export default {
         this.eBus.$emit('worker', mes.data )
       };
     }else{
-      // worker를 가동하지 않을경우      
+      // worker를 가동하지 않을경우
+      const pm = window.abc;
       this.$worker_self = new (function(){
         this.handleTimeout = {}
-        this.postMessage = function(mes){
-          w.bind(this)(mes, that)
-        };
+        this.postMessage = (mes)=>{
+          pm.bind(this)(mes, that);
+        }
       })();
     }
 
-    const worker = useWorker ? this.$worker : this.$worker_self;    
+    const worker = useWorker ? this.$worker : this.$worker_self;
+
     this.eBus.$on('socket', mes => {
       if(mes.type == "welcome"){
         console.log('socket connected')
@@ -91,8 +87,8 @@ export default {
       });
     }
   },
-  mounted(){    
-    
+  mounted(){
+
     const $socket = Vue.prototype.$socket = new WebSocket('ws://www.jh84.kr:3100')
     $socket.sendOBJ = function(mes){
       this.send(JSON.stringify(mes))

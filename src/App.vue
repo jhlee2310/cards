@@ -2,8 +2,9 @@
   <div id="app">
     <div id="wrap">
       <AppHeader :url="location.pathname"></AppHeader>
-      <main>
+      <main>        
         <router-view/>
+        <div v-if="/baccarat/.test(location.pathname) && !(game_loaded && isReady)"> NOW LOADING</div>
       </main>
       <AppFooter></AppFooter>
     </div>
@@ -12,6 +13,7 @@
 </template>
 
 <script>
+  import { mapState } from 'vuex'
   import AppHeader from "@/components/Header.vue"
   import AppFooter from "@/components/Footer.vue"
   import AppChat from "@/components/Chat.vue"
@@ -28,6 +30,11 @@
     },
     mounted(){      
 
+    },
+    computed:{
+      ...mapState([
+      'game_loaded','resolution','room_id', 'isReady', 'welcome'
+    ])
     }
   }
 </script>

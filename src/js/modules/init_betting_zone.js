@@ -1,4 +1,7 @@
-export default function(width,height,betZones,forIntersect){    
+
+
+export default function(width,height,betZones,forIntersect){
+
     
     let _matLine = new THREE.LineMaterial({
         color: 0xAAAAAA,

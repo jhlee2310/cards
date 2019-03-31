@@ -4,19 +4,19 @@
       <div v-if="show"  style="display:inline;">
         <div style="padding:10px 10px;display:flex;">
           <div class="bead-p">P</div>
-          <div class="bead_cnt">{{pWinCnt}}</div>
+          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pWinCnt}}</div>
           <div class="bead-b">B</div>
-          <div class="bead_cnt">{{bWinCnt}}</div>
+          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bWinCnt}}</div>
           <div class="bead-t">T</div>
-          <div class="bead_cnt">{{tWinCnt}}</div>
+          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{tWinCnt}}</div>
           <div class="bead-other">
             <div class="small_red"></div>
           </div>
-          <div class="bead_cnt">{{bPairCnt}}</div>
+          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bPairCnt}}</div>
           <div class="bead-other">
             <div class="small_blue"></div>
           </div>
-          <div class="bead_cnt">{{pPairCnt}}</div>
+          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
           <div v-if="!lobby" style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
             <div style="display: inline-flex;" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">
             P
@@ -42,7 +42,7 @@
           <div v-if="!lobby" class="rectanges" style="margin-right:4px;float:left;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
             <div class="col" v-for="(count, i) in winners" :style="{
                 position:'absolute',
-                height:'20px',
+                height:'100%',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -78,7 +78,7 @@
                 }" :key="`col${i}`"/>
             </svg>
           </div>          
-          <div ref="bigRoadDiv" id="bigRoadDiv" v-dragscroll.x='true' class="rectanges" :style="{
+          <div v-dragscroll.x='true' class="rectanges" :style="{
               'margin-right':'4px',
               'float':'left',
               'cursor': 'grab',
@@ -91,7 +91,7 @@
             }">
             <div class="col" v-for="(count, i) in bigRoad" :style="{
                 position:'absolute',
-                height:'20px',
+                height:'100%',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -134,7 +134,7 @@
           <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:600px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;display:inline;float:left;">
             <div class="col" v-for="(count, i) in bigEyeRoad" :style="{
                 position:'absolute',
-                height:'20px',
+                height:'100%',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -162,7 +162,7 @@
           <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;float:left;">
             <div class="col" v-for="(count, i) in smallRoad" :style="{
                 position:'absolute',
-                height:'20px',
+                height:'100%',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -190,7 +190,7 @@
           <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;">
             <div class="col" v-for="(count, i) in cockroahRoad" :style="{
                 position:'absolute',
-                height:'20px',
+                height:'100%',
                 width:'20px',
                 top: count.top+'px',
                 left: count.left+'px',
@@ -431,38 +431,180 @@ export default {
           )
         }
         this.tempBigRoad = road
-			})
-
-			const lastRoad = _.last(road)
-			if(lastRoad && !this.lobby){
-				//console.log("lastRoad",lastRoad.left)
-				if(lastRoad.left > 200){
-					this.$nextTick(()=> {
-						var bigroad = this.$el.querySelector("#bigRoadDiv");
-						bigroad.scrollLeft = lastRoad.left-200
-					})
-				}
-			}
-			//console.log(this.$refs)
-			//console.log(this.$refs.bigRoadDiv)
-			
-			return road
+      })
+      return road
     },
     //중국점1
     bigEyeRoad: function () {
-      const bigEyeRoad = this.calcBoard(1)
+      const bigEyeRoad = []
+
+      let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+      
+      let road = this.roads
+
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+      }
+
+      road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false,
+            prdt: false
+          }
+
+          if(idx==1){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-1]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            }
+          }else if(idx>1){
+            if(j==0){
+              if(road[idx-1].length==road[idx-2].length)
+                res.result = true
+            }else{
+              const cols =road[idx-1]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>1|| (idx==1&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              //this.eyeLeft = this.eyeLeft+10
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            bigEyeRoad.push(res)
+          }
+        })
+      })
 
       if(this.mouseOverValue!=''){
         if(bigEyeRoad.length > 0){
           _.last(bigEyeRoad).prdt =true
         }
       }
-			
+
       return bigEyeRoad
     },
     //중국점2
     smallRoad: function () {
-			const smallRoad = this.calcBoard(2)
+      const smallRoad = []
+
+      let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+
+      let road = this.roads
+
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+      }
+
+      road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false,
+            prdt: false
+          }
+
+          if(idx==2){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-2]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            } 
+          }else if(idx>2){
+            if(j==0){
+              if(road[idx-1].length==road[idx-3].length)
+                res.result = true
+            }else{
+              const cols =road[idx-2]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>2|| (idx==2&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              //this.eyeLeft = this.eyeLeft+10
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            smallRoad.push(res)
+          }
+        })
+      })
 
       if(this.mouseOverValue!=''){
         if(smallRoad.length > 0) {
@@ -474,7 +616,84 @@ export default {
     },
     //중국점3
     cockroahRoad: function () {
-      const cockroahRoad = this.calcBoard(3)
+      const cockroahRoad = []
+
+      let left = 0
+      let top = 0
+      let winning = 1
+      let last = null
+
+      let road = this.roads
+
+      if(this.mouseOverValue=='P'){
+        road = this.pPrdtRoad
+      }else if(this.mouseOverValue=='B'){
+        road = this.bPrdtRoad
+      }
+
+      road.forEach((data,idx) => {
+        road[idx].forEach((row,j)=>{
+
+          const res = {
+            top: 0,
+            left: 0,
+            result: false,
+            prdt: false,
+          }
+
+          if(idx==3){
+            if(data.length >= 2){
+              if(j >= 1){
+                const cols =road[idx-3]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+              }
+            } 
+          }else if(idx>3){
+            if(j==0){
+              if(road[idx-1].length==road[idx-4].length)
+                res.result = true
+            }else{
+              const cols =road[idx-3]
+                if(cols[j] === cols[j-1]){
+                  res.result = true
+                }
+            }
+          }
+          if(idx>3|| (idx==3&&j>=1)){
+            if(last== null){
+            }else if(last==res.result){
+              if(winning >= 6){
+                left = left+10
+              }else{
+                top = top+10
+              }
+              winning++
+            }else{
+              if(winning>6){
+                let cnt = 0
+                cnt = (winning - 6)*10
+                if(cnt != 0){
+                  left = left-cnt+10
+                }else{
+                  left = left+10                  
+                }
+              }else{
+                left = left+10
+              }
+              top = 0
+              winning =1
+            }
+            res.top = top
+            res.left = left
+
+            last = res.result
+            
+            cockroahRoad.push(res)
+          }
+        })
+      })
 
       if(this.mouseOverValue!=''){
         if(cockroahRoad.length > 0) {
@@ -590,8 +809,7 @@ export default {
           road.push(result)
         }else{
           lastCol.push(winner)
-				}
-				
+        }
   
         let idx =road.length -1
         const data = _.last(road)
@@ -668,88 +886,6 @@ export default {
     }
   },
   methods: {
-		calcBoard(gun){
-			const arrayRoad = []
-
-			let left = 0
-      let top = 0
-      let winning = 1
-      let last = null
-      
-      let road = this.roads
-
-      if(this.mouseOverValue=='P'){
-        road = this.pPrdtRoad
-      }else if(this.mouseOverValue=='B'){
-        road = this.bPrdtRoad
-			}
-			
-			road.forEach((data,idx) => {
-        road[idx].forEach((row,j)=>{
-
-          const res = {
-            top: 0,
-            left: 0,
-            result: false,
-            prdt: false
-          }
-
-          if(idx==gun){
-            if(data.length >= 2){
-              if(j >= 1){
-                const cols =road[idx-gun]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-              }
-            }
-          }else if(idx>gun){
-            if(j==0){
-              if(road[idx-1].length==road[idx-(gun+1)].length)
-                res.result = true
-            }else{
-              const cols =road[idx-gun]
-                if(cols[j] === cols[j-1]){
-                  res.result = true
-                }
-            }
-          }
-          if(idx>gun|| (idx==gun&&j>=1)){
-            if(last== null){
-            }else if(last==res.result){
-              if(winning >= 6){
-                left = left+10
-              }else{
-                top = top+10
-              }
-              winning++
-            }else{
-              if(winning>6){
-                let cnt = 0
-                cnt = (winning - 6)*10
-                if(cnt != 0){
-                  left = left-cnt+10
-                }else{
-                  left = left+10                  
-                }
-              }else{
-                left = left+10
-              }
-              top = 0
-              winning =1
-            }
-            res.top = top
-            res.left = left
-
-            last = res.result
-            
-            arrayRoad.push(res)
-          }
-        })
-			})
-			
-			return arrayRoad
-		},
     viewScore(data){
       const rn = this.$_.split(data,',')
         //console.log(rn)
@@ -762,6 +898,7 @@ export default {
       let beadTop = 0
       let beadLeft = 0
       let col = 0
+      
       if(this.winners.length !=0){
         lastWinner = _.last(_.cloneDeep(this.winners)).lastWinner
         winning =  _.last(_.cloneDeep(this.winners)).winning
@@ -1097,7 +1234,6 @@ export default {
   height: 28px;
   border-radius: 50%;
   border: 1px solid blue;
-	margin: 0 4px;
 }
 
 .bead-border-b {
@@ -1105,7 +1241,6 @@ export default {
   height: 28px;
   border-radius: 50%;
   border: 1px solid red;
-	margin: 0 4px;
 }
 
 .cockroah-true {
@@ -1117,7 +1252,6 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
-	margin-left: 4px;
 }
 
 .cockroah-false {
@@ -1129,7 +1263,6 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg);
   -webkit-transform: rotate(-45deg);
-	margin-left: 4px;
 }
 
 .small_blue {
@@ -1213,15 +1346,6 @@ export default {
   transform: rotate(-45deg);
   -ms-transform: rotate(-45deg); /* IE 9 */
   -webkit-transform: rotate(-45deg); /* Safari and Chrome */
-}
-
-.bead_cnt {
-	color: white;
-	display:flex;
-	-webkit-box-align: center;
-	-ms-flex-align: center;
-	align-items: center;
-	margin: 0 4px;
 }
 
 .blinking{

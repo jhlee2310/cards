@@ -118,9 +118,8 @@ export default function init_cards(opt){
         }
         
         mesh.userData.init_position = mesh.position.clone()
-        mesh.userData.init_rotation = mesh.rotation.clone()
-        console.log(mesh.position)
-        //mesh.visible = false;
+        mesh.userData.init_rotation = mesh.rotation.clone()        
+        mesh.visible = false;
 
         group.add(mesh);
         whole_cards.push(mesh)        
@@ -142,41 +141,44 @@ export default function init_cards(opt){
     const holder_shape = new THREE.Shape();
     card_shape.autoClose = true;    
     round_ractangle(holder_shape, 8, 12.8, 0.45)
-    let _matLine = new THREE.LineMaterial({
-      color: 0xAAAAAA,
-      linewidth: 1, // in pixels
-      dashed: false,
-    });    
 
-    _matLine.resolution.set(5000, 5000);
+    //border shape
+    const border_shape = holder_shape.clone();
+    const border_shape_inner = new THREE.Shape();
+    round_ractangle(border_shape_inner, 7.5,12.3, 0.40)
+    border_shape.holes.push(border_shape_inner);
 
-    let _geo = new THREE.LineGeometry();
     let holder_geo = new THREE.ShapeGeometry(holder_shape)
     let holder_mesh = new THREE.Mesh(holder_geo, new THREE.MeshBasicMaterial({
       color: 0xEEEEEE,
       blending: 4,
-      map: _resources_.textures.betting_zone      
+      map: _resources_.textures.betting_zone,
+      polygonOffset: true,
+      polygonOffsetFactor: 1,
     }));
-    const _positions = []
 
-    for(let a of holder_shape.getPoints()){
-      _positions.push(a.x, a.y, 0)    
-    }
-    _geo.setPositions(_positions)     
+    let border_geo = new THREE.ShapeGeometry(border_shape)
+    let border_mesh = new THREE.Mesh(border_geo, new THREE.MeshBasicMaterial({
+      color: '#CCCCCC',      
+    }))
     
-    whole_cards.forEach( (card,i) =>{
-      let holder = new THREE.Line2(_geo, _matLine);
-      holder.computeLineDistances();
-      holder.position.copy(card.position)
-      holder.rotation.z = card.rotation.z
-      holder.position.z = -0.05;
-      holder.position.x -= (i != 2 && i != 5) ? 4 : 0
-      holder.position.y -= (i == 2 || i == 5) ? 4 : 0
 
-      let clone_mesh = holder_mesh.clone()            
-      clone_mesh.position.copy(holder.position)
-      clone_mesh.rotation.copy(holder.rotation)
-      card.parent.add(clone_mesh)
-      card.parent.add(holder)      
+    whole_cards.forEach( (card,i) =>{      
+      let holder = i == 0 ? holder_mesh : holder_mesh.clone()
+      let border = i == 0 ? border_mesh : border_mesh.clone()
+      holder.position.copy(card.position)
+      border.position.copy(card.position)
+      holder.rotation.z = border.rotation.z = card.rotation.z
+      holder.position.z = border.position.z = -0.05;
+      holder.position.x -= (i != 2 && i != 5) ? 4 : 0
+      border.position.x -= (i != 2 && i != 5) ? 4 : 0
+
+      holder.position.y -= (i == 2 || i == 5) ? 4 : 0
+      border.position.y -= (i == 2 || i == 5) ? 4 : 0        
+
+      card.parent.add(holder)
+      card.parent.add(border);
+      //card.parent.add(holder)      
     })
+    
   }

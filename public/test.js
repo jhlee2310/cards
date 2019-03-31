@@ -1,4 +1,4 @@
-const abc = function(mes, vue){
+self.abc = function(mes, vue){
   let data;
   let isWorker = false;
   let $send;

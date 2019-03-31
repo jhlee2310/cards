@@ -89,13 +89,14 @@ export default function(){
   }
  
   let a = new THREE.PlaneGeometry(4.1,4.1)
-  let b = new THREE.Mesh(a,new THREE.MeshBasicMaterial({
+  let b = new THREE.Mesh(a,new THREE.MeshLambertMaterial({
     color: 0xffffff,
     map: _resources_.textures.shadow,
-    blending: THREE.MultiplyBlending
-
+    blending: THREE.MultiplyBlending,
+    polygonOffset: true,
+    polygonOffsetFacetor:2,
   }))  
-  b.position.z = 0.05  
+  
   betted_coins.push(b);
   
 }

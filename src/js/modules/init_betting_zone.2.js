@@ -1,16 +1,89 @@
-export default function(opt){    
-    const { vue, THREE, _resources_, resizeUpdate, scene, forIntersect } = opt
-    const width = vue.resolution.width
-    const height = vue.resolution.height
-    let betZones = this.betZones;
+import obj1 from '!!raw-loader!@/js/obj1.obj';
+import obj2 from '!!raw-loader!@/js/obj2.obj';
+import obj3 from '!!raw-loader!@/js/obj3.obj';
+import obj4 from '!!raw-loader!@/js/obj4.obj';
+import obj5 from '!!raw-loader!@/js/obj5.obj';
 
-    let _matLine = new THREE.LineMaterial({
-        color: 0xAAAAAA,
-        linewidth: 2, // in pixels        
-        dashed: false,
-    });
+export default function(opt){
 
-    _matLine.resolution.set(width, height);    
+  const { vue, THREE, _resources_, resizeUpdate, scene, forIntersect } = opt
+  const width = vue.resolution.width
+  const height = vue.resolution.height
+  let betZones = this.betZones;
+  const betBoard = new THREE.Group();
+
+  const objLoader = new THREE.OBJLoader();
+  let o1 = objLoader.parse(obj1)
+  o1.position.set( -40.9165,9.79363,0 )    
+  o1.rotation.z =  THREE.Math.degToRad( -29.015 )
+  betBoard.add( o1 )  
+  let o2 = objLoader.parse(obj2)
+  o2.position.set( -20.8671,3.17054,0 )    
+  o2.rotation.z =  THREE.Math.degToRad( -12.9194 )
+  betBoard.add( o2 )
+  let o3 = objLoader.parse(obj3)
+  betBoard.add( o3 )
+  let o4 = objLoader.parse(obj4)
+  o4.position.set( 20.8671,3.17054,0 )    
+  o4.rotation.z =  THREE.Math.degToRad( 12.9194 )
+  betBoard.add( o4 )
+  let o5 = objLoader.parse(obj5)
+  o5.position.set( 40.9165,9.79363,0 )    
+  o5.rotation.z =  THREE.Math.degToRad( 29.015 )
+  betBoard.add( o5 );  
+  
+  [o1,o2,o3,o4,o5].forEach((t, i)=>{
+    // 색제어를 위한 캐시배열
+    t.userData.toChangeRGB = [];
+    t.userData.changeRGB = (c) => {
+      for (let o of t.userData.toChangeRGB) {
+        o.material.color.set(c)
+      }
+    }
+    t.userData.restoreRGB = () => {
+      for (let o of t.userData.toChangeRGB) {
+        o.material.color.copy(o.userData.originalColor)
+      }
+    }
+    let mesh = t.children.find(t=> /inner/.test(t.name))    
+    mesh.userData.index = i;
+    mesh.name = `betzone_${i}`;
+    mesh.material.color.setStyle('#FFFFFF')    
+    mesh.material.map =  _resources_.textures.betting_zone;
+    mesh.material.blending = THREE.MultiplyBlending
+    mesh.material.polygonOffset = true;
+    mesh.material.polygonOffsetFactor = 3;
+    mesh.material.needsUpdate = true;
+    betZones.push(mesh)
+
+    let outter = t.children.find(t=> /outter/.test(t.name))
+    t.userData.toChangeRGB.push(outter)
+    outter.material.color.setStyle('#CCCCCC')
+    outter.userData.originalColor = outter.material.color.clone();
+
+      
+
+
+            
+  })
+
+
+
+  betBoard.scale.set(0.9,0.9,0.9)
+  scene.add(betBoard);
+
+  
+
+
+  return;
+
+   // let _matLine = new THREE.LineMaterial({
+    //    color: 0xAAAAAA,
+    //    linewidth: 2, // in pixels        
+    //    dashed: false,
+    //});
+
+   // _matLine.resolution.set(width, height);    
 
     const RoundedRectangle = function (width, height, radius) {
         let ctx = new THREE.Shape();
@@ -47,7 +120,7 @@ export default function(opt){
 
     let _pl_mt = new THREE.MeshBasicMaterial({
       color: 0xffffff,//e2ecf2,
-      blending:4,
+      blending: 4,
       map: _resources_.textures.betting_zone
     })       
 
@@ -89,28 +162,28 @@ export default function(opt){
     _pl_m2.name = "zone"
     _pl_m2.userData.type = "plane"
 
-    let _geo = new THREE.LineGeometry(),
-      _geo2 = new THREE.LineGeometry();
-    _geo.setPositions(_positions)
-    _geo2.setPositions(_positions2)
+//    let _geo = new THREE.LineGeometry(),
+//      _geo2 = new THREE.LineGeometry();
+//    _geo.setPositions(_positions)
+ //   _geo2.setPositions(_positions2)
 
-    var _line = new THREE.Line2(_geo, _matLine),
-      _line2 = new THREE.Line2(_geo2, _matLine);
-    _line.computeLineDistances();
-    _line2.computeLineDistances();
+    //var _line = new THREE.Line2(_geo, _matLine),
+    //  _line2 = new THREE.Line2(_geo2, _matLine);
+    //_line.computeLineDistances();
+    //_line2.computeLineDistances();
     
-    _line.name = "border"
-    _line2.material = _line2.material.clone()
-    _line2.name = "border"
+   // _line.name = "border"
+    //_line2.material = _line2.material.clone()
+    //_line2.name = "border"
 
     let _group = new THREE.Group();    
-    _group.add(_line);
+    //_group.add(_line);
     _group.add(_pl_m1);    
     _group.name = 'bet_2'
     betZones[2] = _group;
 
     let _group2 = new THREE.Group();
-    _group2.add(_line2)
+   // _group2.add(_line2)
     _group2.add(_pl_m2)
     _group2.position.x = 13.5;
     _group2.name = 'bet_3'
@@ -121,10 +194,10 @@ export default function(opt){
     for( let i of [1,4,0] ){
         let gr = new THREE.Group()
         gr.name = `bet_${i}`
-        let li = _line2.clone();
-        li.material = li.material.clone()
-        li.name = 'border'        
-        gr.add(li)
+        //let li = _line2.clone();
+        //li.material = li.material.clone()
+        //li.name = 'border'        
+       // gr.add(li)
         gr.add(_pl_m2.clone())
         betZones[i] = gr
 
@@ -143,7 +216,7 @@ export default function(opt){
         }
     }
 
-    betZones = betZones.map((t, i) => {      
+      betZones = betZones.map((t, i) => {      
       let a = (t.getObjectByProperty('name', 'zone'))
       a.userData.index = i;      
       scene.add(t);
@@ -153,7 +226,7 @@ export default function(opt){
         if(child !== a) t.userData.toChangeRGB.push(child)
       })
 
-      t.userData.originalRGB = t.userData.toChangeRGB[0].material.color.clone();
+     // t.userData.originalRGB = t.userData.toChangeRGB[0].material.color.clone();
       t.userData.changeRGB = (c) => {
         for (let o of t.userData.toChangeRGB) {
           o.material.color.set(c)

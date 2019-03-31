@@ -4,9 +4,14 @@ import cards_animations from './modules/cards_animations.2.js' // 카드애니�
 import init_betted_coin from './modules/init_betted_coin.2.js' // 배팅된 코인
 //import bet_others from './modules/bet_others' // 다른유저 배팅
 import Texts from './modules/Texts.2.js' // 3dTexts
+
 const e = function (opt) {
   const { vue, TWEEN, THREE } = opt
   this.THREE = THREE;
+
+  THREE.Math = {
+    degToRad : (deg) => {return deg * Math.PI / 180}
+  }
   this.vue = vue;
   this.TWEEN = TWEEN;
 
@@ -59,6 +64,7 @@ const e = function (opt) {
     init_cards.bind(this)({
       THREE, _resources_, scene
     });
+    
     init_betting_zone.bind(this)({
       scene, vue, _resources_, THREE, resizeUpdate, forIntersect
     });
@@ -170,7 +176,7 @@ const e = function (opt) {
     };
     this.clearSelectedObject = ()=>{
       selectedObject = null;
-    }
+    }   
   }
 
   function do_bet(target, sprite, zone, who){    
@@ -274,6 +280,7 @@ const e = function (opt) {
 
      //새로운 그룹 생성
      if (!coins) {
+      
       coins = new THREE.Group()
       coins.name = groupName     
 
@@ -312,6 +319,7 @@ const e = function (opt) {
         coin.position.x = (Math.random() - 0.5) * 0.3
         coin.position.y = (Math.random() - 0.5) * 0.3
         coin.position.z = coins.children.length * 0.5
+        coin.rotation.z = (Math.random() * Math.PI * 2) - Math.PI
         coins.add(coin)
       }
     }
@@ -480,9 +488,10 @@ const e = function (opt) {
       let text = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
         color: 0xCCCCCC
       }));
+      text.userData.originalColor = text.material.color.clone();
 
       text.scale.multiplyScalar(1.2)
-      text.position.y = -10.2;
+      text.position.y = i == 1 || i == 3 ? -10.7 : -10.2;
       this.betZones[i].parent.add(text)
       this.betZones[i].parent.userData.toChangeRGB.push(text)
       text.name = "label"
@@ -499,10 +508,11 @@ const e = function (opt) {
       let text = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({
         color: 0xCCCCCC
       }));
+      text.userData.originalColor = text.material.color.clone();
 
       text.scale.multiplyScalar(0.9)
       text.position.z = 0.05;
-      text.position.y = -7;
+      text.position.y = i == 1 || i == 3 ? -7.5 : -7;
       this.betZones[i].parent.add(text)
       this.betZones[i].parent.userData.toChangeRGB.push(text)
       text.name = "ratio"
