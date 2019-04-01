@@ -58,34 +58,7 @@ export default {
 			eos: [],
 			menu_open:'',
       deposit_open: false,
-      bonus_open: false,
-      tosvr: {
-        set_scatter_identity(scatter_identity = undefined) {
-          console.log("set_scatter_identity");
-          if (!that.$socket || !that.game_connected) return;
-          const scatter = that.scatter;
-
-          if (scatter_identity === undefined) {
-            if (scatter && scatter.identity) {
-              const eosAccount = that.scatter.identity.accounts.find(
-                account => account.blockchain === "eos"
-              );
-              scatter_identity = eosAccount.name;
-              console.log("스캐터 아이디", scatter_identity);
-            }
-          }
-
-          if (scatter_identity === undefined) return;
-
-          let req_json = {
-            type: "req_set_scatter_identity",
-            identity: scatter_identity
-          };
-
-          console.log("req_json", req_json);
-          that.$socket.send(JSON.stringify(req_json));
-        }
-      },
+      bonus_open: false,      
       //eosAccount: null,
       //scatter: ScatterJS.scatter,
       chatWelcome: false
@@ -120,6 +93,12 @@ export default {
       setCredit: "setCredit",
       setOpenScatterError: "setOpenScatterError"
     }),
+    tosvr_set_scatter_identity(name) {      
+      this.$socket.sendOBJ({
+        type: "req_set_scatter_identity",
+        identity: name,
+      })      
+    },
     async proc_forgetIdentity() {
       if (!this.scatter.identity) return;
 
@@ -127,7 +106,7 @@ export default {
       this.setEosAccount(null);
       this.setCredit(0);
 
-      this.tosvr.set_scatter_identity("");
+      this.tosvr_set_scatter_identity("");
     },
     async proc_getIdentity(e) {
       let scatter = this.scatter;
@@ -135,12 +114,10 @@ export default {
         scatter = window.scatter;
       }
       const result = await this.connectScatter();
-      if (!result) return;      
-
+      if (!result) return;
       if (!scatter.suggestNetwork) {
         return;
-      }
-      
+      }      
       await scatter
         .suggestNetwork(this.network)
         .then(() => {
@@ -157,21 +134,16 @@ export default {
         .then(identity => {
           console.log(identity);
           console.log("getIdentity: 성공");
+
           this.setEosAccount(
             identity.accounts.find(account => account.blockchain === "eos")
           );
-          let eosAccount = this.eosAccount;
-          console.log("eosAccount", eosAccount);
 
-          // 게임서버에 identity 알림.
-          this.tosvr.set_scatter_identity(eosAccount.name);
+          this.tosvr_set_scatter_identity(this.eosAccount.name);
         })
-        .catch(function(error) {
-          console.log("에러");
-          console.log(error);
-        });
-
-      //console.log(this.scatter.identity);
+        .catch(error => {          
+          console.log(error)
+        });      
     },
     async connectScatter() {
       let connected = false;
@@ -183,23 +155,20 @@ export default {
         );
       }catch(e){
         console.log(e);
-      }
+      }      
 
       if (!connected) {
         console.log("Could not connect to Scatter.");
         this.setOpenScatterError(true);
         return false;
-      }
-
+      }      
       console.log("Scatter Connected!");
-
       if (this.scatter.identity) {
         this.setEosAccount(
           this.scatter.identity.accounts.find(
             account => account.blockchain === "eos"
           )
         );
-        this.tosvr.set_scatter_identity(this.eosAccount.name);
 
         if (!this.chatWelcome) {
           this.$chat.send(
@@ -210,8 +179,7 @@ export default {
           this.chatWelcome = true;
         }
       } else {
-        this.setEosAccount(null);
-        this.tosvr.set_scatter_identity("");
+        this.setEosAccount(null);        
       }
 
       return true;

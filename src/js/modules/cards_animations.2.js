@@ -36,9 +36,9 @@ function easing(TWEEN, index){
 }
 
 
-export default function (game) {
+export default function ($game) {
 
-  const { _resources_, vue, TWEEN, THREE } = game
+  const { _resources_, vue_room, TWEEN, THREE } = $game  
   const { card_groups, textureLoader } = _resources_
   const reset_generator = function* (ord_cards) {
     for (let card of ord_cards) {
@@ -74,15 +74,17 @@ export default function (game) {
   this.ord_card = null;
   this.generator = null;
   this.winner = null;
+  this.vue_room = null;
 
   card_groups.p_startVector = card_groups['player'].worldToLocal(new THREE.Vector3(0, 40, 10))
   card_groups.b_startVector = card_groups['banker'].worldToLocal(new THREE.Vector3(0, 40, 10))
 
-  this.init = function(p_data, b_data, result){
+  this.init = function(opt){
+    const { p_cards, b_cards, result, vue_room } = opt;
+    this.vue_room = vue_room;
+    vue_room.score.show = true; // 스코어 켜기
     
-    vue.score.show = true; // 스코어 켜기
-
-    [p_data, b_data].forEach( (card_data, i ) => {
+    [p_cards, b_cards].forEach( (card_data, i ) => {
       let cards = (i == 0) ? card_groups['player'].children : card_groups['banker'].children
       card_data.forEach( (data, i) => {
         let c = cards[i];
@@ -95,9 +97,10 @@ export default function (game) {
       })
     })
 
-    this.p_data = p_data
     this.p_cards = card_groups['player'].children.filter(c => c.userData.type == 'card')
     this.b_cards = card_groups['banker'].children.filter(c => c.userData.type == 'card')
+
+    console.log(this.p_cards, this.b_cards)
     this.whole_cards = [...this.p_cards, ...this.b_cards]
     this.ord_cards = [
       this.whole_cards[0],
@@ -106,8 +109,8 @@ export default function (game) {
       this.whole_cards[4],
     ]
 
-    if(p_data.length == 3) this.ord_cards.push(this.whole_cards[2])
-    if(b_data.length == 3) this.ord_cards.push(this.whole_cards[5])    
+    if(p_cards.length == 3) this.ord_cards.push(this.whole_cards[2])
+    if(b_cards.length == 3) this.ord_cards.push(this.whole_cards[5])    
 
     this.whole_cards.forEach( card => {
       card.visible = false
@@ -135,6 +138,7 @@ export default function (game) {
   this.moveCard = (index, duration, e) => {
     const card = this.ord_cards[index]
     if(index >= 2){
+      // 3번째 카드부터 적용
       card.rotation.y = 0;      
       if(index >= 4){
         card.rotation.x = 0;
@@ -201,7 +205,7 @@ export default function (game) {
         .start()      
     }
     this.assignScore = (data) => {      
-      vue.score[data.parent_type] = (vue.score[data.parent_type] + data.value) % 10
+      this.vue_room.score[data.parent_type] = (this.vue_room.score[data.parent_type] + data.value) % 10
     }
 
     this.slideCard = (index, duration, e)=>{
@@ -227,9 +231,26 @@ export default function (game) {
         .onComplete(() => {
           this.assignScore(card.userData)
         })
-        .start()      
-    
+        .start()         
     }
+
+    this.restoreDeal = () => {
+      this.ord_cards.forEach((card,i) => {
+        card.position.copy(card.userData.init_position)
+        card.rotation.copy(card.userData.init_rotation)
+        if( i < 4 ){
+          card.rotation.set(0,0,0)
+          card.position.x = card.position.x - 8
+        }else{
+          card.rotation.x = 0
+          card.position.y = card.position.y - 8
+        }
+        card.children.forEach(child=>{            
+          child.visible = false;
+        })
+        card.visible=true;
+      })
+    };
     
      //초기화
 
@@ -242,12 +263,12 @@ export default function (game) {
         if (next.done) {
           clearInterval(q)
           //스코어 초기화
-          vue.score.player = 0;
-          vue.score.banker = 0;
-          vue.score.show = false;
+          this.vue_room.score.player = 0;
+          this.vue_room.score.banker = 0;
+          this.vue_room.score.show = false;
 
           //코인판 초기화
-          game.clear_bet_coins();
+          $game.clear_bet_coins();
           resolve();
         }
       }, 110)

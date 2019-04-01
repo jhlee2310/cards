@@ -1,7 +1,6 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
 import ScatterJS from 'scatterjs-core'
-
 import ScatterEOS from 'scatterjs-plugin-eosjs'
 import Eos from 'eosjs';
 
@@ -28,7 +27,7 @@ export default new Vuex.Store({
       width: 0,
       height: 0,
     },    
-    scatter: ScatterJS.scatter,
+    //scatter: ScatterJS.scatter,
     eosAccount:null,    
     network, 
     credit: 0,
@@ -67,6 +66,12 @@ export default new Vuex.Store({
     },
     SET_MODAL1_MSG(state, payload){
       state.modal1_msg = payload;
+    },
+    SET_CREDIT(state, payload){
+      state.credit = payload
+    },
+    SET_GAME_CONNECTED(state, payload){
+      state.game_connected = payload
     },
     setScatter: (state, data) => {
       state.scatter = data

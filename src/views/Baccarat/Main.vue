@@ -3,7 +3,7 @@
     <div>
       <router-link v-for="i in 12" :key="i" :to="`/baccarat/${i}`" tag="span" style="margin-right:5px;cursor:pointer">{{i}}</router-link>
     </div>
-    <router-view v-if="game_loaded && isReady"></router-view>    
+    <router-view v-if="game_loaded && game_connected"></router-view>    
   </div>
 </template>
 
@@ -51,14 +51,23 @@ export default {
     this.eBus.$on('socket', mes => {
       if(mes.type == "welcome"){
         console.log('socket connected')
-        this.SET_WELCOME(mes.times)
-        this.SET_IS_READY(true)
+        this.SET_WELCOME(mes.times)        
+        this.SET_GAME_CONNECTED(true)
+
+        console.log(this.$socket)
+        if( this.eosAccount && this.eosAccount.name ){
+          this.tosvr_set_scatter_identity();          
+        }else{
+          
+        }
         
         if(this.$worker) this.$worker.postMessage({
           type: 'welcome',
           data: mes.times
         })
-      }
+      }else if(mes.type == "game_token_info"){
+        this.SET_CREDIT(mes.value)
+      }        
     })
 
     //하부컴퍼넌트에서 요청
@@ -70,6 +79,9 @@ export default {
         case "start_cards_animation":
           worker.postMessage(mes)
         break;
+        case "stop_animation":
+          worker.postMessage(mes)
+        break;
       }
     });     
        
@@ -79,13 +91,16 @@ export default {
       'SET_GAME_LOADED',
       'SET_IS_READY',
       'SET_WELCOME',
+      'SET_CREDIT',
+      'SET_GAME_CONNECTED',
     ]),
-    sendTime(t){
-      this.eBus.$emit('worker',{
-        type: 'timer',
-        value: t,
-      });
-    }
+    tosvr_set_scatter_identity() {
+      let req_json = {
+        type: "req_set_scatter_identity",
+        identity: this.eosAccount.name
+      };
+      this.$socket.send(JSON.stringify(req_json));      
+    }    
   },
   mounted(){
 
@@ -97,11 +112,11 @@ export default {
     $socket.onmessage = (mes) => {
       const data = JSON.parse(mes.data)
       this.eBus.$emit('socket', data);
-    }    
+    }
   },
   computed: {
     ...mapState([
-      'game_loaded','resolution','room_id', 'isReady', 'welcome'
+      'game_loaded','resolution','room_id','welcome', 'eosAccount', 'game_connected'
     ])
   }
 }

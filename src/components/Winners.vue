@@ -21,7 +21,7 @@
   
 
   export default {
-    props: ['winner','pair','game', 'TWEEN'],
+    props: [ 'winner','pair' ],
     data() {
       return {
         common_style:{
@@ -102,8 +102,8 @@
       
     },
     watch:{
-      winner(newVal, oldVal){        
-        const {player, banker, tie} = this.game.winners
+      winner(newVal, oldVal){   
+        const {player, banker, tie} = this.$game._resources_.winners
           let target;
           let old_target;
         if(newVal){     
@@ -118,6 +118,7 @@
               target = tie;
             break;           
           }
+
           target.visible = true;
           new TWEEN.Tween({
             z: -10,
@@ -133,7 +134,7 @@
             target.rotation.z = a.rotZ            
           })
           .start()
-          this.game.changeColor(this.winner,this.pair)          
+          this.$game.changeColor(this.winner,this.pair)
           
         }else{
             switch(oldVal){
@@ -148,7 +149,7 @@
               break;
             }
             old_target.visible = false;
-            this.game.restoreColor()
+            this.$game.restoreColor()
           }
       }
     }

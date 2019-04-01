@@ -29,7 +29,7 @@
       }
     },
     computed: {
-      ...mapState(['resolution','open_scatter_error', 'game_connected','scatter','eosAccount']),
+      ...mapState(['resolution','open_scatter_error', 'game_connected', 'eosAccount']),
       msg_modal(){
         return {
           position:'absolute',
@@ -100,7 +100,7 @@
           window.open('https://get-scatter.com/');
         },
         clearBetCoin(name){
-          this.game.clear_bet_coins(name);
+          this.$game.clear_bet_coins(name);
         },
         proc_cancel_bet(){
           //bet_info에서 자기자신 빼기          
@@ -114,15 +114,14 @@
         },
         tosvr_req_cancel_betting() {
           if (!this.$socket || !this.game_connected) return; 
-          if (!this.scatter || !this.scatter.identity) return; 
-          
-          const eosAccount = this.scatter.identity.accounts.find(account => account.blockchain === 'eos');
+          if (!this.eosAccount) return;           
 
           var req_json = {
               type    : "req_cancel_betting",
-              account : eosAccount.name,
+              account : this.eosAccount.name,
               room_id : this.room_id
-          };          
+          };
+
           this.$socket.send(JSON.stringify(req_json));
           this.proc_cancel_bet();
       }

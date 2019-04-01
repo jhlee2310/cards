@@ -6,6 +6,7 @@ import init_betted_coin from './modules/init_betted_coin.2.js' // 배팅된 코�
 import Texts from './modules/Texts.2.js' // 3dTexts
 
 const e = function (opt) {
+  const that = this;
   const { vue, TWEEN, THREE } = opt
   this.THREE = THREE;
 
@@ -14,9 +15,11 @@ const e = function (opt) {
   }
   this.vue = vue;
   this.TWEEN = TWEEN;
-
+  this.timeStamp = 0;  
   const textureLoader = new THREE.TextureLoader();  
   const fontLoader = new THREE.FontLoader();
+  const mouseVector = new THREE.Vector3();
+  const raycaster = new THREE.Raycaster();
 
   let camera, scene, renderer;
   const _resources_ = this._resources_ = {
@@ -103,8 +106,13 @@ const e = function (opt) {
 
     // 방입장시 빠른 딜 전개
     this.restoreDeal = (data) => {
+      /*
       console.log('게임카드 복구')
-      const $R = _resources_;  
+      const $R = _resources_;
+      this.animateCards.init({
+        p_cards, b_cards, result, vue_room,
+      }
+      /*)
       [ data.player.cards, data.banker.cards ].forEach( (group, g)=>{
         group.forEach( (d, i) => {
           let c = g == 0 ? $R.cards.player[i] : $R.cards.banker[i];
@@ -121,9 +129,13 @@ const e = function (opt) {
             c.rotation.x = 0
             c.position.y = c.position.y - 8
           }
+          c.children.forEach(child=>{            
+            child.visible = false;
+          })
           c.visible = true;
         })
-      })   
+      })
+      */
     };
     this.bet_others = (message) => {
 
@@ -149,6 +161,7 @@ const e = function (opt) {
 
     this.clear_bet_coins = (name) => {
     // 전체 철수
+      const { vue_room } = this;
       this.betZones.forEach( (zone,i)=>{
         let parent = zone.parent
         delete(parent.userData.zones)
@@ -162,7 +175,7 @@ const e = function (opt) {
           }else if(coins.name == name){
             parent.remove(coins)
             //라벨에서 해당네임 빼기
-            vue.coin_groups = vue.coin_groups.filter(t=>{              
+            vue_room.coin_group_labels = vue_room.coin_group_labels.filter(t=>{              
               return t.name != name
             })
           }
@@ -176,7 +189,107 @@ const e = function (opt) {
     };
     this.clearSelectedObject = ()=>{
       selectedObject = null;
-    }   
+    }
+
+
+    // mouse mouse event handler
+    this.onMouseMove = function (e) {
+      const { vue_room } = this;
+      const { resolution } = vue_room;
+      let width = resolution.width;
+      let height = resolution.height;
+
+      if (!vue_room.game_status.bet_start || !vue_room.game_status.betting) return
+      e.preventDefault();
+      let x, y;    
+      if( e.target.tagName == "CANVAS" ){
+        x = (e.layerX / width) * 2 - 1;
+        y = -(e.layerY / height) * 2 + 1;
+      }else{
+        //const rect = e.target.getBoundingClientRect()      
+        x = ( parseFloat(e.target.style.left) + e.layerX) / width * 2 - 1;
+        y = ( parseFloat(e.target.style.top) + e.layerY) / height  * -2 + 1;      
+      }
+  
+      //console.log(+e.target.style.left + e.layerX)
+  
+      mouseVector.set(x, y, 10);
+      let targets = forIntersect.betting_zone
+  
+      raycaster.setFromCamera(mouseVector, camera);
+  
+      let intersects = raycaster.intersectObjects(this.betZones);
+  
+      if (intersects.length > 0) {
+        let intersect = intersects[0].object
+        document.body.style.cursor = "pointer"
+        if (!selectedObject) {        
+          intersect.parent.userData.changeRGB('#FFFF00')
+          selectedObject = intersect;
+  
+        } else if (selectedObject) {
+          if (selectedObject === intersect) {
+            return
+          } else {
+            let toChange = selectedObject
+            toChange.parent.userData.restoreRGB();
+            intersect.parent.userData.changeRGB('#FFFF00')
+            selectedObject = intersect
+          }
+        }
+      } else {
+        document.body.style.cursor = ""
+        if (selectedObject) {        
+          let toChange = selectedObject        
+          toChange.parent.userData.restoreRGB(); 
+          selectedObject = null;       
+        }
+      }
+      return;   
+    },
+    //배팅존 테두리 컬러 이펙트
+    this.changeColor = (winner, pair) => {
+      //winner color
+      const reverse = {
+        P: {
+          slot: 1,
+          color: '#0000FF'
+        },
+        B: {
+          slot: 3,
+          color: '#FF0000'
+        },
+        T: {
+          slot: 2,
+          color: '#00FF00'
+        },
+        P1: {
+          slot: 0,
+          color: '#FFFF00'
+        },
+        P2: {
+          slot: 4,
+          color: '#FFFF00'
+        }
+      }
+      const group = this.betZones[reverse[winner].slot].parent;    
+      group.userData.changeRGB(reverse[winner].color);
+  
+      if(pair > 0){
+        const p_group = this.betZones[reverse[`P${pair}`].slot].parent;
+        p_group.userData.changeRGB(reverse[`P${pair}`].color);
+      }
+    },
+    this.onMouseClick = function (e) {
+      const { vue_room } = this;
+      if (!vue_room.game_status.bet_start) return;
+      if (!selectedObject) return;
+      if (selectedObject.type == "Mesh") {      
+        //vue.proc_insert_coin(vue.BACCARAT_ACCOUNT, 'eosio.token', parseFloat(vue.selectedCoin.value).toFixed(4), 'EOS');              
+        let reverse_index = [3,1,0,2,4]
+        vue_room.tosvr_req_betting("EOS", parseFloat(vue_room.selectedCoin.value).toFixed(2), reverse_index[selectedObject.userData.index])
+      }
+    }
   }
 
   function do_bet(target, sprite, zone, who){    
@@ -322,7 +435,7 @@ const e = function (opt) {
         coin.rotation.z = (Math.random() * Math.PI * 2) - Math.PI
         coins.add(coin)
       }
-    }
+    }   
   }
 
   function loadResource(R){    
@@ -520,8 +633,17 @@ const e = function (opt) {
     }    
   }
 
-  function animate(){
+  function animate(time){
+    if(typeof time == 'undefined') time = 0;
     requestAnimationFrame(animate)
+    that.timeStamp = time
+    TWEEN.update(time)
+    camera.layers.enable(1)
+    camera.layers.set(0)
+    renderer.render(scene, camera)
+    renderer.autoClear = false;
+    renderer.clearDepth();    
+    camera.layers.set(1)
     renderer.render(scene, camera)
   }
 }

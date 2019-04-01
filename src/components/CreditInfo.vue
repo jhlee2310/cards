@@ -84,7 +84,7 @@ export default {
       
       ;(async()=>{        
         for(let slot of final_slots){          
-          this.$parent.tosvr.req_betting("EOS", slot.value, slot.slot);
+          this.$parent.tosvr_req_betting("EOS", slot.value, slot.slot);
           await new Promise(resolve => {
             setTimeout(resolve, 50)
           })          

@@ -48,6 +48,15 @@
         </div>
       </div>
 
+      <!--winners-->
+      <Winners :winner="game_status.winner" :pair="game_status.pair"/>
+
+      <!--OtherTables-->
+      <OtherTables v-if="toggles.OtherTables"></OtherTables>
+      <div v-else class="toggle-other-tables">
+        <div><span>Tables</span><i class="fas fa-caret-right"></i></div>
+      </div>
+
       <!-- bet_info_total -->
       <div class="bet_info_total">        
         <div><span>PLAYER</span><span>{{bet_info_total[0]}}</span></div>
@@ -72,11 +81,20 @@ import Modal from '@/components/Modal.vue'
 import CreditInfo from '@/components/CreditInfo.vue'
 import CoinsForBet from '@/components/CoinsForBet.vue'
 import NameTags from '@/components/NameTags.vue'
+import Winners from '@/components/Winners.vue'
+import OtherTables from '@/components/OtherTables.vue'
+
 export default {
-  components: { Modal, CreditInfo, CoinsForBet, NameTags},
+  components: { Modal, CreditInfo, CoinsForBet, NameTags, Winners, OtherTables},
   props: ['room_id','loaded'],
+  created(){
+    this.$game.vue_room = this;
+  },
   data(){
     return {
+      toggles:{
+        OtherTables: false,
+      },
       bet_info_style:{
         transform: 'translate(0px, 0px)'
       },
@@ -110,7 +128,47 @@ export default {
     ...mapMutations([
       'SET_WINDOW_RESOLUTION',
       'SET_ROOM_ID',
+      'SET_CREDIT',
+      'SET_OPEN_SCATTER_ERROR',
     ]),
+    tosvr_req_betting(symbol, value, slot) {          
+      
+      if (!this.$socket || !this.game_connected) return;
+      if (!this.eosAccount) return;      
+      
+      var req_json = {
+        type    : "req_betting",
+        account : this.eosAccount.name,
+        symbol  : symbol,
+        value   : value,
+        slot    : slot
+      };        
+          
+      this.$socket.send(JSON.stringify(req_json)); 
+    },
+    onMouseClick(e){
+      if( e.target.tagName != 'CANVAS' && e.target.getAttribute('class') != "name_tag") return;
+      else{
+        if(!this.eosAccount) {
+          console.log(this.eosAccount)
+          this.SET_OPEN_SCATTER_ERROR(true)
+          return;
+        }
+        this.$game.onMouseClick(e);
+      }
+    },
+    init_betting_info(){      
+      this.bet_info = [];
+      this.coin_group_labels = [];
+
+      //배팅존에 내재된 used 배열 리셋
+      for(let z of this.$game.betZones){
+        z.parent.userData.zones = [];
+      }
+    },
+    onMouseMove(e){      
+      this.$game.onMouseMove(e);      
+    },
     save_my_bet(){
       if(this.eosAccount && this.eosAccount.name){
         if(!this.my_bet_info.sum){
@@ -165,32 +223,19 @@ export default {
         })
       }
 
-      array = [
-       {slot:0,acc_name:"oranke",value:500, symbol: "EOS"},
-       {slot:1,acc_name:"oranke22",value:46.7, symbol: "EOS"},
-       {slot:2,acc_name:"oke244",value:220, symbol: "EOS"},
-       {slot:1,acc_name:"oke555",value:7, symbol: "EOS"},
-       {slot:2,acc_name:"oranke2",value:49, symbol: "EOS"},
-       {slot:0,acc_name:"oranke",value:0.4, symbol: "EOS"},
-       {slot:0,acc_name:"oranke888",value:10, symbol: "EOS"},
-       {slot:3,acc_name:"oranke96",value:12, symbol: "EOS"},
-       {slot:0,acc_name:"orank419e",value:112.8, symbol: "EOS"},
-       {slot:4,acc_name:"244oranke",value:12.4, symbol: "EOS"},
-      ];      
-
       (async function(){        
         for(let mes of array){
           this.$game.bet_others(mes);
           await new Promise(res=>setTimeout( res, 30 ) )
         }
-      }.bind(this))()
-      
-      
-      //this.bet_info = array;
+      }.bind(this))()      
     },
     init_before_detail(){
-      clearTimeout(this.handleTimeout1)
-      clearTimeout(this.handleTimeout2)
+      // 카드 애니메이션 즉시 종료
+      this.eBus.$emit('toWorker',{
+        type:'stop_animation'
+      })
+
       this.score = {
         player: 0,
         banker: 0,
@@ -236,32 +281,28 @@ export default {
         break;
         case "betting::chain":
         break;
-        case "dealing":
+        case "dealing": case "dealing::chain":
+        const p_cards = data.deal.player.cards;
+        const b_cards = data.deal.banker.cards;
+        const result = data.deal.result;
+        
           this.score = {
             player: data.deal.player.score,
             banker: data.deal.banker.score,
             show: true
-          }
-          this.$game.restoreDeal(data.deal); // 그래픽 복원
+          };
+
+          this.$game.animateCards.init({
+            p_cards, b_cards, result, vue_room: this,
+          });
+          this.$game.animateCards.restoreDeal();
           // 배팅관련
           //"bettings": { "eosblackkiko": { "0": { "EOS": "0.1000" }, "1": { "EOS": "0.2000" }, "2": { "EOS": "0.2000" } } } }
           // type: "room_betting", acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"
           //this.bet_info = {acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"}
           this.restore_bettings(data.betting); // 데이터 복원
         break;
-        case "dealing::chain":
-          this.score = {
-            player: data.deal.player.score,
-            banker: data.deal.banker.score,
-            show: true
-          }
-          this.$game.restoreDeal(data.deal); // 그래픽 복원
-          // 배팅관련
-          //"bettings": { "eosblackkiko": { "0": { "EOS": "0.1000" }, "1": { "EOS": "0.2000" }, "2": { "EOS": "0.2000" } } } }
-          // type: "room_betting", acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"
-          //this.bet_info = {acc_name: "eosblackkiko", slot: 1, symbol: "EOS", value: "1.00"}
-          this.restore_bettings(data.betting); // 데이터 복원
-        break;
+        
       }
     },
     enterRoom(number){      
@@ -283,7 +324,7 @@ export default {
   },
   computed: {
     ...mapState([
-      'game_loaded', 'resolution', 'welcome'
+      'game_loaded', 'resolution', 'welcome', 'credit', 'eosAccount', 'game_connected'
     ]),
     bet_info_total(){
       const obj = [0,0,0,0,0];
@@ -342,10 +383,9 @@ export default {
       }
     },
   },
-  async mounted(){
-    this.$game.vue_room = this;
+  async mounted(){    
     this.eBus.$on('socket', data => {
-			//console.log("data",data)
+			console.log("data",data)
       switch(data.type){
         case "welcome":          
           break;
@@ -356,6 +396,18 @@ export default {
           if(this.room_id==data.room_id){
             this.room_bead = data
           }
+          break;
+        case 'deal_info':
+          const b_cards = data.deal.banker.cards
+          const p_cards = data.deal.player.cards
+          const result = data.deal.result      
+          this.$game.animateCards.init({
+              p_cards, b_cards, result, vue_room: this,
+            });
+          this.eBus.$emit('toWorker', {
+            type: 'start_cards_animation',
+            data: data.deal,
+          })
           break;
         case 'room_state':
           this.game_status.status = data.state;
@@ -401,26 +453,75 @@ export default {
               //나의 배팅정보를 기록함
               this.save_my_bet();
               break;
-            case 'dealing':
-              //alert('animation start')
-              this.eBus.$emit('toWorker', {
-                type: 'start_cards_animation'
-              })
-              break;
+            case 'dealing':              
+            break;            
             case 'prepare_round':
               if(data.round != 0)
-                this.$refs.board.nextRound(this.room_bead)
+                this.$refs.board.nextRound(this.room_bead);
+                this.$game.animateCards.reset();
+                this.$set(this.game_status,'winner','')
+                this.$set(this.game_status,'pair','')
+                this.init_betting_info();
+                console.log('배팅정보를 초기화합니다.');
               break;
             case 'prepare_game':
               this.roundInit()
-              break;
+            break;            
           }
-        break;        
+        break;
+        case 'room_betting':          
+          this.$game.bet_others(data)
+        break;
+        
+    
       }
+      
+      window.addEventListener('mousemove',this.onMouseMove,false)
+      window.addEventListener('click',this.onMouseClick,false)
     })
 
-    this.eBus.$on('worker', data => {
-      this.timer = data.value
+    this.eBus.$on('worker', data => {      
+      switch(data.type){
+        case "worker::timer":
+          this.timer = data.value
+          break;
+        case "worker::cards_drop":
+          ;(async()=>{
+            if(data.index >= 2 ){
+
+            }
+            console.log(data);
+            this.$game.animateCards.moveCard(data.index,600,1)            
+          })()          
+        break;
+
+        case "worker::cards_open_quick":
+          ;(async()=>{
+            this.$game.animateCards.rotateCard(data.index,200,4)
+          })()          
+        break;
+
+        case "worker::cards_open_long":
+          ;(async()=>{
+            this.$game.animateCards.slideCard(data.index,200)
+          })()          
+        break;
+        
+        case "worker::cards_out":
+        /*
+          this.$game.animateCards.reset();
+          //this.$set(this.game_status,'winner','')
+          //this.$set(this.game_status,'pair','')
+          this.init_betting_info();
+          console.log('배팅정보를 초기화합니다.');
+          */
+        break;
+
+        case "worker::expose_winner":
+          this.$set(this.game_status,'winner', this.room_bead.bead.split(',')[0]);
+          this.$set(this.game_status,'pair', this.room_bead.bead.split(',')[1]);
+        break;
+      }
     });
 
     this.$refs.cont_3d.appendChild( this.$game.renderer.domElement )
@@ -430,7 +531,9 @@ export default {
   },
   beforeDestroy(){
     window.removeEventListener('resize', this.onResize );
+    window.removeEventListener('click',this.onMouseClick)
     this.eBus.$off('socket');
+    window.removeEventListener('mousemove',this.onMouseMove)
   },
   beforeRouteEnter( to, from, next){
     //deep link
@@ -482,6 +585,31 @@ export default {
   }
 
   #cont_3d{
+    .toggle-other-tables{
+      @media (hover:hover){
+        &:hover{
+          color:yellow;
+        }
+      }
+      cursor:pointer;
+      position:absolute;
+      background-color:#000;
+      color:white;
+      font-size:18px;
+      width:40px;
+      height:100px;
+      top:50%;
+      transform:translate(0,-50%);
+      &>div{
+        position:absolute;
+        top:50%;left:50%;
+        transform: translate(-50%,-50%) rotateZ(90deg);
+        &>i{
+          margin-left:12px;
+          transform: rotate(-90deg)
+        }
+      }
+    }
     .bet_info{
       font-size:13px;
       position:absolute;

@@ -4,7 +4,7 @@
       <AppHeader :url="location.pathname"></AppHeader>
       <main>        
         <router-view/>
-        <div v-if="/baccarat/.test(location.pathname) && !(game_loaded && isReady)"> NOW LOADING</div>
+        <div v-if="/baccarat/.test(location.pathname) && !(game_loaded && game_connected)"> NOW LOADING</div>
       </main>
       <AppFooter></AppFooter>
     </div>
@@ -33,7 +33,7 @@
     },
     computed:{
       ...mapState([
-      'game_loaded','resolution','room_id', 'isReady', 'welcome'
+      'game_loaded','resolution','room_id', 'game_connected', 'welcome'
     ])
     }
   }

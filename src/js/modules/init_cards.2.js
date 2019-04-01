@@ -118,7 +118,9 @@ export default function init_cards(opt){
         }
         
         mesh.userData.init_position = mesh.position.clone()
-        mesh.userData.init_rotation = mesh.rotation.clone()        
+        mesh.userData.init_rotation = mesh.rotation.clone()
+        mesh.userData.original_position = mesh.position.clone()
+        mesh.userData.original_rotation = mesh.rotation.clone()
         mesh.visible = false;
 
         group.add(mesh);
