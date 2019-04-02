@@ -61,8 +61,8 @@ export default {
     if(this.$socket){
       this.$socket.sendOBJ({
         type    :"req_room_list",
-          offset  : 0,
-          count   : 10
+        offset  : 0,
+        count   : 10
       })
 
       if(this.room_id){
@@ -81,26 +81,13 @@ export default {
     //console.log(message)
     
       switch(message.type){
-        case 'welcome':
-          console.log('game_connected');
-          this.$socket.sendOBJ({
-              type    :"req_room_list",
-              offset  : 0,
-              count   : 10
-          })
-
-          break;
         case 'room_list':
         console.log("romm_list",message.rooms)
           this.roomList = message.rooms
           this.$nextTick(()=>{
-            // console.log('room_list');
-            // console.log('this.$refs',this.$refs)
             message.rooms.forEach((data,i) => {
-              let num = 'board'+i
-              //console.log()
-              this.$refs[num][0].setRound(data)
-              
+              let num = 'board'+i              
+              this.$refs[num][0].setRound(data)              
             });
 
           })

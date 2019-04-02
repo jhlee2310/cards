@@ -1,9 +1,8 @@
 <template>  
   <div>
-    <div>
-      <router-link v-for="i in 12" :key="i" :to="`/baccarat/${i}`" tag="span" style="margin-right:5px;cursor:pointer">{{i}}</router-link>
-    </div>
-    <router-view v-if="game_loaded && game_connected"></router-view>    
+    <router-view v-if="game_loaded && game_connected"></router-view>
+    <!--hidden canvas-->
+    <canvas width="256" height="256" ref="hiddenCanvas" v-show="false"/>
   </div>
 </template>
 
@@ -49,12 +48,18 @@ export default {
     const worker = useWorker ? this.$worker : this.$worker_self;
 
     this.eBus.$on('socket', mes => {
+      console.log(mes)
       if(mes.type == "welcome"){
         console.log('socket connected')
         this.SET_WELCOME(mes.times)        
         this.SET_GAME_CONNECTED(true)
 
-        console.log(this.$socket)
+        this.$socket.send(JSON.stringify({
+          type    :"req_room_list",
+          offset  : 0,
+          count   : 10
+        }))
+        
         if( this.eosAccount && this.eosAccount.name ){
           this.tosvr_set_scatter_identity();          
         }else{
@@ -67,7 +72,11 @@ export default {
         })
       }else if(mes.type == "game_token_info"){
         this.SET_CREDIT(mes.value)
-      }        
+      }else if(mes.type == "room_list"){
+        //this.SET_ROOM_LIST(mes.rooms);
+      }else if(mes.type == "room_bead"){
+        //this.SET_ROOM_BEAD(mes)
+      }
     })
 
     //하부컴퍼넌트에서 요청
@@ -93,6 +102,7 @@ export default {
       'SET_WELCOME',
       'SET_CREDIT',
       'SET_GAME_CONNECTED',
+      'SET_ROOM_LIST',
     ]),
     tosvr_set_scatter_identity() {
       let req_json = {
@@ -113,6 +123,10 @@ export default {
       const data = JSON.parse(mes.data)
       this.eBus.$emit('socket', data);
     }
+
+    this.$nextTick(()=>{
+
+    })
   },
   computed: {
     ...mapState([

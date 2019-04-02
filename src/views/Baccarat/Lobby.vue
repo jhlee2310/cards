@@ -60,19 +60,13 @@ export default {
     window.vv = this
     this.$socket.onmessage = (mes)=>{      
     const message = JSON.parse(mes.data)
-      console.log("message",message)
+      
       switch(message.type){
-				case 'welcome':
-          console.log('game_connected');
-          this.$socket.send(JSON.stringify({
-              type    :"req_room_list",
-              offset  : 0,
-              count   : 10
-          }))
-
-          break;
+        case 'welcome':
+        break;
+/*
         case 'room_list':
-          this.roomList = message.rooms
+          this.roomList = message.rooms;          
           this.$nextTick(()=>{
             // console.log('room_list');
             // console.log('this.$refs',this.$refs)
@@ -84,20 +78,9 @@ export default {
             });
 
           })
-          break;
+        break;
+*/
 
-        case 'room_state':
-          /**
-           * http://192.168.0.7:8081/issues/1126 참조
-           * prepare_game	게임 준비중. 카드슈를 준비하는 상태
-              prepare_game::chain	게임 정보를 체인에 동기화. 클라입장에서는 prepare_game와 같다.
-              prepare_round	라운드를 준비하는 상태
-              prepare_round::chain	라운드 정보를 체인에 동기화. 클라입장에서는 prepare_round와 같다.
-              betting	배팅 가능 상태
-              betting::chain	배팅정보를 체인에 동기화.
-              dealing	카드 오픈
-              dealing::chain	카드 오픈 및 돈분배를 체인에 동기화
-          */
           switch(message.state){           
             case 'prepare_round':
               if(message.round != 0)
@@ -118,11 +101,9 @@ export default {
           this.roomList[i].round = message.round
           this.$refs[num][0].nextRound(message)
           //this.$refs.board.nextRound(message)
-
           break;
         default:
           break;
-          //console.log(message)
       }
       
        

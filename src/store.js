@@ -37,6 +37,7 @@ export default new Vuex.Store({
     game_loaded: false,
     isReady: false,
     welcome: null,
+    room_list: null,
   },
   getters: {
     'getEosAccount': state => state.eosAccount,
@@ -48,6 +49,9 @@ export default new Vuex.Store({
     'getRoomId': state => state.room_id,    
   },
   mutations: {
+    SET_ROOM_LIST(state, payload){
+      state.room_list = payload
+    },
     SET_WELCOME(state, payload){
       state.welcome = payload
     },

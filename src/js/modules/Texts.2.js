@@ -31,59 +31,25 @@ export default function(opt){
 
     return geometry;
   }
-  
-  _resources_.winners = {};
-  ;(async() => {
-    const fonts = await Promise.all(
-      [
-        new Promise( resolve => {
-          new THREE.FontLoader().load('/brushScript.json', _f1 => {
-            resolve(_f1)
-          })
-        }),
-        /*
-        new Promise( resolve => {
-          new THREE.FontLoader().load('/helvetiker_bold.typeface.json', _f2 => {
-            resolve(_f2)
-          })
-        }),
-        new Promise( resolve => {
-          //new THREE.TextureLoader().load(require('@/images/equirectangular.png'), texture => {
-            new THREE.TextureLoader().load(require('@/images/metal.jpg'), texture => {
-            texture.mapping = THREE.SphericalReflectionMapping;
-            texture.encoding = THREE.sRGBEncoding;
-            resolve(texture)
-          })
-        }),*/
-      ]
-    )
-
-    let font1 = fonts[0]
-    //let font2 = fonts[1]
-    //let envMap = fonts[2];
 
     
     let text_material = new THREE.MeshPhongMaterial({      
-      color: '#FF0000',
-     // envMap: envMap,
+      color: '#FF0000',   
     })
 
     let text_material2 = new THREE.MeshPhongMaterial({      
-      color: '#0000ff',
-      //envMap: envMap, 
+      color: '#0000ff',      
     })
 
     let text_material3 = new THREE.MeshPhongMaterial({      
       color: '#00ff00'     
     })
-
-    //console.log(text_material2)
-
+    let font1 = _resources_.fonts.brushScript;
     // p_group
     ;(function(){
       let group = new THREE.Group();
-      let mesh = new THREE.Mesh( makeTextGeo('Player',font1,4), text_material2 )
-      let mesh2 = new THREE.Mesh( makeTextGeo('Win!',font1,4), text_material2 )
+      let mesh = new THREE.Mesh( makeTextGeo('Player',_resources_.fonts.brushScript,4), text_material2 )
+      let mesh2 = new THREE.Mesh( makeTextGeo('Win!',_resources_.fonts.brushScript,4), text_material2 )
       mesh.layers.set(1)
       mesh2.layers.set(1)
       mesh.position.y = 2.2
@@ -133,8 +99,6 @@ export default function(opt){
       
       group.position.y = 7
       _resources_.winners.tie = group;
-    })();
-
+    })();  
   
-  })();
 }

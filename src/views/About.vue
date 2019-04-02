@@ -18,7 +18,7 @@
       <canvas width="256" height="256" ref="hiddenCanvas"/>
     </div>
     
-    <div id="cont_3d">      
+    <div id="cont_3d">
       <!--스코어-->
       <transition name="fade">
         <div v-show="score.show" :style="scoreStyle" class="score player" ref="score_player">{{score.player}}</div>
@@ -67,7 +67,7 @@
       <div class="table-number" :style="tableNumStyle">
         <span>TABLE</span><span style="margin-left:20px;">{{game_status.table}}</span>
       </div>
-      <!--Room Number -->
+      <!--round Number -->
       <div class="round-number" :style="roundNumStyle">
         <span>ROUND</span><span style="margin-left:20px;">{{game_status.round}}</span>
       </div>

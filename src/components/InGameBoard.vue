@@ -1,229 +1,93 @@
-<template>
-  <div style="background-color: rgba(0, 0, 0, .77)">
-    <div class="board">      
-      <div v-if="show"  style="display:inline;">
-        <div style="padding:10px 10px;display:flex;">
-          <div class="bead-p">P</div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pWinCnt}}</div>
-          <div class="bead-b">B</div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bWinCnt}}</div>
-          <div class="bead-t">T</div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{tWinCnt}}</div>
+<template>  
+  <div class="in-game-board" style="position:relative;">
+    <div class="hover-pop" @click="change_room(data.room_id)">
+      <div>
+        <div style="text-align:left;margin-bottom:10px;line-height:25px;">
+          <span class="bead-p">P</span>
+          <span class="bead-txt" style="color: white;">{{pWinCnt}}</span>
+          <span class="bead-b">B</span>
+          <span class="bead-txt" style="color: white;">{{bWinCnt}}</span>
+          <span class="bead-t">T</span>
+          <span class="bead-txt" style="color: white;">{{tWinCnt}}</span>
+        </div>
+        <div style="text-align:left;line-height:30px;vertical-align:middle">
           <div class="bead-other">
             <div class="small_red"></div>
           </div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{bPairCnt}}</div>
+          <span class="bead-txt" style="color: white;">{{bPairCnt}}</span>
           <div class="bead-other">
             <div class="small_blue"></div>
           </div>
-          <div style="color: white;display:flex;-webkit-box-align: center;-ms-flex-align: center;align-items: center;">{{pPairCnt}}</div>
-          <div v-if="!lobby" style="position:absolute;right:12px;display: inline-flex;color: white;font-size: 20px;line-height: 28px;">
-            <div style="display: inline-flex;" @mouseenter="onMouseEnter('P')" @mouseleave="onMouseLeave('P')">
-            P
-            <div v-if="prdtPResult.result1" class="bead-border-b"></div>
-            <div v-else class="bead-border-p"></div>
-            <div v-if="prdtPResult.result2" class="bead-b"></div>
-            <div v-else class="bead-p"></div>
-            <div v-if="prdtPResult.result3" class="cockroah-true"></div>
-            <div v-else class="cockroah-false"></div>
-          </div>
-          <div style="display: inline-flex;" @mouseenter="onMouseEnter('B')" @mouseleave="onMouseLeave('B')">
-            B
-            <div v-if="prdtBResult.result1" class="bead-border-b"></div>
-            <div v-else class="bead-border-p"></div>
-            <div v-if="prdtBResult.result2" class="bead-b"></div>
-            <div v-else class="bead-p"></div>
-            <div v-if="prdtBResult.result3" class="cockroah-true"></div>
-            <div v-else class="cockroah-false"></div>
-          </div>
-          </div>
+          <span class="bead-txt" style="color: white;">{{pPairCnt}}</span>
         </div>
-        <div class="rect_wrap" style="overflow:hidden;box-sizing:border-box;padding-left:4px;">
-          <div v-if="!lobby" class="rectanges" style="margin-right:4px;float:left;position: relative;width:240px;height:120px;left:0px;bottom:0;background:rgba(255,255,255,0.9);overflow-x: auto;overflow-y: hidden; display:inline;float:left;">
-            <div class="col" v-for="(count, i) in winners" :style="{
-                position:'absolute',
-                height:'100%',
-                width:'20px',
-                top: count.top+'px',
-                left: count.left+'px',
-              }"
-              :key="i">
-              <div v-if="count.winner=='P'" class="beadRoad-p">
-                P
-                <div v-if="count.bPair" class="b-pair"></div>
-                <div v-if="count.pPair" class="p-pair"></div>
-              </div>
-              <div v-if="count.winner=='B'" class="beadRoad-b">
-                B
-                <div v-if="count.bPair" class="b-pair"></div>
-                <div v-if="count.pPair" class="p-pair"></div>
-              </div>
-              <div v-if="count.winner=='T'" class="beadRoad-t">
-                T
-                <div v-if="count.bPair" class="b-pair"></div>
-                <div v-if="count.pPair" class="p-pair"></div>
-              </div>
-              <!-- <img src="@/assets/logo.png"> -->
-            </div>
-            <svg height="121" width="240">
-              <line v-for="i in 6" x1="0" :y1="i*20" x2="240" :y2="i*20" :style="{
-                'stroke':'rgb(0,0,0)',
-                //'stroke-width':i==6?'2':'1'
-                'stroke-width':'1'
-              }" :key="`row${i}`"/>
-              <line v-for="i in 12" :x1="i*20" y1="0" :x2="i*20" y2="121" :style="{
-                'stroke':'rgb(0,0,0)',
-                //'stroke-width':i%2==0?'2':'1'
-                'stroke-width':'1'
-                }" :key="`col${i}`"/>
-            </svg>
-          </div>          
-          <div v-dragscroll.x='true' class="rectanges" :style="{
-              'margin-right':'4px',
-              'float':'left',
-              'cursor': 'grab',
-              'position': 'relative',
-              'width':lobby?'600px':'420px',
-              'height':'120px',              
-              'background':'rgba(255,255,255,0.9)',
-              'overflow': 'hidden',
-              'display':'block',
-            }">
-            <div class="col" v-for="(count, i) in bigRoad" :style="{
-                position:'absolute',
-                height:'100%',
-                width:'20px',
-                top: count.top+'px',
-                left: count.left+'px',
-              }"
-              :key="i">
-              <div v-if="count.winner=='P'" :class="count.prdt?'is-p-player blinking':'is-p-player'">
-                <div v-if="count.bPair" class="b-pair"></div>
-                <div v-if="count.pPair" class="p-pair"></div>
-                <div v-if="count.isTie > 1" class="is-tie">
-                  {{count.isTie}}
-                </div>
-                <div v-if="count.isTie > 0" class="is-tie-line"></div>
-              </div>
-              <div v-else-if="count.winner=='B'" :class="count.prdt?'is-b-player blinking':'is-b-player'">
-                <div v-if="count.bPair" class="b-pair"></div>
-                <div v-if="count.pPair" class="p-pair"></div>
-                <div v-if="count.isTie > 1" class="is-tie">
-                  {{count.isTie}}
-                </div>
-                <div v-if="count.isTie > 0" class="is-tie-line"></div>
-              </div>
-              <div v-else-if="count.winner=='T'" class="is-tie is-tie-line">
-                  {{count.isTie}}
-              </div>
-              <!-- <img src="@/assets/logo.png"> -->
-            </div>
-            <svg height="121" width="800">
-              <line v-for="i in 6" x1="0" :y1="i*delta" x2="800" :y2="i*delta" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                'stroke-width':i==6?'2':'0.5'
-                //'stroke-width':'1'
-              }" :key="`row${i}`"/>
-              <line v-for="i in 40" :x1="i*delta" y1="0" :x2="i*delta" y2="121" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                //'stroke-width':i%2==0?'2':'1'
-                'stroke-width':'1'
-                }" :key="`col${i}`"/>
-            </svg>
-          </div>          
-          <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:600px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;display:inline;float:left;">
-            <div class="col" v-for="(count, i) in bigEyeRoad" :style="{
-                position:'absolute',
-                height:'100%',
-                width:'20px',
-                top: count.top+'px',
-                left: count.left+'px',
-              }"
-              :key="i">
-              <div v-if="count.result"  :class="count.prdt?'is-eye-true blinking':'is-eye-true'">
-              </div>
-              <div v-else :class="count.prdt?'is-eye-false blinking':'is-eye-false'">
-              </div>
-              <!-- <img src="@/assets/logo.png"> -->
-            </div>
-            <svg height="61" width="800">
-              <line v-for="i in 3" x1="0" :y1="i*delta" x2="800" :y2="i*delta" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                'stroke-width':i==3|| i==0?'2':'0.5'
-                //'stroke-width':'1'
-              }" :key="`row${i}`"/>
-              <line v-for="i in 40" :x1="i*delta" y1="0" :x2="i*delta" y2="61" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                //'stroke-width':i==30?'2':'1'
-                'stroke-width':'1'
-                }" :key="`col${i}`"/>
-            </svg>
-          </div>          
-          <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;float:left;">
-            <div class="col" v-for="(count, i) in smallRoad" :style="{
-                position:'absolute',
-                height:'100%',
-                width:'20px',
-                top: count.top+'px',
-                left: count.left+'px',
-              }"
-              :key="i">
-              <div v-if="count.result" :class="count.prdt?'is-small-true blinking':'is-small-true'">
-              </div>
-              <div v-else  :class="count.prdt?'is-small-false blinking':'is-small-false'">
-              </div>
-              <!-- <img src="@/assets/logo.png"> -->
-            </div>
-            <svg height="61" width="800">
-              <line v-for="i in 3" x1="0" :y1="i*delta" x2="800" :y2="i*delta" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                'stroke-width':i==3|| i==0?'2':'0.5'
-                //'stroke-width':'1'
-              }" :key="`row${i}`"/>
-              <line v-for="i in 40" :x1="i*delta" y1="0" :x2="i*delta" y2="61" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                //'stroke-width':i==30?'2':'1'
-                //'stroke-width':'1'
-                }" :key="`col${i}`"/>
-            </svg>
-          </div>        
-          <div v-dragscroll.x='true' class="rectanges" style="cursor: grab;position: relative;width:300px;height:60px;bottom:1;background:rgba(255,255,255,0.9);overflow: hidden;">
-            <div class="col" v-for="(count, i) in cockroahRoad" :style="{
-                position:'absolute',
-                height:'100%',
-                width:'20px',
-                top: count.top+'px',
-                left: count.left+'px',
-              }"
-              :key="i">
-              <div v-if="count.result" :class="count.prdt?'is-cockroah-true blinking':'is-cockroah-true'">
-              </div>
-              <div v-else :class="count.prdt?'is-cockroah-false blinking':'is-cockroah-false'">
-              </div>
-              <!-- <img src="@/assets/logo.png"> -->
-            </div>
-            <svg height="61" width="800">
-              <line v-for="i in 3" x1="0" :y1="i*delta" x2="800" :y2="i*delta" :style="{
-                'stroke':'rgb(0,0,0,0.5)',
-                //'stroke-width':i==3|| i==0?'2':'1'
-                'stroke-width':'0.5'
-              }" :key="`row${i}`"/>
-              <line v-for="i in 40" :x1="i*delta" y1="0" :x2="i*delta" y2="61" :style="{
-                'stroke':i==40?'rgb(0,0,0)':'rgb(0,0,0,0.5)',
-                'stroke-width':i==40?'2':'1'
-                //'stroke-width':'1'
-                }" :key="`col${i}`"/>
-            </svg>
-          </div>
-        </div>
-      </div>      
+      </div>
     </div>
-  </div>
+    <div class="rect_wrap" style="height:144px;position:relative;overflow:hidden;box-sizing:border-box;padding:12px;padding-right:12px;background-color:rgba(0,0,0,.55);margin-bottom:8px;width:100%;border-radius:10px;"> 
+      <div v-dragscroll.x='true' class="rectanges" :style="{
+          'margin-right':'4px',
+          'float':'left',
+          'cursor': 'grab',
+          'position': 'relative',
+          'width':'460px',
+          'height':'120px',              
+          'background':'rgba(255,255,255,1)',
+          'overflow': 'hidden',
+          'display':'block',
+          float:'right',
+        }">
+        <div class="col" v-for="(count, i) in bigRoad" :style="{
+            position:'absolute',
+            height:'100%',
+            width:'20px',
+            top: count.top+'px',
+            left: count.left+'px',
+          }"
+          :key="i">
+          <div v-if="count.winner=='P'" :class="count.prdt?'is-p-player blinking':'is-p-player'">
+            <div v-if="count.bPair" class="b-pair"></div>
+            <div v-if="count.pPair" class="p-pair"></div>
+            <div v-if="count.isTie > 1" class="is-tie">
+              {{count.isTie}}
+            </div>
+            <div v-if="count.isTie > 0" class="is-tie-line"></div>
+          </div>
+          <div v-else-if="count.winner=='B'" :class="count.prdt?'is-b-player blinking':'is-b-player'">
+            <div v-if="count.bPair" class="b-pair"></div>
+            <div v-if="count.pPair" class="p-pair"></div>
+            <div v-if="count.isTie > 1" class="is-tie">
+              {{count.isTie}}
+            </div>
+            <div v-if="count.isTie > 0" class="is-tie-line"></div>
+          </div>
+          <div v-else-if="count.winner=='T'" class="is-tie is-tie-line">
+              {{count.isTie}}
+          </div>
+          <!-- <img src="@/assets/logo.png"> -->
+        </div>
+        <svg height="121" width="800">
+          <line v-for="i in 6" x1="0" :y1="i*delta" x2="800" :y2="i*delta" :style="{
+            'stroke':'rgb(0,0,0,0.5)',
+            'stroke-width':i==6?'2':'0.5'
+            //'stroke-width':'1'
+          }" :key="`row${i}`"/>
+          <line v-for="i in 40" :x1="i*delta" y1="0" :x2="i*delta" y2="121" :style="{
+            'stroke':'rgb(0,0,0,0.5)',
+            //'stroke-width':i%2==0?'2':'1'
+            'stroke-width':'1'
+            }" :key="`col${i}`"/>
+        </svg>
+      </div>
+      <div style="color:white;text-align:center;float:right;height:100%;width:40px;font-size:21px;display:flex;align-items:center;">
+        {{data.room_id}}
+      </div>
+    </div>           
+  </div>  
 </template>
 
 <script>
 export default {
   name: 'Board',
+  /*
   props: {
 		roomId: Number,
 		lobby: {
@@ -231,9 +95,10 @@ export default {
 			default: false
     },
     room_detail: Object,
-    in_game: Boolean,
-		
+    in_game: Boolean,		
   },
+  */
+  props:['data'],
   data() {
     return {
       round:1,
@@ -244,6 +109,19 @@ export default {
       mouseOverValue: '',
       tempData: '',
     }
+  },
+  mounted(){
+    this.eBus.$on('socket',mes => {
+      if(mes.type == 'room_bead'){
+        if(this.data.room_id == mes.room_id){          
+          if(mes.round ==1){
+            this.setInit()
+          }
+          this.round = mes.round
+          this.nextRound(mes)
+        }
+      }
+    })
   },
   computed: {
     pWinCnt: function (){
@@ -887,6 +765,10 @@ export default {
     }
   },
   methods: {
+    change_room(r){
+      this.$router.push(`/baccarat/${r}`);
+      this.eBus.$emit('close_tables');
+    },
     viewScore(data){
       const rn = this.$_.split(data,',')
         //console.log(rn)
@@ -998,11 +880,9 @@ export default {
     }
   },
   watch: {
-    room_detail:{
-      handler(nv){
-        if(nv==null) return;
-        //setInit()
-        this.setRound(nv)
+    data:{
+      handler(d){
+        this.setRound(d);
       },
       immediate: true,
     }
@@ -1010,8 +890,19 @@ export default {
 }
 </script>
 
-<!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped lang="scss">
+.in-game-board{
+  .hover-pop{
+    
+    display:none;
+  }
+  &:hover{
+    .hover-pop{
+      cursor:pointer;
+      display:flex;
+    }
+  }
+}
 /**
   ①6매(BEAD ROAD)
   ②원매(BIG ROAD)
@@ -1180,70 +1071,95 @@ export default {
   -webkit-transform: rotate(-45deg); /* Safari and Chrome */
 }
 
-.bead-p {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  color: white;
-  display: inline-flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: relative;
-  font-size: 13px;
-  background: blue;
-}
+.hover-pop{
+  position:absolute;width:90%;height:100%;background-color:rgba(0,0,0,.7);top:0;right:0;z-index:1;overflow:hidden;align-items: center;justify-content: center;
+  .bead-txt{
+      font-size:22px;
+      margin-right:16px;
+      vertical-align: text-bottom;
+      width:26px;
+      display:inline-block;
+    }
+  .bead-p {
+    width: 30px;
+    height: 30px;
+    margin-right:8px;
+    border-radius: 50%;
+    color: white;
+    display: inline-flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+    font-size: 16px;
+    background: blue;    
+  }
 
-.bead-b {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  color: white;
-  display: inline-flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: relative;
-  font-size: 13px;
-  background: red;
-}
+  .bead-b {
+    width: 30px;
+    height: 30px;
+    margin-right:8px;
+    border-radius: 50%;
+    color: white;
+    display: inline-flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+    font-size: 16px;
+    background: red;
+  }
 
-.bead-other {
+  .bead-other {
+      width: 30px;
+      height: 30px;
+      margin-right:8px;
+      border-radius: 50%;
+      color: white;
+      display: inline-block;
+      position: relative;
+      background: #cccccc;
+  }
+
+  .bead-border-p {
+    width: 28px;
+    
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid blue;
+  }
+
+  .bead-border-b {
     width: 28px;
     height: 28px;
     border-radius: 50%;
+    border: 1px solid red;
+  }
+
+  .bead-t {
+    width: 28px;
+    height: 28px;
+    margin-right:8px;
+    border-radius: 50%;
     color: white;
-     display: inline-flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: relative;
-    background: #cccccc;
+    display: inline-flex;
+    -webkit-box-pack: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    position: relative;
+    font-size: 16px;
+    background: green;
+  }
 }
-
-.bead-border-p {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid blue;
-}
-
-.bead-border-b {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  border: 1px solid red;
-}
-
 .cockroah-true {
   width: 28px;
   height: 1px;
@@ -1308,22 +1224,7 @@ export default {
   background-color: #b61010;
 }
 
-.bead-t {
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  color: white;
-  display: inline-flex;
-  -webkit-box-pack: center;
-  -ms-flex-pack: center;
-  justify-content: center;
-  -webkit-box-align: center;
-  -ms-flex-align: center;
-  align-items: center;
-  position: relative;
-  font-size: 13px;
-  background: green;
-}
+
 
 .is-cockroah-true {
   position: absolute;

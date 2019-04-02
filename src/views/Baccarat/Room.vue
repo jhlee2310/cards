@@ -1,6 +1,14 @@
 <template>
   <div ref="room_root">
-    <div>{{game_loaded}} {{resolution}}</div>
+    <div ref="hiddenDiv" v-show="false" style="width:256px;height:256px;">   
+      <div v-for="(item, index) in hiddenData" :style="hiddenStyle.div(index == 2 ? 1 : 0)" :key="index">
+        <div style="font-size:32px;position:relative">            
+          <span style="position:absolute;left:0px;"><img src="@/images/human.png" style="width:30px;height:30px;position:relative;">{{item[1]}}</span>
+          <span :style="hiddenStyle.percent">{{item[2]}}%</span>
+        </div>
+      </div>
+    </div>      
+    
     <div id="cont_3d" ref="cont_3d" :style="{
       width: resolution.width + 'px',
       height: resolution.height + 'px',
@@ -23,10 +31,7 @@
       <div :class="timer < 4?'timer active':'timer'" v-show="game_status.betting && timer " ref="timer" :style="timerStyle">{{timer}}</div>
 
       <!--NameTags-->
-      <NameTags :coin_groups="coin_group_labels" :resolution="resolution"/>
-
-      <!--CoinsForBet-->
-      <CoinsForBet ref="coins_for_bet" :betting="game_status.betting" :selected="selectedCoin"/>
+      <NameTags :coin_groups="coin_group_labels" :resolution="resolution"/>      
 
       <!--스코어-->
       <transition name="fade">
@@ -52,9 +57,11 @@
       <Winners :winner="game_status.winner" :pair="game_status.pair"/>
 
       <!--OtherTables-->
-      <OtherTables v-if="toggles.OtherTables"></OtherTables>
-      <div v-else class="toggle-other-tables">
-        <div><span>Tables</span><i class="fas fa-caret-right"></i></div>
+      <div class="tables_wrap" :class="{hidden:toggles.OtherTables}" :style="otherTableStyle">
+        <OtherTables :list="room_list"></OtherTables>
+        <div class="toggle-other-tables" @click="toggles.OtherTables=!toggles.OtherTables">
+          <div><span>Tables</span><i class="tables_btn fas fa-caret-right"></i></div>
+        </div>
       </div>
 
       <!-- bet_info_total -->
@@ -64,12 +71,13 @@
         <div><span>TIE</span><span>{{bet_info_total[2]}}</span></div>
         <div><span>P.PAIR</span><span>{{bet_info_total[3]}}</span></div>
         <div><span>B.PAIR</span><span>{{bet_info_total[4]}}</span></div>
-      </div>
-       
-      
+      </div>      
     </div>
     <!-- bottom_ui -->
-      <CreditInfo :bet="my_bet_info" :saved="saved_my_bet">
+    <div style="position:relative;width:100%;height:0;">
+      <CoinsForBet ref="coins_for_bet" :betting="game_status.betting" :selected="selectedCoin"/>
+    </div>
+      <CreditInfo :bet="my_bet_info" :saved="saved_my_bet">        
         <board :roomId="parseInt(room_id)" :room_detail="room_detail" ref="board"></board>
       </CreditInfo>
   </div>
@@ -83,6 +91,8 @@ import CoinsForBet from '@/components/CoinsForBet.vue'
 import NameTags from '@/components/NameTags.vue'
 import Winners from '@/components/Winners.vue'
 import OtherTables from '@/components/OtherTables.vue'
+import rasterizeHTML from 'rasterizehtml'
+
 
 export default {
   components: { Modal, CreditInfo, CoinsForBet, NameTags, Winners, OtherTables},
@@ -92,11 +102,31 @@ export default {
   },
   data(){
     return {
+      history_move_start: false,
       toggles:{
-        OtherTables: false,
+        OtherTables: true,
+      },
+      hiddenStyle:{
+        percent:{                    
+          textAlign: 'center',          
+          fontSize: '1em',
+          float:'right',          
+        },
+        div(n){
+          return{
+            width: (n==0) ? '100%' : '76%',
+            fontSize: '999px',
+            //lineHeight: '1em',
+            fontFamily: 'Arial',
+            fontWeight: 500,
+            color: '#fff',
+            overflow: 'hidden',            
+            height:'51.2px'
+          }
+        }
       },
       bet_info_style:{
-        transform: 'translate(0px, 0px)'
+        
       },
       selectedCoin:{
         index: null,
@@ -130,6 +160,7 @@ export default {
       'SET_ROOM_ID',
       'SET_CREDIT',
       'SET_OPEN_SCATTER_ERROR',
+      'SET_ROOM_LIST',
     ]),
     tosvr_req_betting(symbol, value, slot) {          
       
@@ -149,12 +180,15 @@ export default {
     onMouseClick(e){
       if( e.target.tagName != 'CANVAS' && e.target.getAttribute('class') != "name_tag") return;
       else{
-        if(!this.eosAccount) {
-          console.log(this.eosAccount)
-          this.SET_OPEN_SCATTER_ERROR(true)
-          return;
-        }
-        this.$game.onMouseClick(e);
+        if(this.game_status.bet_start){
+          if(!this.eosAccount) {          
+            this.SET_OPEN_SCATTER_ERROR(true)
+            return;
+          }
+          else{
+            this.$game.onMouseClick(e);
+          }
+        }        
       }
     },
     init_betting_info(){      
@@ -236,6 +270,11 @@ export default {
         type:'stop_animation'
       })
 
+      //bet_info_history 종료
+      clearInterval(this.handleInterval);
+      this.history_move_start == false;
+      this.bet_info_style = {};
+
       this.score = {
         player: 0,
         banker: 0,
@@ -243,6 +282,9 @@ export default {
       };
       this.game_status.betting = null;      
       this.timer = '';
+      this.$game.restoreColor();
+      this.$game.clearSelectedObject();
+      this.$game.hideWinners();
       this.$game.init_before_detail();
       this.$game.clear_bet_coins();
       this.bet_info = [];
@@ -262,21 +304,7 @@ export default {
             type: 'start_bet_timer',
             time: time,
           });
-          this.game_status.betting = -1;
-          //let extra = time % 1000
-          //this.timer = ((time - extra) / 1000) + 1          
-          /*
-          this.handleTimeout1 = setTimeout(()=>{
-            this.game_status.betting = true;
-            const d = () => {
-              if(this.timer == 0) return;              
-              this.timer --;
-              this.handleTimeout2 = setTimeout( d, 1000 )
-            }
-            d();            
-          },extra)          
-          */
-
+          this.game_status.betting = -1;                    
           this.restore_bettings(data.betting);
         break;
         case "betting::chain":
@@ -309,7 +337,7 @@ export default {
       this.$socket.sendOBJ({
         type: "req_enter_room",
         room_id : number || this.room_id
-      })
+      })      
     },
     onResize(e){
       const _width = this.$refs.room_root.clientWidth;
@@ -324,8 +352,38 @@ export default {
   },
   computed: {
     ...mapState([
-      'game_loaded', 'resolution', 'welcome', 'credit', 'eosAccount', 'game_connected'
+      'game_loaded', 'resolution', 'welcome', 'credit', 'eosAccount', 'game_connected', 'room_list'
     ]),
+     hiddenData(){      
+      let arrays = [[0,[],0],[0,[],0],[0,[],0],[0,[],0],[0,[],0]];
+      let totalValue = 0;
+       const rSlot = (i) => {
+          let s = [2,1,3,0,4]
+          return s[i]
+        }
+
+      for(let item of this.bet_info){       
+        totalValue += +item.value;
+        let slot = arrays[rSlot(item.slot)]        
+        slot[0] = (+slot[0] + +item.value).toFixed(1)
+        
+
+        if( slot[1].indexOf(item.acc_name) == -1) slot[1].push(item.acc_name)        
+      }
+
+      arrays.forEach(slot => {
+        slot[2] = totalValue == 0 ? 0 : parseInt( slot[0] / totalValue * 100 )
+        slot[1] = slot[1].length
+      })
+      return arrays
+    },
+    otherTableStyle(){
+      let scalefactor = this.resolution.width / 1920;
+      let X = this.toggles.OtherTables ? (-scalefactor * 560) + 'px' : 0 ;
+      return {
+        transform: `translate(${X},-50%) scale(${scalefactor})`
+      }
+    },
     bet_info_total(){
       const obj = [0,0,0,0,0];
       const aTob = index => {
@@ -383,9 +441,12 @@ export default {
       }
     },
   },
-  async mounted(){    
+  async mounted(){
+    this.eBus.$on('close_tables', ()=>{
+      this.toggles.OtherTables = true;;
+    });
     this.eBus.$on('socket', data => {
-			console.log("data",data)
+			//console.log("data",data)
       switch(data.type){
         case "welcome":          
           break;
@@ -393,7 +454,7 @@ export default {
           this.room_detail = data
 					break;
 				case 'room_bead':
-          if(this.room_id==data.room_id){
+          if(this.room_id == data.room_id){
             this.room_bead = data
           }
           break;
@@ -472,13 +533,17 @@ export default {
         case 'room_betting':          
           this.$game.bet_others(data)
         break;
-        
+        case 'room_list':
+         this.SET_ROOM_LIST(data.rooms);
+        break;
+      }     
+    })    
+    this.$socket.sendOBJ({
+      type: "req_room_list",
+      offset  : 0,
+      count   : 10
+    });
     
-      }
-      
-      window.addEventListener('mousemove',this.onMouseMove,false)
-      window.addEventListener('click',this.onMouseClick,false)
-    })
 
     this.eBus.$on('worker', data => {      
       switch(data.type){
@@ -527,12 +592,16 @@ export default {
     this.$refs.cont_3d.appendChild( this.$game.renderer.domElement )
     this.enterRoom();
 
-    window.addEventListener('resize', this.onResize );    
+    window.addEventListener('resize', this.onResize );
+    window.addEventListener('mousemove',this.onMouseMove,false)
+    window.addEventListener('click',this.onMouseClick,false)
   },
   beforeDestroy(){
     window.removeEventListener('resize', this.onResize );
     window.removeEventListener('click',this.onMouseClick)
     this.eBus.$off('socket');
+    this.eBus.$off('worker');
+    this.eBus.$off('close_tables');
     window.removeEventListener('mousemove',this.onMouseMove)
   },
   beforeRouteEnter( to, from, next){
@@ -552,7 +621,23 @@ export default {
     next()
   },
   watch: {
-    game_loaded(){},    
+    bet_info(newV, oldV){
+      if( newV.length == 1 && oldV.length == 0 && this.history_move_start == false){
+        this.history_move_start == true;
+        let t = 0;
+        let factor = -0.7;
+        this.handleInterval = setInterval(()=>{
+          let offset = factor*(t++)
+          this.bet_info_style = {
+              transform: `translateY(${offset}px)`
+          }
+          if(offset < -3000 ) {
+            clearInterval(this.handleInterval);
+            this.history_move_start == false;
+          }
+        },15)
+      }
+    },
     room_id : {
       handler(newVal){
         if(newVal === null) return;
@@ -562,7 +647,23 @@ export default {
     },
     room_detail(data, oldData){
       this.proc_room_detail(data, oldData)
-    }
+    },
+     hiddenData: {
+      handler(nv,ov){                
+        const ctx = this.$parent.$refs.hiddenCanvas.getContext('2d');      
+        ctx.clearRect(0, 0, 255, 255);
+        this.$nextTick(()=>{
+          rasterizeHTML.drawHTML(this.$refs.hiddenDiv.innerHTML, this.$parent.$refs.hiddenCanvas)
+         .then((a) => {           
+            this.$game.textLabels.forEach((label, i) => {
+              label.material.map.needsUpdate = true;
+            })
+          })
+        })
+      },
+      deep: true,
+      //immediate: true,
+    },    
   }
 }
 
@@ -585,6 +686,28 @@ export default {
   }
 
   #cont_3d{
+    user-select: none;
+    overflow:hidden;
+    .tables_wrap{
+      background-color:rgba(0,0,0,.35);
+      transform-origin:0 50%;
+      position:absolute;
+      box-sizing:border-box;
+      width:560px;
+      height:640px;
+      top:50%;
+      padding:12px;
+      padding-right:0;
+      left:0px;
+      transition:0.4s left;
+      .tables_btn{
+        transform: rotateZ(90deg);
+        transition: 0.2s transform;        
+      }
+      &.hidden{        
+        .tables_btn{transform: rotateZ(-90deg)}
+      }
+    }
     .toggle-other-tables{
       @media (hover:hover){
         &:hover{
@@ -599,6 +722,7 @@ export default {
       width:40px;
       height:100px;
       top:50%;
+      left:100%;      
       transform:translate(0,-50%);
       &>div{
         position:absolute;
@@ -618,7 +742,7 @@ export default {
       width:200px;
       height:500px;  
       color:yellow;
-      overflow:hidden;  
+      /*overflow:hidden;  */
       -webkit-mask-image: -webkit-gradient(linear, left 20%, left 0, from(rgba(0,0,0,1)), to(rgba(0,0,0,0)));
       .bet_info_item{
         margin-bottom:5px;
@@ -695,8 +819,8 @@ export default {
     .bet_info_wrap{  
       width:100%;
       position:absolute;
-      top:0px;//500px;
-      white-space: nowrap;
+      top:500px;
+      white-space: nowrap;      
     }
     .table-number{
       color: #fff;     

@@ -48,6 +48,7 @@ const e = function (opt) {
   this.betZones = [];
   this.betted_coins = [];
   this.definedZones = [];
+  this.textLabels = [];
 
   const forIntersect = this.forIntersect = {
     betting_zone: [],
@@ -79,6 +80,7 @@ const e = function (opt) {
     init_definedZones.bind(this)();
     init_betted_coin.bind(this)();
     init_functions.bind(this)();
+    init_textLabels.bind(this)(this.betZones);
 
     console.log(`loading Time :: ${Date.now() - _s}`);
     vue.SET_GAME_LOADED(true)    
@@ -93,6 +95,15 @@ const e = function (opt) {
     }
   }
   function init_functions(){
+    // 방입장시 위너 하이드
+    this.hideWinners = () => {
+      ['player','banker','tie'].forEach(t=>{        
+        const winners = this._resources_.winners
+        console.log(winners.player)
+        
+      })
+      
+    };
     // 방입장시 빠른 딜 전개 초기화
     this.init_before_detail = () => {
       const $R = _resources_
@@ -103,39 +114,8 @@ const e = function (opt) {
         t.rotation.copy(t.userData.init_rotation);
       })      
     };
-
-    // 방입장시 빠른 딜 전개
     this.restoreDeal = (data) => {
-      /*
-      console.log('게임카드 복구')
-      const $R = _resources_;
-      this.animateCards.init({
-        p_cards, b_cards, result, vue_room,
-      }
-      /*)
-      [ data.player.cards, data.banker.cards ].forEach( (group, g)=>{
-        group.forEach( (d, i) => {
-          let c = g == 0 ? $R.cards.player[i] : $R.cards.banker[i];
-          //재질
-          let texture = `${d.suit}${d.number}`.toLowerCase()
-          texture = $R.textures.cards.front[texture];        
-          c.material[0].map = texture
-          c.material[0].needsUpdate = true;
-          
-          if(i<2){
-            c.rotation.set(0,0,0)
-            c.position.x = c.position.x - 8
-          }else{
-            c.rotation.x = 0
-            c.position.y = c.position.y - 8
-          }
-          c.children.forEach(child=>{            
-            child.visible = false;
-          })
-          c.visible = true;
-        })
-      })
-      */
+
     };
     this.bet_others = (message) => {
 
@@ -291,6 +271,49 @@ const e = function (opt) {
       }
     }
   }
+
+  function init_textLabels(zones){
+
+    zones.forEach( (z,i) => { 
+      let parent = z.parent;
+      let geo = new THREE.PlaneGeometry(11.5,2.2)
+      let mat = new THREE.MeshBasicMaterial({      
+        transparent:true,
+        //depthTest: false,
+      })
+      let mesh = new THREE.Mesh(geo,mat.clone())
+      let cvs = vue.$refs.hiddenCanvas
+      //cvs.getContext('2d').imageSmoothingEnabled = true
+      let map = new THREE.Texture(cvs)
+      map.wrapS = map.wrapT = THREE.RepeatWrapping
+      map.repeat.y = 0.2
+      map.offset.y = -0.2 * (i+1)  
+  
+      mesh.material.map = map
+      mesh.material.map.minFilter = mesh.material.map.magFilter = THREE.LinearFilter;
+      //mesh.material.needsUpdate=true
+      mesh.position.x = ( i == 0 ) ? 0.3 : ( i == 2 ) ? 1.48 : ( i == 4 ) ? -0.3 : 0;
+      mesh.position.y = (function(){
+        let _y;
+        switch(i){
+          case 0: case 4:
+            _y = 6.1;
+          break;
+          case 1: case 3:
+            _y = 5.2;
+          break;
+          case 2:
+            _y = 5.6;
+          break;
+        }
+        return _y        
+      })();
+      mesh.position.z = 0.1
+      parent.add(mesh)
+      this.textLabels.push(mesh)
+    })
+  }
+  
 
   function do_bet(target, sprite, zone, who){    
     
