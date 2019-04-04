@@ -63,27 +63,47 @@ const e = function (opt) {
   let _s = Date.now()
   init.bind(this)();
   
-  loadResource(_resources_).then( () => {    
+  loadResource(_resources_).then( () => {
     init_table.bind(this)();
+    vue.INCREASE_LOADING_PROGRESS();
+    
     init_cards.bind(this)({
       THREE, _resources_, scene
     });
+    vue.INCREASE_LOADING_PROGRESS();
     
     init_betting_zone.bind(this)({
       scene, vue, _resources_, THREE, resizeUpdate, forIntersect
     });
-    init_labels.bind(this)();    
+    vue.INCREASE_LOADING_PROGRESS();
+    
+    init_labels.bind(this)();
+    vue.INCREASE_LOADING_PROGRESS();
+    
     init_winner_effect.bind(this)({
       camera, scene, THREE, _resources_
     });
+    vue.INCREASE_LOADING_PROGRESS();
+
     this.animateCards = new cards_animations(this)
+    vue.INCREASE_LOADING_PROGRESS();
+    
     init_definedZones.bind(this)();
+    vue.INCREASE_LOADING_PROGRESS();
+    
     init_betted_coin.bind(this)();
+    vue.INCREASE_LOADING_PROGRESS();
+    
     init_functions.bind(this)();
+    vue.INCREASE_LOADING_PROGRESS();
+    
     init_textLabels.bind(this)(this.betZones);
+    vue.INCREASE_LOADING_PROGRESS();
 
     console.log(`loading Time :: ${Date.now() - _s}`);
-    vue.SET_GAME_LOADED(true)    
+    setTimeout(()=>{
+      vue.SET_GAME_LOADED(true)
+    },100)
   })
   function init_definedZones(){    
     for (let y = -1; y <= 1; y++) {
@@ -98,8 +118,7 @@ const e = function (opt) {
     // 방입장시 위너 하이드
     this.hideWinners = () => {
       ['player','banker','tie'].forEach(t=>{        
-        const winners = this._resources_.winners
-        console.log(winners.player)
+        this._resources_.winners[t].visible = false;
         
       })
       
@@ -469,6 +488,7 @@ const e = function (opt) {
           tex.minFilter = tex.magFilter = THREE.LinearFilter
           R.textures.table = tex
           console.log('table_texture_loaded')
+          vue.INCREASE_LOADING_PROGRESS();
           resolve();
         })
       }),
@@ -478,6 +498,7 @@ const e = function (opt) {
         fontLoader.load('/brushScript.json', font => {
           R.fonts.brushScript = font
           console.log('brushScript_loaded')
+          vue.INCREASE_LOADING_PROGRESS();
           resolve()
         });
       }),
@@ -487,6 +508,7 @@ const e = function (opt) {
         fontLoader.load('/Arial_Regular.json', font => {
           R.fonts.Arial_Regular = font
           console.log('Arial_Regular_loaded')
+          vue.INCREASE_LOADING_PROGRESS();
           resolve()
         });
       }),
@@ -494,6 +516,7 @@ const e = function (opt) {
       new Promise( resolve => {
         textureLoader.load(require('@/images/backside.jpg'), tex => {
           R.textures.cards.back = tex;
+          vue.INCREASE_LOADING_PROGRESS();
           resolve();
         });
       }),
@@ -501,6 +524,7 @@ const e = function (opt) {
       new Promise( resolve => {
         textureLoader.load(require(`@/images/betting_zone.jpg`), tex => {
           R.textures.betting_zone = tex
+          vue.INCREASE_LOADING_PROGRESS();
           resolve();
         })
       }),
@@ -510,7 +534,8 @@ const e = function (opt) {
         for (let i of [4, 5, 6, 7, 8, 9, 10, 11, 12]) {
           array.push( new Promise( r => {
               textureLoader.load(require(`@/images/chips/bet${i}__.png`), tex => {
-                R.textures.chips.push(tex)                
+                R.textures.chips.push(tex)
+                vue.INCREASE_LOADING_PROGRESS();                
                 r();
               })
             })
@@ -520,6 +545,7 @@ const e = function (opt) {
         array.push( new Promise( r => {
           textureLoader.load(require(`@/images/chips/coin_shadow2.jpg`), tex=>{
             R.textures.shadow = tex;
+            vue.INCREASE_LOADING_PROGRESS();
             r();    
           })
         }))
@@ -536,6 +562,7 @@ const e = function (opt) {
               textureLoader.load( require(`@/images/cards/${symbol}${(val)}.png` ), texture => {
                 texture.minFilter = texture.magFilter = THREE.LinearFilter;
                 R.textures.cards.front[`${symbol}${(val)}`] = texture
+                vue.INCREASE_LOADING_PROGRESS();
                 r();
               })
             }))

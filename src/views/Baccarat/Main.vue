@@ -20,6 +20,7 @@ export default {
     return {
       
     }
+    
   },
   created(){        
     const that = this
@@ -95,7 +96,7 @@ export default {
     });     
        
   },
-  methods:{
+  methods: {
      ...mapMutations([
       'SET_GAME_LOADED',
       'SET_IS_READY',
@@ -103,6 +104,8 @@ export default {
       'SET_CREDIT',
       'SET_GAME_CONNECTED',
       'SET_ROOM_LIST',
+      'SET_LOADING_PROGRESS',
+      'INCREASE_LOADING_PROGRESS'
     ]),
     tosvr_set_scatter_identity() {
       let req_json = {
@@ -113,7 +116,6 @@ export default {
     }    
   },
   mounted(){
-
     const $socket = Vue.prototype.$socket = new WebSocket('ws://www.jh84.kr:3100')
     $socket.sendOBJ = function(mes){
       this.send(JSON.stringify(mes))
@@ -123,14 +125,11 @@ export default {
       const data = JSON.parse(mes.data)
       this.eBus.$emit('socket', data);
     }
-
-    this.$nextTick(()=>{
-
-    })
+   
   },
   computed: {
     ...mapState([
-      'game_loaded','resolution','room_id','welcome', 'eosAccount', 'game_connected'
+      'game_loaded','resolution','room_id','welcome', 'eosAccount', 'game_connected', 'loading_progress'
     ])
   }
 }

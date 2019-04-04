@@ -38,6 +38,7 @@ export default new Vuex.Store({
     isReady: false,
     welcome: null,
     room_list: null,
+    loading_progress: 0,
   },
   getters: {
     'getEosAccount': state => state.eosAccount,
@@ -68,6 +69,9 @@ export default new Vuex.Store({
       state.resolution.width = payload[0];
       state.resolution.height = payload[1];
     },
+    SET_LOADING_PROGRESS(state, payload){
+      state.loading_progress = payload;           
+    },
     SET_MODAL1_MSG(state, payload){
       state.modal1_msg = payload;
     },
@@ -76,6 +80,9 @@ export default new Vuex.Store({
     },
     SET_GAME_CONNECTED(state, payload){
       state.game_connected = payload
+    },
+    INCREASE_LOADING_PROGRESS(state){
+      state.loading_progress++;
     },
     setScatter: (state, data) => {
       state.scatter = data

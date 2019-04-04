@@ -4,7 +4,15 @@
       <AppHeader :url="location.pathname"></AppHeader>
       <main>        
         <router-view/>
-        <div v-if="/baccarat/.test(location.pathname) && !(game_loaded && game_connected)"> NOW LOADING</div>
+        <div class="loading-progress" v-if="/baccarat/.test(location.pathname) && !(game_loaded && game_connected)">
+          <div>
+            <div>NOW LOADING...</div>
+            <div class="bar" style="width:320px;height:10px;border:1px solid white;border-radius:6px;position:relative;overflow:hidden;background-color:#222;margin-bottom:8px;margin-top:8px;">
+              <div class="bar_inner" style="height:100%;background-color:white;position:absolute;left:0;top:0;" :style="progress_style"></div>
+            </div>
+            <div>{{loading_progress}} / {{to_done}}</div>
+          </div>
+        </div>
       </main>
       <AppFooter></AppFooter>
     </div>
@@ -25,6 +33,7 @@
     },
     data(){      
       return {
+        to_done: 77,
         location: window.location,        
       }
     },
@@ -33,22 +42,38 @@
     },
     computed:{
       ...mapState([
-      'game_loaded','resolution','room_id', 'game_connected', 'welcome'
-    ])
+      'game_loaded','resolution','room_id', 'game_connected', 'welcome', 'loading_progress'
+    ]),
+      progress_style(){
+        let percent = Math.round( this.loading_progress / this.to_done * 100 );
+        return {
+          width: percent +'%' 
+        }
+      }
     }
   }
 </script>
 
 
-<style lang="scss" scoped>
+<style lang="scss">
 @import url('https://fonts.googleapis.com/css?family=Montserrat:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&subset=cyrillic,cyrillic-ext,latin-ext,vietnamese');
-#app {
+#app {  
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
   //background-image: url('./assets/bg.png');
+  .loading-progress{
+    display:flex;
+    min-height:300px;    
+    color:white;
+    align-items: center;
+    justify-content: center;
+    .bar_inner{
+      //transition: 0.01s width ease;
+    }
+  }
   
 }
 #wrap {
