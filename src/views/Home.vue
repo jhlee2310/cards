@@ -1,119 +1,27 @@
 <template>
-  <div style="width: 100%;">
-    <div style="position: relative;margin: 0px 9.1%;">
-      <div>
-        <div style="text-align: left;">
-        <!-- <img src="@/assets/bg.png" style="position: absolute;top: 0px;left: 0px;width:100%;height:100%;"/> -->
-          <img src="@/assets/model.png" style="margin-left: -75px;
-          z-index: 2;
-        position: relative;"/>
-        </div>
-        <div id="textContent">
-          <div 
-          style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
-          font-size: 103.5px;
-          font-weight: bold;
-          font-style: normal;
-          font-stretch: normal;
-          line-height: 1.2;
-          letter-spacing: normal;
-          text-align: left;
-          color: #dfdfe4;
-          position: absolute;
-          margin-top: 564px;
-          margin-left: 22px;
-          top: 0px;
-          z-index: 1;
-          ">
-            BACCA
-          </div>
-          <div style="text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);
-          font-size: 103.5px;
-          font-weight: bold;
-          font-style: normal;
-          font-stretch: normal;
-          line-height: 1.2;
-          letter-spacing: normal;
-          text-align: left;
-          color: #dfdfe4;
-          position: absolute;
-          top: 0px;
-          margin-top: 655px;
-          margin-left: 191px;
-          z-index: 1;
-          ">
-            RAT
+  <div class="home_wrap">    
+      <div class="content_cont" :style="content_cont_style">
+        <div class="img_cont" :style="img_cont_style">
+          <img class="img_model" src="@/assets/model.png"/>
+          <div class="text_content">
+            <div class="bacca">BACCA</div>
+            <div class="rat">RAT</div>
           </div>
         </div>
-      </div>
-      <div style="position: absolute;
-      top: 0;
-      width: 100%;
-      z-index: 3;
-      ">
-        <div
-        class="txtAni"
-      style="font-size: 60px;
-      font-weight: bold;
-      font-style: normal;
-      font-stretch: normal;
-      line-height: 1.2;
-      letter-spacing: normal;
-      text-align: left;
-      color: #ffffff;
-      position: absolute;
-      top: 266px;
-      right: 436px;
-      "
-      >
-          Baccarat
-        </div>
-        <div style="font-family: OpenSans;
-      font-size: 16px;
-      font-weight: normal;
-      font-style: normal;
-      font-stretch: normal;
-      line-height: 1.88;
-      letter-spacing: normal;
-      text-align: left;
-      color: #c1c1c1;
-      width: 684px;
-      position: absolute;
-      top: 344px;
-      right: 27px;
-      ">
+        <img src="@/assets/group-1.png" style="width: 100%;height:70px;z-index: 2;position: absolute;left: 0px;bottom: 0px;transform:translate(0px,50%);opacity:0.48"/>
+      </div>              
+      <div class="right_side">
+        <div class="txtAni">Baccarat</div>
+        <div class="txtLong">
           Baccarat is the ultimate card casino game. It attracts more high rollers than any other game, and once you play Baccarat you’ll know why. You are one click away from the world’s most majestic casino card game.
         </div>
-        <div style="width: 214px;
-      height: 56px;
-      border-radius: 27.5px;
-      background-color: #ffd324;
-      font-size: 20px;
-      font-weight: bold;
-      font-style: normal;
-      font-stretch: normal;
-      line-height: 56px;
-      letter-spacing: normal;
-      text-align: center;
-      color: #000000;
-      position: absolute;
-      top: 477px;
-      right: 496px;
-      cursor: pointer;
-      z-index: 2;
+        <div class="btn_play" style="
       ">
-      <router-link to="/baccarat/12" tag="div" class="button">
+      <router-link to="/baccarat/1" tag="div" class="button">
       Play Now
     </router-link>
       </div>
-        </div>
-        <img src="@/assets/group-1.png" style="width: 100%;
-      z-index: 2;
-      position: absolute;
-      left: 0px;
-      top: 746px;
-      "/>
-    </div>
+    </div>    
   </div>
 </template>
 
@@ -126,8 +34,8 @@
 export default {
   name: 'home',
   methods:{
-    onWindowResize(){
-
+    onWindowResize(e){
+      this.width = window.innerWidth;
     },
     render(stamp){
       this.update()
@@ -140,9 +48,11 @@ export default {
   data(){
     return{
       br:'',
+      width:0,
     }
   },
   created(){
+    window.addEventListener('resize',this.onWindowResize)
     /*
     this.$options.sockets.onopen = (data) => {
       const x = JSON.stringify({
@@ -163,23 +73,105 @@ export default {
 
     //this.$socket.sendObj({awesome: 'data'})
   },
-  mounted(){    
-    // new threejs(this)
-    // window.on( 'resize', this.onWindowResize )
+  mounted(){
+    this.$nextTick(()=>{
+      window.dispatchEvent(new Event('resize'))
+    })    
   },
+  computed: {
+    content_cont_style(){
+      if(this.width <= 850 ){
+        let scaleFactor = this.width/850;        
+        return {
+          height: `${scaleFactor*600}px`,          
+        }
+      }else return {}
+    },
+    img_cont_style(){
+      if(this.width <= 850 ){
+        let scaleFactor = this.width/850
+        return {
+          transform: `translate(-50%,-50%) scale(${scaleFactor})`,
+        }
+      }else return {}
+    }
+  }
 }
 </script>
 
-<style lang="scss" scoped>
-  // div {
-  //   position: relative;
-  // }
-  // img {
-  //   position: absolute;
-  // }
-  /*
- * Animation module with all animation code
- */
+<style lang="scss">
+.home_wrap{
+  position:relative;max-width:1600px;margin:0 auto;
+  .content_cont{
+    position:relative;width:100%;height:600px;overflow:hidden;margin:0 auto;
+    .img_cont{
+      width:680px;height:600px;overflow:hidden;position:absolute;top:0;left:0;
+      @media screen and (max-width: 1200px){
+        &{
+          position:relative;
+          margin:0 auto;
+          top:auto;left:auto;
+        }
+      }
+      @media screen and (max-width: 850px){
+        &{          
+          position:absolute;          
+          top:50%;left:50%;
+        }
+      }
+      .img_model{
+      display:block;right:-170px;position:absolute;height:600px;
+      }
+      .text_content{
+        position:absolute;
+        bottom:36px;left:100px;font-size:70px;z-index:-1;
+        .bacca{
+          text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);font-size: 1em;font-weight: bold;font-style: normal;font-stretch: normal;
+          line-height: 1.2;letter-spacing: normal;text-align: right;color: #dfdfe4;
+        }
+        .rat{
+          text-shadow: 2.5px 4.3px 25px rgba(0, 0, 0, 0.88);font-size: 1em;font-weight: bold;
+          text-align: right;color: #dfdfe4;
+        }
+      }    
+    }
+  }
+  .right_side{
+    position:absolute;width:750px;right:0;top:45%;transition: 0.2s all ease;overflow:hidden;
+    @media screen and (max-width: 1200px){
+      &{
+        box-sizing:border-box;
+        padding:30px;
+        margin-top:100px;
+        width:100%;
+        position:relative;
+        right:auto;
+        top:auto;
+        margin:0 auto;
+      }
+    }
+    .txtAni{
+      font-size: 60px;font-weight: bold;font-style: normal;font-stretch: normal;line-height: 1.2;letter-spacing: normal;text-align: left;
+      color: #ffffff;margin-bottom:25px;  
+    }
+    .txtLong{
+      font-family: 'OpenSans';
+      font-size: 16px;
+      font-weight: normal;
+      font-style: normal;
+      font-stretch: normal;
+      line-height: 1.88;
+      letter-spacing: normal;
+      text-align: left;
+      color: #c1c1c1;
+      margin-bottom:25px;
+    }
+    .btn_play{
+      width: 214px;height: 56px;border-radius: 27.5px;background-color: #ffd324;font-size: 20px;font-weight: bold;font-style: normal;font-stretch: normal;line-height: 56px;
+      letter-spacing: normal;text-align: center;color: #000000;cursor: pointer;z-index: 2;
+    }
+  }
+}
 .anim-text-flow,
 .anim-text-flow-hover:hover {
   /*
